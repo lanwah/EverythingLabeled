@@ -104,6 +104,7 @@ Meta (key-value，含 data_version)
 - UNIQUE `(FromTagId, ToTagId, Kind)`
 - 写 `child` 边时：若会引入环则拒绝
 - 调整子顺序：更新同父下各 `child` 边的 `Seq`（可批量重排）
+- HTTP `POST /v1/relations/batch`：在「旧图 ∪ 本批全部新边」上做集合校验，全部合法才提交（见 [HTTP API §3.5](./2026-09-26-http-api.md)）；`related` 不自动补反向边
 
 `Namespace` 仍只作管理归类，**不**表达父子；结构关系一律走 `TagRelation`。
 
@@ -195,7 +196,7 @@ ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
 3. 以 `-` 开头的词为排除（去掉前缀后解析标签）。
 4. 每个标签词经 `AliasNormalized` 解析为 `TagId`。
 5. 集合运算在 `ResourceTag` 上完成，再取 Resource 详情。
-6. **含子孙（可选展开）**：查询语言细则（待办 #2）将定义语法（例如 `工作*` 或显式参数 `expand=child`）；展开时沿 `Kind=child` 从该标签 DFS/BFS 收集后代 TagId，再与原词一并参与集合运算。`related` 默认不自动展开。
+6. **含子孙（可选展开）**：查询语言细则（待办 #2）将定义语法（例如 `工作*` 或显式参数 `expand=child`）；展开时沿 `Kind=child` 从该标签 DFS/BFS 收集后代 TagId，再与原词一并参与集合运算。`related` **不**自动展开（浏览走 HTTP `neighbors`）。成本闸门（默认 `maxDepth=8`、`expandedTagLimit=500`，可下调）见 [HTTP API §3.6 / §9](./2026-09-26-http-api.md)。
 
 未知标签：
 
@@ -219,11 +220,12 @@ ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
 - 读接口缓存键：
 
 ```text
-v{data_version}:{op}:{normalized_query}:{limit}:{offset}
+v{data_version}:{op}:{normalized_query}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}
 ```
 
 - `op` ∈ `suggest` | `preview` | `query`
 - `normalized_query`：分词、`OR` 大写统一、别名解析前的规范化查询串（稳定序列化）
+- `expand` / `maxDepth` / `expandedTagLimit`：与 [HTTP API](./2026-09-26-http-api.md) 一致；未展开时用稳定占位（如空 / 默认值）以免键漂移
 
 详情见[架构文档 · 查询缓存](./2026-09-22-local-daemon-architecture.md#5-查询缓存)。
 
