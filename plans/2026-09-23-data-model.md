@@ -1,11 +1,12 @@
 # EverythingLabeled 数据模型
 
 日期：2026-09-23  
-状态：已确认（v1 基线；含网状标签关系、`NameInitials` 简拼）  
+状态：已确认（v1 基线；含网状标签关系、`NameInitials` 简拼、别名字符集）  
 关联：
 
 - [本地守护进程架构](./2026-09-22-local-daemon-architecture.md)
 - [HTTP API 契约](./2026-09-26-http-api.md)
+- [查询语言细则](./2026-09-26-query-language.md)
 
 ## 1. 实体与字段
 
@@ -51,6 +52,23 @@ Meta (key-value，含 data_version)
 - 一个 Tag 可有多个 Alias。
 - **创建 Tag 时若未显式提供别名，自动插入 `Alias = Name`。**
 - 查询与打标输入经 Alias（或与主名相同的默认别名）解析为 `TagId`。
+
+**别名字符集（写入校验；与查询词法配套）**
+
+创建 Tag 默认别名、显式 `aliases`、`POST …/aliases`、`createMissing` 建标所用别名均须满足：
+
+| 规则 | 说明 |
+|---|---|
+| 非空 | trim 后长度 ≥ 1 |
+| 不以 `-` 开头 | 保证查询语言能写正词（以 `-` 开头的 token 一律为负词） |
+| 不含 Unicode 空白 | 查询按空白分词，含空白的别名无法用 `q=` 引用 |
+| 不含 ASCII 控制字符 | U+0000–U+001F、U+007F |
+| 保留词 | `AliasNormalized` ∉ `{ or, and, not }`（大小写不敏感归一后）；避免与查询运算符 / 未来关键字冲突 |
+| 其它字符 | v1 **允许**（含中文、`:` 等，以便 `proj:foo` 风格别名） |
+
+违规 → HTTP `422 validation_failed`，`data.details` 建议带原因；服务端日志写清（如 `alias_rejected_leading_dash` / `alias_rejected_whitespace` / `alias_rejected_control` / `alias_rejected_reserved`）。
+
+展示名 `Tag.Name` **可以**含空白等（仅展示/管理）；若未显式提供别名且 `Name` 本身违反上表，创建失败（不得插入非法默认别名）。
 
 ### Resource
 
@@ -189,19 +207,26 @@ ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
 - 全局标签列表 / 资源上的标签列表：用 **`Tag.Seq` / `Tag.CreatedAt`**。
 - 客户端不得依赖未文档化的其它默认序；需要别种排序时由查询参数显式指定（见 [HTTP API](./2026-09-26-http-api.md)）。
 
+## 3.2 资源列表默认排序
+
+凡返回**资源集合**的接口（`GET /v1/resources`、`GET /v1/query`、`GET /v1/query/preview` 等），无显式排序参数时：
+
+1. **`CreatedAt` 升序**
+2. 再相同 → **`Id` 升序**
+
+查询多段 OR 并集后再按此序分页（见 [查询语言细则 §3.4](./2026-09-26-query-language.md)）。
+
 ## 4. 查询语义
 
-1. 对查询字符串 trim；按空白分词。
+要点（全文以 [查询语言细则](./2026-09-26-query-language.md) 为准）：
+
+1. 对查询字符串 trim；按 Unicode 空白分词。
 2. 词 `OR`（大小写不敏感）为并集运算符；默认相邻正词为 AND。
-3. 以 `-` 开头的词为排除（去掉前缀后解析标签）。
-4. 每个标签词经 `AliasNormalized` 解析为 `TagId`。
+3. 以 `-` 开头的词为排除（去掉**一个**前导 `-` 后解析标签）。
+4. 每个标签词经 `AliasNormalized` 解析为 `TagId`（受别名字符集约束）。
 5. 集合运算在 `ResourceTag` 上完成，再取 Resource 详情。
-6. **含子孙（可选展开）**：仅 HTTP 参数 `expand=child`（无词级 `*`）；正、负词均沿 `Kind=child` 展开（含自身）；`related` **不**自动展开（浏览走 HTTP `neighbors`）。闸门默认 `maxDepth=8`、`expandedTagLimit=512`。语法与集合语义见 [查询语言细则](./2026-09-26-query-language.md)；路由见 [HTTP API §3.6 / §9](./2026-09-26-http-api.md)。
-
-未知标签：
-
-- **正词无法解析 → 整个查询结果为空**
-- **负词无法解析 → 忽略该负词**
+6. **含子孙（可选展开）**：仅 HTTP 参数 `expand=child`（无词级 `*`）；正、负词均沿 `Kind=child` 展开（含自身；负词排除整个子树）；`related` **不**自动展开。闸门默认 `maxDepth=8`、`expandedTagLimit=512`；深度截断、标签数触顶分流见细则。
+7. 未知正词 → 整句空结果 + 成功信封非空 `message`；未知负词 → 忽略（仅日志）。
 
 示例：
 
@@ -224,10 +249,12 @@ v{data_version}:{op}:{normalized_query}:{expand}:{maxDepth}:{expandedTagLimit}:{
 ```
 
 - `op` ∈ `suggest` | `preview` | `query`
-- `normalized_query`：分词、`OR` 统一、别名小写、解析 TagId **之前**的词面串；算法见 [查询语言细则 §4](./2026-09-26-query-language.md)
-- `expand` / `maxDepth` / `expandedTagLimit`：未展开时固定占位 `none` / `0` / `0`；展开时为钳位后生效值（默认深度 8、标签数 512）
+- `normalized_query`：分词、`OR` 统一、别名小写、解析 TagId **之前**的词面串；**保持用户词序**（段内不重排 → 语义相同但词序不同会产生不同缓存键）；算法见 [查询语言细则 §4](./2026-09-26-query-language.md)
+- `expand` / `maxDepth` / `expandedTagLimit`：未展开时固定占位 `none` / `0` / `0`；展开时为校验后生效值（默认深度 8、标签数 512）
 
 详情见[架构文档 · 查询缓存](./2026-09-22-local-daemon-architecture.md#5-查询缓存)与 [查询语言细则](./2026-09-26-query-language.md)。
+
+HTTP 读写响应使用统一信封 `{ status, message, data }`（见 [HTTP API §2.2](./2026-09-26-http-api.md)）。
 
 ## 6. 同步预留字段
 
