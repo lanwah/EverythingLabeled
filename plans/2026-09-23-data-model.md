@@ -1,8 +1,11 @@
 # EverythingLabeled 数据模型
 
 日期：2026-09-23  
-状态：已确认（v1 基线；含网状标签关系）  
-关联：[本地守护进程架构](./2026-09-22-local-daemon-architecture.md)
+状态：已确认（v1 基线；含网状标签关系、`NameInitials` 简拼）  
+关联：
+
+- [本地守护进程架构](./2026-09-22-local-daemon-architecture.md)
+- [HTTP API 契约](./2026-09-26-http-api.md)
 
 ## 1. 实体与字段
 
@@ -19,12 +22,22 @@ Meta (key-value，含 data_version)
 |---|---|---|
 | Id | Guid | 主键 |
 | Name | string | 主名（展示名） |
+| NameInitials | string | 主名简拼；服务端由 `Name` 自动生成；小写；只读 |
 | Namespace | string? | 可选命名空间；空 = 全局扁平 |
+| Seq | int? | 可选顺序号；越小越靠前；未设置则为 null |
 | CreatedAt | DateTimeOffset | |
 | UpdatedAt | DateTimeOffset | |
 | Revision | long | 同步预留；本地写时递增 |
 
 约束：同一 `Namespace` 内 `Name` 唯一（`Namespace` 为 NULL 时用统一空键参与唯一约束）。
+
+**NameInitials（简拼）**
+
+- 仅由 **主名 `Name`** 生成；不按 Alias 存简拼。
+- 创建 Tag、更新 `Name` 时重算；客户端不可写入。
+- 算法：汉字 → 拼音首字母小写；ASCII 字母数字 → 小写保留；其余跳过。例：`工作笔记` → `gzbj`，`API设计` → `apisj`。若结果为空字符串仍入库（极少见；检索仅精确空前缀时有意义）。
+- 多音字：v1 用拼音库默认读音。
+- 用途：`suggest` / 标签列表 `q=` 前缀检索（与 `AliasNormalized` 为 OR）。
 
 ### TagAlias
 
@@ -73,7 +86,7 @@ Meta (key-value，含 data_version)
 | FromTagId | Guid | FK → Tag（边起点） |
 | ToTagId | Guid | FK → Tag（边终点） |
 | Kind | string | 关系类型，见下表 |
-| SortOrder | int | 同一 `(FromTagId, Kind)` 下的顺序；越小越靠前 |
+| Seq | int? | 同一 `(FromTagId, Kind)` 下的顺序；越小越靠前；未设置则为 null |
 | CreatedAt | DateTimeOffset | |
 | UpdatedAt | DateTimeOffset | |
 | Revision | long | 同步预留 |
@@ -90,7 +103,7 @@ Meta (key-value，含 data_version)
 - `FromTagId ≠ ToTagId`
 - UNIQUE `(FromTagId, ToTagId, Kind)`
 - 写 `child` 边时：若会引入环则拒绝
-- 调整子顺序：更新同父下各 `child` 边的 `SortOrder`（可批量重排）
+- 调整子顺序：更新同父下各 `child` 边的 `Seq`（可批量重排）
 
 `Namespace` 仍只作管理归类，**不**表达父子；结构关系一律走 `TagRelation`。
 
@@ -138,10 +151,12 @@ Meta (key-value，含 data_version)
 | ResourceTag | PK (ResourceId, TagId) | 绑定唯一 |
 | ResourceTag | INDEX (TagId, ResourceId) | 按标签查资源（查询热路径） |
 | TagRelation | UNIQUE (FromTagId, ToTagId, Kind) | 边唯一 |
-| TagRelation | INDEX (FromTagId, Kind, SortOrder) | 列出子节点 / 相关并保序 |
+| TagRelation | INDEX (FromTagId, Kind, Seq) | 列出子节点 / 相关并保序 |
 | TagRelation | UNIQUE (ToTagId) WHERE Kind = 'child' | 单父（若引擎不支持部分唯一索引，则用应用层校验 + 普通 INDEX (ToTagId, Kind)） |
+| Tag | INDEX (Seq, CreatedAt) | 标签列表默认排序 |
+| Tag | INDEX (NameInitials) | 简拼前缀检索 |
 
-建议接口：对 `TagAlias.Alias`、`Tag.Name` 做前缀匹配（SQLite `LIKE 'prefix%'` 且别名列大小写折叠策略在实现时固定为 ordinal ignore case 或统一小写存储——**v1 采用入库前将 Alias / 解析键规范为一种大小写策略：保留用户大小写展示，另存 `AliasNormalized` 小写列并对其建唯一索引**）。
+建议接口：对 `TagAlias.AliasNormalized`、`Tag.NameInitials` 做前缀匹配（SQLite `LIKE 'prefix%'`）。别名列大小写策略：**保留用户大小写展示，另存 `AliasNormalized` 小写列并对其建唯一索引**。
 
 补充字段（写入实现约定）：
 
@@ -151,6 +166,27 @@ Meta (key-value，含 data_version)
 | Tag | NameNormalized | 小写；与 Namespace 组成唯一（若与 Alias 策略冲突则以 Alias 解析为准） |
 
 为减少歧义：**对外解析只走 `TagAlias.AliasNormalized`**（含默认别名 = 主名）。`Tag.Name` 仅作展示与管理。
+
+## 3.1 标签列表默认排序
+
+凡返回**标签集合**的接口（标签列表、某资源上的标签、某父下的子标签、某标签的 `related` 邻居等），默认排序规则统一为：
+
+1. **`Seq` 升序**（数值越小越靠前）
+2. 若 **`Seq` 未设置（null）或彼此相等**：再按 **`CreatedAt` 升序**（先创建的在前）
+3. 若仍相同：按 **`Id` 升序** 作为稳定次序
+
+SQL 等价表达（示意）：
+
+```sql
+ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
+```
+
+说明：
+
+- `(Seq IS NULL) ASC` 使**已设置 Seq 的排在未设置之前**；未设置的一组内部只按 `CreatedAt`（及 `Id`）排。
+- 列表「子标签 / related」时，排序字段取 **边上的 `TagRelation.Seq` / `TagRelation.CreatedAt`**（边的创建时间），不是目标 Tag 自身的 Seq（除非接口文档另行约定合并规则；v1 固定用边）。
+- 全局标签列表 / 资源上的标签列表：用 **`Tag.Seq` / `Tag.CreatedAt`**。
+- 客户端不得依赖未文档化的其它默认序；需要别种排序时由查询参数显式指定（HTTP API 待讨论）。
 
 ## 4. 查询语义
 
@@ -203,5 +239,5 @@ v1 不实现同步协议；跨机文件资源仅能同步 URI 字符串元数据
 
 ## 7. 后续
 
-- HTTP API 请求 / 响应 JSON 契约
+- [HTTP API 契约](./2026-09-26-http-api.md)（已确认）
 - CLI / 扩展 / Explorer 字段映射
