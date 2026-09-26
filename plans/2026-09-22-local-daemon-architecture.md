@@ -105,7 +105,7 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 ```
 
 - `baseUrl` / `token`：各客户端共用。
-- `confirmUntag`：可选，**仅 CLI 使用**（缺省 = `true`）；其它客户端可忽略。详见 [CLI 规格](./2026-09-26-cli.md)。
+- `confirmUntag`：可选；缺省 = `true`。**CLI** 与**浏览器扩展**各自读取（CLI 读 AppData config；扩展读 `chrome.storage.local`，键同名但**不自动同步**）。详见 [CLI 规格](./2026-09-26-cli.md)、[浏览器扩展规格](./2026-09-27-browser-extension.md)。
 
 服务端另含 `Cache:Provider` 等项（可用 `appsettings.json` 或同目录配置）。
 
