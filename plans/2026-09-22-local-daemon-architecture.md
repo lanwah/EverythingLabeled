@@ -78,7 +78,9 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 ### 5.4 失效策略
 
 - SQLite `Meta` 表维护单调 `data_version`；任意标签 / 别名 / 绑定 / **关系** 写成功后递增。
-- 缓存键：`v{data_version}:{op}:{normalized_query}:{limit}:{offset}`。
+- 缓存键（query / preview）：
+  `v{data_version}:{op}:{normalized_query}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}`  
+  规范化与未展开占位见 [查询语言细则](./2026-09-26-query-language.md)。
 - 写后不必逐键删除：version 前进即失效；可异步清理旧前缀。
 
 ### 5.5 未命中缓存时的库侧保障
@@ -133,4 +135,5 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 
 - [数据模型](./2026-09-23-data-model.md)
 - [HTTP API 契约](./2026-09-26-http-api.md)
+- [查询语言细则](./2026-09-26-query-language.md)
 - 各客户端实现计划（待开）

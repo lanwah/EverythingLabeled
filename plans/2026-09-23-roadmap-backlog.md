@@ -7,6 +7,7 @@
 - [本地守护进程架构](./2026-09-22-local-daemon-architecture.md)
 - [数据模型](./2026-09-23-data-model.md)（含 `TagRelation` 网状关系、`NameInitials`）
 - [HTTP API 契约](./2026-09-26-http-api.md)
+- [查询语言细则](./2026-09-26-query-language.md)
 
 用法：指定编号开始讨论（例如「讨论 1」）。一项确认后可再落盘为独立 `plans/*.md`，再进入下一项。
 
@@ -17,7 +18,7 @@
 | # | 事项 | 状态 |
 |---|---|---|
 | 1 | **HTTP API 契约** — `/v1` 路由、JSON、错误码、鉴权头（含关系 CRUD / `Seq` 重排 / `neighbors` / `relations/batch` / 性能边界） | [已确认](./2026-09-26-http-api.md) |
-| 2 | **查询语言细则** — 分词、`OR`/`-`、规范化、缓存键、**含子孙展开**（`expand=child` 闸门默认 depth=8 / 500 tags 已由 API 契约占位；本项定语法与规范化串） | 待讨论 |
+| 2 | **查询语言细则** — 分词、`OR`/`-`、规范化、缓存键、**含子孙展开**（`expand=child`；默认 depth=8 / 512 tags） | [已确认](./2026-09-26-query-language.md) |
 | 3 | **CLI 规格** — 命令集、读 config | 待讨论 |
 | 4 | **浏览器扩展规格** — 打标当前页、按标签打开、服务发现 | 待讨论 |
 | 5 | **Explorer 集成规格** — 右键、路径→URI、调用的 API | 待讨论 |

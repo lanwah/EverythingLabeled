@@ -187,7 +187,7 @@ ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
 - `(Seq IS NULL) ASC` 使**已设置 Seq 的排在未设置之前**；未设置的一组内部只按 `CreatedAt`（及 `Id`）排。
 - 列表「子标签 / related」时，排序字段取 **边上的 `TagRelation.Seq` / `TagRelation.CreatedAt`**（边的创建时间），不是目标 Tag 自身的 Seq（除非接口文档另行约定合并规则；v1 固定用边）。
 - 全局标签列表 / 资源上的标签列表：用 **`Tag.Seq` / `Tag.CreatedAt`**。
-- 客户端不得依赖未文档化的其它默认序；需要别种排序时由查询参数显式指定（HTTP API 待讨论）。
+- 客户端不得依赖未文档化的其它默认序；需要别种排序时由查询参数显式指定（见 [HTTP API](./2026-09-26-http-api.md)）。
 
 ## 4. 查询语义
 
@@ -196,7 +196,7 @@ ORDER BY (Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC
 3. 以 `-` 开头的词为排除（去掉前缀后解析标签）。
 4. 每个标签词经 `AliasNormalized` 解析为 `TagId`。
 5. 集合运算在 `ResourceTag` 上完成，再取 Resource 详情。
-6. **含子孙（可选展开）**：查询语言细则（待办 #2）将定义语法（例如 `工作*` 或显式参数 `expand=child`）；展开时沿 `Kind=child` 从该标签 DFS/BFS 收集后代 TagId，再与原词一并参与集合运算。`related` **不**自动展开（浏览走 HTTP `neighbors`）。成本闸门（默认 `maxDepth=8`、`expandedTagLimit=500`，可下调）见 [HTTP API §3.6 / §9](./2026-09-26-http-api.md)。
+6. **含子孙（可选展开）**：仅 HTTP 参数 `expand=child`（无词级 `*`）；正、负词均沿 `Kind=child` 展开（含自身）；`related` **不**自动展开（浏览走 HTTP `neighbors`）。闸门默认 `maxDepth=8`、`expandedTagLimit=512`。语法与集合语义见 [查询语言细则](./2026-09-26-query-language.md)；路由见 [HTTP API §3.6 / §9](./2026-09-26-http-api.md)。
 
 未知标签：
 
@@ -224,10 +224,10 @@ v{data_version}:{op}:{normalized_query}:{expand}:{maxDepth}:{expandedTagLimit}:{
 ```
 
 - `op` ∈ `suggest` | `preview` | `query`
-- `normalized_query`：分词、`OR` 大写统一、别名解析前的规范化查询串（稳定序列化）
-- `expand` / `maxDepth` / `expandedTagLimit`：与 [HTTP API](./2026-09-26-http-api.md) 一致；未展开时用稳定占位（如空 / 默认值）以免键漂移
+- `normalized_query`：分词、`OR` 统一、别名小写、解析 TagId **之前**的词面串；算法见 [查询语言细则 §4](./2026-09-26-query-language.md)
+- `expand` / `maxDepth` / `expandedTagLimit`：未展开时固定占位 `none` / `0` / `0`；展开时为钳位后生效值（默认深度 8、标签数 512）
 
-详情见[架构文档 · 查询缓存](./2026-09-22-local-daemon-architecture.md#5-查询缓存)。
+详情见[架构文档 · 查询缓存](./2026-09-22-local-daemon-architecture.md#5-查询缓存)与 [查询语言细则](./2026-09-26-query-language.md)。
 
 ## 6. 同步预留字段
 
@@ -242,4 +242,5 @@ v1 不实现同步协议；跨机文件资源仅能同步 URI 字符串元数据
 ## 7. 后续
 
 - [HTTP API 契约](./2026-09-26-http-api.md)（已确认）
+- [查询语言细则](./2026-09-26-query-language.md)（已确认）
 - CLI / 扩展 / Explorer 字段映射
