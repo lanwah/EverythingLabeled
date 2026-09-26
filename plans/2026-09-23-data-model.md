@@ -7,6 +7,8 @@
 - [本地守护进程架构](./2026-09-22-local-daemon-architecture.md)
 - [HTTP API 契约](./2026-09-26-http-api.md)
 - [查询语言细则](./2026-09-26-query-language.md)
+- [CLI 规格](./2026-09-26-cli.md)
+- [浏览器扩展规格](./2026-09-27-browser-extension.md)
 
 ## 1. 实体与字段
 
@@ -271,4 +273,5 @@ v1 不实现同步协议；跨机文件资源仅能同步 URI 字符串元数据
 - [HTTP API 契约](./2026-09-26-http-api.md)（已确认）
 - [查询语言细则](./2026-09-26-query-language.md)（已确认）
 - [CLI 规格](./2026-09-26-cli.md)（已确认）
-- 扩展 / Explorer 字段映射
+- [浏览器扩展规格](./2026-09-27-browser-extension.md)（已确认）
+- Explorer 字段映射
