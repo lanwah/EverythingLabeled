@@ -99,9 +99,13 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 ```json
 {
   "baseUrl": "http://127.0.0.1:5123",
-  "token": "<local-secret>"
+  "token": "<local-secret>",
+  "confirmUntag": true
 }
 ```
+
+- `baseUrl` / `token`：各客户端共用。
+- `confirmUntag`：可选，**仅 CLI 使用**（缺省 = `true`）；其它客户端可忽略。详见 [CLI 规格](./2026-09-26-cli.md)。
 
 服务端另含 `Cache:Provider` 等项（可用 `appsettings.json` 或同目录配置）。
 

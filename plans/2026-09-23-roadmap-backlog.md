@@ -20,7 +20,7 @@
 |---|---|---|
 | 1 | **HTTP API 契约** — `/v1` 路由、JSON、错误码、鉴权头（含关系 CRUD / `Seq` 重排 / `neighbors` / `relations/batch` / 性能边界） | [已确认](./2026-09-26-http-api.md) |
 | 2 | **查询语言细则** — 分词、`OR`/`-`、规范化、缓存键、**含子孙展开**（`expand=child`；默认 depth=8 / 512 tags） | [已确认](./2026-09-26-query-language.md) |
-| 3 | **CLI 规格** — 命令集、读 config | [已确认](./2026-09-26-cli.md) |
+| 3 | **CLI 规格** — 命令集、读 config | [已确认](./2026-09-26-cli.md)（[审核记录](./confirmed/2026-09-26-cli-review.md)） |
 | 4 | **浏览器扩展规格** — 打标当前页、按标签打开、服务发现 | 待讨论 |
 | 5 | **Explorer 集成规格** — 右键、路径→URI、调用的 API | 待讨论 |
 | 6 | **配置与安装** — Windows 安装/开机启动、端口、首次 token | 待讨论 |
