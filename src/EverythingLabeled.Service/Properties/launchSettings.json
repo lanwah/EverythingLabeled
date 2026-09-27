@@ -1,0 +1,11 @@
+﻿{
+  "profiles": {
+    "EverythingLabeled.Service": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

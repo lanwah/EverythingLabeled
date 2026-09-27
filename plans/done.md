@@ -18,3 +18,4 @@
 - 2026-09-27 — grill Round 1 修订 Service 骨架（Mutex/WAL/信封404/日志保留/health dataVersion）并同步 HTTP API
 - 2026-09-27 — grill Round 2 修订 Service 骨架（`EL_APPDATA` / `EL_MUTEX_NAME` / dataVersion number / 迁库失败保留 db）
 - 2026-09-27 — grill Round 3 修订 Service 骨架（无 CORS / 访问日志 / Nullable+WAsE / 退出码不钉表）
+- 2026-09-27 — 实现 #8 Service 骨架（sln、EF 迁库、health/鉴权、Mutex/config 引导、集成测试 8/8）→ [Service 骨架](./2026-09-27-service-skeleton.md)
