@@ -11,6 +11,7 @@
 - [CLI 规格](./2026-09-26-cli.md)
 - [浏览器扩展规格](./2026-09-27-browser-extension.md)
 - [Explorer 集成规格](./2026-09-27-explorer-integration.md)
+- [MCP 规格](./2026-09-27-mcp.md)
 
 用法：指定编号开始讨论（例如「讨论 1」）。一项确认后可再落盘为独立 `plans/*.md`，再进入下一项。
 
@@ -25,22 +26,25 @@
 | 3 | **CLI 规格** — 命令集、读 config | [已确认](./2026-09-26-cli.md)（[审核记录](./confirmed/2026-09-26-cli-review.md)） |
 | 4 | **浏览器扩展规格** — 打标当前页、按标签打开、服务发现 | [已确认](./2026-09-27-browser-extension.md)（[审核记录](./confirmed/2026-09-27-browser-extension-review.md)） |
 | 5 | **Explorer 集成规格** — 右键、路径→URI、调用的 API | [已确认](./2026-09-27-explorer-integration.md)（[审核记录](./confirmed/2026-09-27-explorer-integration-review.md)） |
-| 6 | **配置与安装** — Windows 安装/开机启动、端口、首次 token | 待讨论 |
+| 6 | **MCP 规格** — stdio Tools、与 CLI 同级、`IElApi` 预留 HTTP MCP | [已确认](./2026-09-27-mcp.md) |
+| 7 | **配置与安装** — Windows 安装/开机启动、端口、首次 token | 待讨论 |
 
 ## B. 实现（按依赖）
 
 | # | 事项 | 状态 |
 |---|---|---|
-| 7 | **Service 骨架** — 解决方案、SQLite 迁移、Minimal API、本机 token | 待讨论 |
-| 8 | **CRUD + 查询解析** — 标签/资源/绑定/**关系**与查询引擎 | 待讨论 |
-| 9 | **查询缓存** — `ITagQueryCache`（Memory 默认 + Redis）、suggest / preview / query | 待讨论 |
-| 10 | **CLI `el`** | 待讨论 |
-| 11 | **浏览器扩展（Windows 联调）** | 待讨论 |
-| 12 | **Explorer 上下文菜单包** | 待讨论 |
+| 8 | **Service 骨架** — 解决方案、SQLite 迁移、Minimal API、本机 token | 待讨论 |
+| 9 | **CRUD + 查询解析** — 标签/资源/绑定/**关系**与查询引擎 | 待讨论 |
+| 10 | **查询缓存** — `ITagQueryCache`（Memory 默认 + Redis）、suggest / preview / query | 待讨论 |
+| 11 | **CLI `el`** — 含共享 `EverythingLabeled.Client`（供 MCP / Explorer 复用） | 待讨论 |
+| 12 | **MCP stdio host** — `Mcp.Tools` + stdio；依赖 Client / Service | 待讨论 |
+| 13 | **浏览器扩展（Windows 联调）** | 待讨论 |
+| 14 | **Explorer 上下文菜单包** | 待讨论 |
 
 ## C. 明确延后（不进 v1 优先队列）
 
 | # | 事项 | 状态 |
 |---|---|---|
-| 13 | 多机同步协议 | 延后 |
-| 14 | 托盘壳、文件跟标、全盘索引 | 延后 |
+| 15 | 多机同步协议 | 延后 |
+| 16 | 托盘壳、文件跟标、全盘索引 | 延后 |
+| 17 | HTTP MCP（Service 内 `MapMcp` + InProc `IElApi`） | 延后（边界见 [MCP 规格 §7](./2026-09-27-mcp.md)） |

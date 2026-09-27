@@ -14,7 +14,7 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 |---|---|
 | 形态 | 本地后台服务 + 多端客户端 |
 | 同步 | 先单机；模型与 API 预留；v1 不做同步实现 |
-| v1 客户端 | Service API + CLI + 浏览器扩展 + Explorer 集成 |
+| v1 客户端 | Service API + CLI + 浏览器扩展 + Explorer 集成 + MCP（stdio） |
 | 平台 | Windows 优先；Service / CLI 避开 Windows-only API，便于日后多平台 |
 | 标签 | 扁平主名 + 可选命名空间；多别名；未设别名时默认别名 = 标签名；**网状关系 `TagRelation`（`child` / `related`），父子与子排序由 `child` + `Seq` 表达**；**返回标签默认按 `Seq` 升序，未设置或相同时按 `CreatedAt` 升序** |
 | 文件身份 | 仅路径；改名 / 移动不自动跟标 |
@@ -28,8 +28,8 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 ```text
 [CLI el] ──┐
 [Explorer] ─┼── HTTP JSON + Bearer token ──► [EverythingLabeled.Service]
-[浏览器扩展]┘                                      │
-                                                   ├─ ITagQueryCache (Memory | Redis)
+[浏览器扩展]┤                                      │
+[MCP stdio]┘                                      ├─ ITagQueryCache (Memory | Redis)
                                                    └─ SQLite
 ```
 
@@ -45,9 +45,10 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 | `el`（CLI） | 打标、查标、建议补全；只调 HTTP |
 | Explorer 集成 | 右键打标 / 按标签查找；`IExplorerCommand` / 稀疏包，避免老式 in-proc Shell Extension |
 | Browser extension | 当前页 URL 打标、按标签打开；Options 手动 `baseUrl`+token（读不到 AppData）；详见 [浏览器扩展规格](./2026-09-27-browser-extension.md)；日后可加 Native Messaging |
+| MCP（stdio） | Agent 工具面（与 CLI 同级）；`Client` + `Mcp.Tools` + stdio host；详见 [MCP 规格](./2026-09-27-mcp.md)；HTTP MCP 预留不进 v1 |
 
 - 监听：`127.0.0.1`（不暴露公网）。
-- 端口与 token 写入 `%AppData%/EverythingLabeled/config.json`，供 CLI / Explorer 等可读该文件的客户端使用；浏览器扩展 v1 在 Options 手动配置（见 [浏览器扩展规格](./2026-09-27-browser-extension.md)）。
+- 端口与 token 写入 `%AppData%/EverythingLabeled/config.json`，供 CLI / Explorer / MCP 等可读该文件的客户端使用；浏览器扩展 v1 在 Options 手动配置（见 [浏览器扩展规格](./2026-09-27-browser-extension.md)）。
 - API 前缀：`/v1/...`。
 
 ## 5. 查询缓存
@@ -145,4 +146,5 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 - [CLI 规格](./2026-09-26-cli.md)
 - [浏览器扩展规格](./2026-09-27-browser-extension.md)
 - [Explorer 集成规格](./2026-09-27-explorer-integration.md)
+- [MCP 规格](./2026-09-27-mcp.md)
 - 其余客户端实现计划（待开）
