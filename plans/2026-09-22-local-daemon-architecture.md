@@ -48,7 +48,7 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 | MCP（stdio） | Agent 工具面（与 CLI 同级）；`Client` + `Mcp.Tools` + stdio host；详见 [MCP 规格](./2026-09-27-mcp.md)；HTTP MCP 预留不进 v1 |
 
 - 监听：`127.0.0.1`（不暴露公网）。
-- 端口与 token 写入 `%AppData%/EverythingLabeled/config.json`，供 CLI / Explorer / MCP 等可读该文件的客户端使用；浏览器扩展 v1 在 Options 手动配置（见 [浏览器扩展规格](./2026-09-27-browser-extension.md)）。
+- 端口与 token 写入 `%AppData%/EverythingLabeled/config.json`，供 CLI / Explorer / MCP 等可读该文件的客户端使用；浏览器扩展 v1 在 Options 手动配置（见 [浏览器扩展规格](./2026-09-27-browser-extension.md)）。安装、自启与首次生成见 [配置与安装](./2026-09-27-config-and-install.md)。
 - API 前缀：`/v1/...`。
 
 ## 5. 查询缓存
