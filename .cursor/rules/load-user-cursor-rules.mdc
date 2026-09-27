@@ -1,0 +1,25 @@
+---
+description: 开聊后立刻读取 %USERPROFILE%\.cursor\rules 下全部 .mdc 并遵守
+alwaysApply: true
+---
+
+# Load user-level Cursor rules
+
+在本会话中，对任何**业务代码**的写入/修改之前，必须先完成以下步骤：
+
+1. 用 Read（或等价文件读取）读取 `%USERPROFILE%\.cursor\rules`（Windows 即 `C:\Users\<user>\.cursor\rules`）下**全部** `.mdc` 文件全文。
+2. 按各文件 frontmatter 遵守：
+   - `alwaysApply: true` → 本会话全程遵守
+   - 仅有 `globs` → 当编辑/涉及匹配路径时遵守
+   - 二者皆无 → 仍视为应知晓的用户级约定；有冲突时先问用户
+3. 未读完全部 `.mdc` 前：**禁止**新建或修改业务源码；仅允许列目录、读规则、澄清问题。
+
+## Do
+
+- 每个新对话开聊后尽快读取；同一会话内已读且文件未变可不再重读。
+- 用户级规则与项目 `.cursor/rules` 冲突时，先指出冲突并询问，再动手。
+
+## Do not
+
+- 假设用户级 `.mdc` 已由系统注入而跳过 Read。
+- 只读文件名或 frontmatter 而不读正文。
