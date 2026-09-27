@@ -4,8 +4,8 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8 Service 骨架已确认，grill Round 1 已落盘 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
-- 实现项 #8 待编码（grill 可续 Round 2）；#9–#14 仍待讨论；仓库尚无业务源码 / 解决方案
+- v1 设计基线已齐；#8 Service 骨架已确认，grill Round 1–3 已落盘 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
+- 实现项 #8 待编码（待 grill 收束确认）；#9–#14 仍待讨论；仓库尚无业务源码 / 解决方案
 - 延后不进 v1：多机同步、托盘/跟标/全盘索引、HTTP MCP
 
 ## 关键决策

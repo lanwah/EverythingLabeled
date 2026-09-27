@@ -16,3 +16,5 @@
 - 2026-09-27 — 安装项目看板规则与根目录 `project.md`（含闭环回写 / `plans/done.md`）
 - 2026-09-27 — 确认 #8 Service 骨架规格 → [Service 骨架](./2026-09-27-service-skeleton.md)
 - 2026-09-27 — grill Round 1 修订 Service 骨架（Mutex/WAL/信封404/日志保留/health dataVersion）并同步 HTTP API
+- 2026-09-27 — grill Round 2 修订 Service 骨架（`EL_APPDATA` / `EL_MUTEX_NAME` / dataVersion number / 迁库失败保留 db）
+- 2026-09-27 — grill Round 3 修订 Service 骨架（无 CORS / 访问日志 / Nullable+WAsE / 退出码不钉表）

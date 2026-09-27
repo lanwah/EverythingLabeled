@@ -39,6 +39,24 @@
 | Q5 | Serilog 滚动 | **A** — 按日，保留 14 天 |
 | Q6 | SQLite pragma | **A** — WAL + `busy_timeout=5000` |
 
+## C. Grill 审核 Round 2
+
+| # | 议题 | 确认 |
+|---|---|---|
+| Q7 | `EL_APPDATA` 语义 | **A** — 应用数据根（其下 config/data/logs） |
+| Q8 | 测试隔离 Mutex | **A** — 生产默认名；测试可用 `EL_MUTEX_NAME` |
+| Q9 | `dataVersion` JSON 类型 | **A** — 对外一律 number |
+| Q10 | `Migrate()` 失败 | **A** — 非 0 退出；保留半截 db，不自动删 |
+
+## D. Grill 审核 Round 3
+
+| # | 议题 | 确认 |
+|---|---|---|
+| Q11 | 失败退出码 | **A** — 一律非 0；不钉稳定码表 |
+| Q12 | CORS | **A** — #8 不加 |
+| Q13 | HTTP 访问日志 | **A** — Information；不记 Authorization |
+| Q14 | csproj 严格度 | **A** — Nullable + TreatWarningsAsErrors |
+
 ## 实现入口
 
-Grill 未全部结束前可继续 Round 2；规格以当前落盘为准。实现：按 [Service 骨架规格](../2026-09-27-service-skeleton.md) 并通过 §8 验收清单。
+Grill frontier 已空（见下轮收束确认）。实现：按 [Service 骨架规格](../2026-09-27-service-skeleton.md) 并通过 §8 验收清单。
