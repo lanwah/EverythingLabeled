@@ -4,10 +4,10 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- 设计基线已确认：架构、数据模型、HTTP API、查询语言、CLI、扩展、Explorer、MCP、配置安装（见 `plans/`）
-- v1 实现项 #8–#14 均「待讨论」，仓库尚无业务源码 / 解决方案骨架
-- 已安装项目看板规则（`.cursor/rules/project-board.mdc`）与本文件
-- 延后明确不进 v1：多机同步、托盘/跟标/全盘索引、HTTP MCP
+- v1 设计基线已齐（架构→配置安装）；明细见 `plans/`，完成史见 [done.md](plans/done.md)
+- 实现项 #8–#14 均「待讨论」；仓库尚无业务源码 / 解决方案骨架
+- 看板规则已对齐最新模板（闭环回写 + 已完成外链归档）
+- 延后不进 v1：多机同步、托盘/跟标/全盘索引、HTTP MCP
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -18,14 +18,16 @@
 - MCP v1 仅 stdio；HTTP MCP 延后 → [MCP](plans/2026-09-27-mcp.md)
 
 ## 待办
-- #8 Service 骨架（解决方案、SQLite 迁移、Minimal API、本机 token）
-- #9 CRUD + 查询解析（标签/资源/绑定/关系与查询引擎）
-- #10 查询缓存 `ITagQueryCache`
-- #11 CLI `el` + 共享 `EverythingLabeled.Client`
-- #12 MCP stdio host
-- #13 浏览器扩展（Windows 联调）
-- #14 Explorer 上下文菜单包
+- [ ] #8 Service 骨架（解决方案、SQLite 迁移、Minimal API、本机 token）
+- [ ] #9 CRUD + 查询解析（标签/资源/绑定/关系与查询引擎）
+- [ ] #10 查询缓存 `ITagQueryCache`
+- [ ] #11 CLI `el` + 共享 `EverythingLabeled.Client`
+- [ ] #12 MCP stdio host
+- [ ] #13 浏览器扩展（Windows 联调）
+- [ ] #14 Explorer 上下文菜单包
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
+
+已完成记录 → [plans/done.md](plans/done.md)
 
 ## 风险
 - 设计已齐、实现未开：讨论与编码间隙可能导致规格与落地漂移
