@@ -4,7 +4,7 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8 Service 骨架已实现并通过集成测试（sln、迁库、health/鉴权、Mutex/引导）→ [Service 骨架](plans/2026-09-27-service-skeleton.md)
+- v1 设计基线已齐；#8 Service 骨架已实现并通过集成测试 → [规格](plans/2026-09-27-service-skeleton.md) · [实现说明](docs/service-skeleton.md)
 - #9–#14 仍待讨论/实现；业务 CRUD / 查询引擎尚未开始
 - 延后不进 v1：多机同步、托盘/跟标/全盘索引、HTTP MCP
 
