@@ -26,7 +26,7 @@
 | 3 | **CLI 规格** — 命令集、读 config | [已确认](./2026-09-26-cli.md)（[审核记录](./confirmed/2026-09-26-cli-review.md)） |
 | 4 | **浏览器扩展规格** — 打标当前页、按标签打开、服务发现 | [已确认](./2026-09-27-browser-extension.md)（[审核记录](./confirmed/2026-09-27-browser-extension-review.md)） |
 | 5 | **Explorer 集成规格** — 右键、路径→URI、调用的 API | [已确认](./2026-09-27-explorer-integration.md)（[审核记录](./confirmed/2026-09-27-explorer-integration-review.md)） |
-| 6 | **MCP 规格** — stdio Tools、与 CLI 同级、`IElApi` 预留 HTTP MCP | [已确认](./2026-09-27-mcp.md) |
+| 6 | **MCP 规格** — stdio Tools、与 CLI 同级、`IElApi` 预留 HTTP MCP | [已确认](./2026-09-27-mcp.md)（[审核记录](./confirmed/2026-09-27-mcp-review.md)） |
 | 7 | **配置与安装** — Windows 安装/开机启动、端口、首次 token | 待讨论 |
 
 ## B. 实现（按依赖）
