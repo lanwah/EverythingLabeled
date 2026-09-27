@@ -274,4 +274,4 @@ v1 不实现同步协议；跨机文件资源仅能同步 URI 字符串元数据
 - [查询语言细则](./2026-09-26-query-language.md)（已确认）
 - [CLI 规格](./2026-09-26-cli.md)（已确认）
 - [浏览器扩展规格](./2026-09-27-browser-extension.md)（已确认）
-- Explorer 字段映射
+- [Explorer 集成规格](./2026-09-27-explorer-integration.md)（已确认；路径→URI / 字段约定）
