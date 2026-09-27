@@ -14,3 +14,5 @@
 - 2026-09-27 — 确认 MCP 规格（stdio；HTTP MCP 延后）→ [MCP](./2026-09-27-mcp.md)
 - 2026-09-27 — 确认配置与安装规格 → [配置与安装](./2026-09-27-config-and-install.md)
 - 2026-09-27 — 安装项目看板规则与根目录 `project.md`（含闭环回写 / `plans/done.md`）
+- 2026-09-27 — 确认 #8 Service 骨架规格 → [Service 骨架](./2026-09-27-service-skeleton.md)
+- 2026-09-27 — grill Round 1 修订 Service 骨架（Mutex/WAL/信封404/日志保留/health dataVersion）并同步 HTTP API
