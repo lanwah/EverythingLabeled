@@ -35,7 +35,7 @@
 | # | 事项 | 状态 |
 |---|---|---|
 | 8 | **Service 骨架** — 解决方案、SQLite 迁移、Minimal API、本机 token | [已确认](./2026-09-27-service-skeleton.md)（[审核记录](./confirmed/2026-09-27-service-skeleton-review.md)）；[已实现](../docs/service-skeleton.md) |
-| 9 | **CRUD + 查询解析** — 标签/资源/绑定/**关系**与查询引擎 | 待讨论 |
+| 9 | **CRUD + 查询解析** — 标签/资源/绑定/**关系**与查询引擎 | [已确认规格](./2026-09-29-crud-and-query.md)（[审核记录](./confirmed/2026-09-29-crud-and-query-review.md)）；待实现 |
 | 10 | **查询缓存** — `ITagQueryCache`（Memory 默认 + Redis）、suggest / preview / query | 待讨论 |
 | 11 | **CLI `el`** — 含共享 `EverythingLabeled.Client`（供 MCP / Explorer 复用） | 待讨论 |
 | 12 | **MCP stdio host** — `Mcp.Tools` + stdio；依赖 Client / Service | 待讨论 |
