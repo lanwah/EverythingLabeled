@@ -21,3 +21,4 @@
 - 2026-09-27 — 实现 #8 Service 骨架（sln、EF 迁库、health/鉴权、Mutex/config 引导、集成测试 8/8）→ [Service 骨架](./2026-09-27-service-skeleton.md)
 - 2026-09-27 — 撰写 #8 实现说明文档 → [docs/service-skeleton.md](../docs/service-skeleton.md)
 - 2026-09-29 — 确认 #9 CRUD + 查询解析实现规格 → [CRUD + 查询解析](./2026-09-29-crud-and-query.md)
+- 2026-09-29 — grill Round 1–4 修订 #9 规格（dirty/Revision/缓存键/ServiceResult/性能边界等）并展开审核问答 → [审核记录](./confirmed/2026-09-29-crud-and-query-review.md)
