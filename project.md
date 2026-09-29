@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8 Service 骨架已实现 → [规格](plans/2026-09-27-service-skeleton.md) · [实现说明](docs/service-skeleton.md)
-- #9 实现规格已确认（含 grill Round 1–4）→ [CRUD + 查询解析](plans/2026-09-29-crud-and-query.md) · [审核](plans/confirmed/2026-09-29-crud-and-query-review.md)
+- #9 实现规格已确认（含 grill Round 1–8；缓存专题 frontier 已空）→ [CRUD + 查询解析](plans/2026-09-29-crud-and-query.md) · [审核](plans/confirmed/2026-09-29-crud-and-query-review.md)
 - #10–#14 仍待讨论/实现；延后：多机同步、托盘/跟标、全盘索引、HTTP MCP
 
 ## 关键决策
@@ -16,7 +16,7 @@
 - 查询缓存可插拔（v1 默认 Memory，可配 Redis）→ [架构 §5](plans/2026-09-22-local-daemon-architecture.md)
 - MCP v1 仅 stdio；HTTP MCP 延后 → [MCP](plans/2026-09-27-mcp.md)
 - Service 骨架：单项目文件夹分层、EF Core Migrations、`el.db`、Serilog、health+鉴权最小集 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
-- #9：`Services/` + `ServiceResult`；显式 dirty / `CommitAsync`；`Revision` 自 0；查询三分流水线；Null 缓存与专用 suggest 键；§9 性能边界进验收 → [CRUD + 查询解析](plans/2026-09-29-crud-and-query.md)
+- #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；Null 缓存；Set 前复核；#10 须可配 Cache:*（SizeLimit/MaxEntrySize/TTL）+ 键索引/逐出回调 + singleflight + 不可变 DTO → [CRUD §2.3](plans/2026-09-29-crud-and-query.md)
 
 ## 待办
 - [ ] #9 CRUD + 查询解析（规格已确认，待实现）

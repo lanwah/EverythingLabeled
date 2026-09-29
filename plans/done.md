@@ -22,3 +22,7 @@
 - 2026-09-27 — 撰写 #8 实现说明文档 → [docs/service-skeleton.md](../docs/service-skeleton.md)
 - 2026-09-29 — 确认 #9 CRUD + 查询解析实现规格 → [CRUD + 查询解析](./2026-09-29-crud-and-query.md)
 - 2026-09-29 — grill Round 1–4 修订 #9 规格（dirty/Revision/缓存键/ServiceResult/性能边界等）并展开审核问答 → [审核记录](./confirmed/2026-09-29-crud-and-query-review.md)
+- 2026-09-29 — grill Round 5 钉死缓存写后正确性（原子 `data_version+1`；Set 前 version 复核、变则不写入）→ [CRUD + 查询解析](./2026-09-29-crud-and-query.md) · [审核 §G](./confirmed/2026-09-29-crud-and-query-review.md)
+- 2026-09-29 — grill Round 6 钉死 #10 防撑爆硬约束（SizeLimit；写后异步清旧 version 前缀；suggest/preview 短 TTL）→ [CRUD §2.3](./2026-09-29-crud-and-query.md) · [审核 §H](./confirmed/2026-09-29-crud-and-query-review.md)
+- 2026-09-29 — grill Round 7 缓存专题（合法空可缓存；singleflight；键索引前缀删；可配 MaxEntrySize；Memory 防御拷贝；仅成功 Set；绝对 TTL；#9 Commit 接线 InvalidatePrefix）→ [审核 §I](./confirmed/2026-09-29-crud-and-query-review.md)
+- 2026-09-29 — grill Round 8 缓存专题收束（Cache:* 可配默认；PostEviction 同步索引；record DTO；日志计数；清理失败不翻写）→ [审核 §J](./confirmed/2026-09-29-crud-and-query-review.md) · [CRUD §2.3](./2026-09-29-crud-and-query.md)

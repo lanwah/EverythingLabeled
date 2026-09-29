@@ -1,7 +1,7 @@
 # EverythingLabeled CRUD + 查询解析（#9）
 
 日期：2026-09-29  
-状态：已确认（v1 实现基线；主线澄清 + 设计 §1–§5 + grill Round 1–4）  
+状态：已确认（v1 实现基线；主线澄清 + 设计 §1–§5 + grill Round 1–8）  
 审核记录：[CRUD + 查询解析讨论确认](./confirmed/2026-09-29-crud-and-query-review.md)  
 关联：
 
@@ -18,9 +18,9 @@
 ## 1. 设计摘要
 
 - **范围**：在 #8 骨架上实装 [HTTP API](./2026-09-26-http-api.md) **全部业务路由** + [查询语言](./2026-09-26-query-language.md) 的 `query` / `preview`，以及 `suggest`（别名 + `NameInitials` 前缀）。
-- **与 #10**：读路径经 `ITagQueryCache`；#9 提供 **Null 实现**（直通 DB）。Memory / Redis、TTL、旧键清理 → #10。
+- **与 #10**：读路径经 `ITagQueryCache`；#9 提供 **Null 实现**（直通 DB）。Memory / Redis 实装 → #10，但须遵守下方 **#10 硬约束**（容量 / 旧前缀清理 / TTL）。
 - **工程**：保持单项目 `EverythingLabeled.Service`；新增 `Services/` 用例层；`Http/*Endpoints` 保持薄；**不**预建 `EverythingLabeled.Core`。
-- **数据访问**：写用例集中 `IUnitOfWork.CommitAsync()`（显式 dirty 才 bump）；查询冷路径以 **EF Core LINQ** 为主，难点允许局部 SQL / `FromSql`。
+- **数据访问**：写用例集中 `IUnitOfWork.CommitAsync()`（显式 dirty 才 **原子** bump）；查询冷路径以 **EF Core LINQ** 为主，难点允许局部 SQL / `FromSql`；读缓存 `Set` 前复核 `data_version`。
 - **简拼**：`INameInitialsGenerator` + 黄金用例表；NuGet 拼音库实现时选定（规格不钉包名）。
 - **落地文档**：实现完成后新增 `docs/crud-and-query.md`。
 
@@ -42,15 +42,33 @@
 
 ### 2.2 非目标
 
-- Memory / Redis 缓存实装与失效清理策略细节 → #10
+- Memory / Redis 缓存**实装** → #10（逻辑失效仍靠 `data_version` 键；#9 只 Null + 接口）
 - CLI / `EverythingLabeled.Client` / MCP / 浏览器扩展 / Explorer → #11+
 - 多机同步、文件跟标、全盘索引、HTTP MCP（已延后）
 - 拆出独立 Core 程序集
 - OpenAPI 产物（可选，不堵 #9）
 - 按 `Accept-Language` 切换查询 notice 文案
 
-## 3. 目录与组件
+### 2.3 对 #10 的硬约束（grill Round 6–8；实现时不可削弱）
 
+逻辑失效（写后读准）已由 `v{data_version}:…` 保证；下列约束防止**物理**撑爆并钉读路径语义：
+
+| 项 | 约束 |
+|---|---|
+| 配置面 | 节 `Cache:*`（精确键名 #10 定，须进 appsettings 示例）。至少可配：`Provider`、**SizeLimit**、**MaxEntrySize**、`SuggestTtl`、`PreviewTtl`。**禁止把 SizeLimit / MaxEntrySize 写死在代码里**；推荐默认：SizeLimit≈**128 MiB**、MaxEntrySize≈**2 MiB**、Suggest/Preview TTL=**60s**（均可覆盖） |
+| Memory 容量 | 必须 SizeLimit + 条目 Size 估算；满则压缩/逐出 |
+| 单条上限 | 超过 MaxEntrySize → **跳过 Set**，仍返回查库结果 |
+| 旧前缀清理 | dirty bump 后异步 `InvalidatePrefix`（旁路 version→键索引）；**不**默认同步 `InvalidateAll`。索引须在 **PostEvictionCallback**（或等价）中随逐出/过期同步移除，避免幽灵键 |
+| 清理失败 | 只打**警告日志**；**不**让写请求失败；靠 SizeLimit/TTL 兜底 |
+| TTL | suggest/preview：**绝对**短 TTL（可配）；命中不续期。query：默认不靠短 TTL |
+| 合并打库 | #10：按 cache key **singleflight**；#9 Null 不需要 |
+| 存值形态 | Memory：缓存专用**不可变/record DTO**（Set 拷入；TryGet 返回拷贝或只读视图）；Redis：序列化字节 |
+| 何可 Set | **仅**成功执行结果（含合法空列表）；软失败 / 4xx / 5xx / 展开触顶等不 Set |
+| 可观测性 | #10：至少日志或简易计数 hit / miss / skip(MaxEntrySize) / invalidate；**不**强制对外 stats 端点 |
+| 接线 | #9：`CommitAsync` dirty bump 后已调异步 `InvalidatePrefix(previous)`（Null no-op） |
+| Redis | 若启用：同样需要淘汰 / TTL / 前缀清理，不得无限增长（细节 #10） |
+
+## 3. 目录与组件
 ```text
 src/EverythingLabeled.Service/
 ├── Services/
@@ -79,7 +97,8 @@ src/EverythingLabeled.Service/
 ### 4.1 提交与 `data_version`
 
 - **公开写用例方法**结尾调用 `CommitAsync` **恰好一次**；内部 helper 只改实体 / 标 dirty，不 Commit。
-- `CommitAsync`：同事务 `SaveChanges` +（**显式 dirty** 时）`Meta.data_version++`。禁止靠 `ChangeTracker.HasChanges()` 猜测；禁止业务路径手写 bump。
+- `CommitAsync`：同事务 `SaveChanges` +（**显式 dirty** 时）对 `Meta.data_version` 做**原子 +1**（EF `ExecuteUpdate` 或等价 SQL `UPDATE … value = value + 1`）。禁止依赖请求早期已跟踪的 Meta 实体做内存 `++` 再写回（防并发丢更新）。禁止靠 `ChangeTracker.HasChanges()` 猜测；禁止业务路径手写 bump。
+- dirty bump 成功后：捕获 bump **前**的 version，**异步**调用 `ITagQueryCache.InvalidatePrefix`（按旧 version；Null 为 no-op）。清理失败只记警告日志，**不**使写请求失败。不在写请求上同步清空全库缓存。
 - 幂等无变更、同值 PATCH、已对齐的 reorder → dirty=false → HTTP 200，**不** bump；响应仍带**当前** `dataVersion`。
 - `POST /v1/relations/batch` 整批成功只 bump **一次**；成功 `data` = `{ "items": [...], "dataVersion": n }`。
 - 实体行更新时 `Revision++`；**新建** Tag / Resource / TagRelation 的 `Revision = 0`。
@@ -116,8 +135,10 @@ src/EverythingLabeled.Service/
 3. `QueryParser` → clauses；结构非法 → `400 bad_request`。
 4. 别名 → `TagId`（只用 `AliasNormalized`）。任一正词未知 → `ServiceResult` Ok + 空列表 + **英文** `Message`（如 `Unknown positive term '{token}'; returning empty result.`）→ HTTP `200`；**不**展开、**不**查集合、**不**走缓存。未知负词忽略并打日志。
 5. `expand=child` 时 `QueryExpander`：含自身；深度截断仅日志；去重后触顶 → `422 expansion_limit_exceeded`。
-6. `ITagQueryCache.TryGet`（Null：永未命中）→ `QueryExecutor`（EF LINQ 优先）→ `Set`（Null：no-op）。
-7. 缓存值为业务 **`data` DTO**（非信封）；`query` 含 `total`；`preview` **省略** `total`。
+6. 读取当前 `data_version` 组键 → `ITagQueryCache.TryGet`（Null：永未命中）→ miss 则 `QueryExecutor`（EF LINQ 优先）。
+7. **`Set` 前复核**：再读一次 `Meta.data_version`；若与组键时的 version **不同** → **不 Set**，仍把本次查库结果返回调用方（不强制按新 version 重查）。
+8. **仅成功结果可 Set**（含合法空 `items`）；软失败 / 校验与展开失败等不 Set。若条目超过可配 `MaxEntrySize` → 跳过 Set，仍返回结果。
+9. 缓存值为业务 **`data` DTO**（非信封）；`query` 含 `total`；`preview` **省略** `total`。Memory 实现须防御拷贝/不可变后再存（#10）。
 
 **`query` / `preview` 缓存键**：
 
@@ -140,7 +161,7 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 ### 5.2 `suggest`
 
 - **不**使用查询语法；`AliasNormalized` 前缀 **OR** `NameInitials` 前缀（禁止 `%x%` substring）。
-- 经 `ITagQueryCache`；简拚命中时 `alias` 字段规则见 HTTP API。
+- 经 `ITagQueryCache`；组键 / TryGet / Set 与 §5.1 相同（含 **Set 前 version 复核**）；简拚命中时 `alias` 字段规则见 HTTP API。
 
 ### 5.3 其它列表读
 
@@ -161,21 +182,21 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 | 层 | 覆盖 |
 |---|---|
 | 单元 | `QueryParser` / `NormalizeQuery` / 展开闸门；别名字符集；`child` 单父与成环；`NameInitials` 黄金用例；**缓存键工厂**（query/preview/suggest + 未展开占位）；Null 缓存行为 |
-| Service / SQLite | 临时文件或可控连接串（**不用** EF InMemory）；打标幂等与 `createMissing`；`relations/batch`；dirty/bump；最后别名拒绝 |
+| Service / SQLite | 临时文件或可控连接串（**不用** EF InMemory）；打标幂等与 `createMissing`；`relations/batch`；dirty/bump（含并发下 version 单调不丢）；最后别名拒绝；读路径 Set 前 version 变化则不写入缓存 |
 | HTTP 集成（#8 fixture） | 鉴权；标签 CRUD；打标；`query`/`preview`；未知正词英文 message；一例 `expand=child`；抽样性能边界（如超限 batch、无过滤 relations） |
 
 ### 7.2 完成定义
 
 1. HTTP API 业务路由均已注册且信封一致（含 batch `data` 形状、preview 无 `total`）。
 2. 查询行为与查询语言细则一致（含闸门、软失败英文 notice、日志 reason）。
-3. 写路径约束（别名 / 最后别名 / 单父 / 成环 / dirty bump / Revision）有自动化测试。
+3. 写路径约束（别名 / 最后别名 / 单父 / 成环 / dirty bump / 原子 `data_version+1` / Revision）有自动化测试。
 4. [HTTP API §9](./2026-09-26-http-api.md) 性能边界有对应拒绝行为与抽样测试。
-5. `ITagQueryCache` 已接线且为 Null；键工厂单测通过；#10 可只换实现。
+5. `ITagQueryCache` 已接线且为 Null；键工厂单测通过；读路径含 Set 前 version 复核钩子（Null 下可测「不调用 Set」分支）；#10 可只换实现。
 6. 上述测试本地 / CI 绿灯；实现说明 → `docs/crud-and-query.md`。
 
 ## 8. 实现顺序建议
 
-1. 横切：`ServiceResult`、code→HTTP 映射、`IUnitOfWork`（dirty）、`INameInitialsGenerator`、别名校验、`UriNormalizer`、缓存键工厂 + Null 缓存
+1. 横切：`ServiceResult`、code→HTTP 映射、`IUnitOfWork`（dirty + **原子 bump**）、`INameInitialsGenerator`、别名校验、`UriNormalizer`、缓存键工厂 + Null 缓存
 2. Tags + Aliases + Suggest（无关系）
 3. Resources + 打标
 4. Relations（约束 / 再读校验 / neighbors / batch / reorder）
@@ -196,9 +217,9 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 | Q6 | 测试 | A 分层 / B 全集成 / C 少集成 | **A** |
 | Q7 | 查询模块 | A 三分+Normalize / B 单引擎 / C Parser+合并执行 | **A** |
 
-## 10. 决策记录（Grill Round 1–4）
+## 10. 决策记录（Grill Round 1–8）
 
-候选全文见[审核记录 §C–§F](./confirmed/2026-09-29-crud-and-query-review.md)。
+候选全文见[审核记录 §C–§J](./confirmed/2026-09-29-crud-and-query-review.md)。
 
 | Round | # | 议题 | 候选摘要 | 确认 |
 |---|---|---|---|---|
@@ -228,3 +249,21 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 | 4 | Q24 | 打标碰 Resource？ | A 不碰 / B UpdatedAt+Revision / C 仅 UpdatedAt | **A** |
 | 4 | Q25 | 最后别名 | A 422 validation_failed / B 409 / C 400 | **A** |
 | 4 | Q26 | 回写范围 | A 规格+review+看板 / B 仅 review / C 新 plan | **A** |
+| 5 | Q27 | bump 防丢更新 | A 原子 +1 / B Reload+令牌 / C 接受极少丢失 | **A** |
+| 5 | Q28 | Set 前复核 version | A 变则不 Set / B 不复核 / C 整段只读事务 | **A**（不强制重查） |
+| 6 | Q29 | Memory 容量 | A SizeLimit+逐出 / B 仅 TTL / C 无硬顶只清前缀 | **A**（**可配**，禁写死） |
+| 6 | Q30 | 旧前缀清理 | A 写后异步 InvalidatePrefix / B 只靠逐出 / C 同步 InvalidateAll | **A** |
+| 6 | Q31 | TTL 分层 | A suggest/preview 短、query 靠 version / B 同一 TTL / C 全不过期 | **A** |
+| 7 | Q32 | 合法空结果 | A 缓存 / B 不缓存空 / C 空更短 TTL | **A** |
+| 7 | Q33 | singleflight | A #10 按键合并 / B 不做 / C 全局信号量 | **A** |
+| 7 | Q34 | Memory 前缀删 | A 旁路键索引 / B Memory 改 InvalidateAll / C 不真删 | **A** |
+| 7 | Q35 | MaxEntrySize | A 超限跳过 Set（**可配**） / B 无单条上限 / C 压缩再存 | **A** |
+| 7 | Q36 | 存值形态 | A Memory 拷贝+Redis 字节 / B 统一字节 / C 可变引用 | **A** |
+| 7 | Q37 | 错误入缓存 | A 仅成功可 Set / B 可缓存 4xx / C 422 也缓存 | **A** |
+| 7 | Q38 | TTL 绝对/滑动 | A 绝对 / B 滑动 / C 混用 | **A** |
+| 7 | Q39 | 清理接线 | A #9 Commit 已调 InvalidatePrefix / B #10 再挂 / C 仅 Redis | **A** |
+| 8 | Q40 | 配置面 | A Cache:* 可配+推荐默认 / B 仅容量可配 TTL 写死 / C 仅环境变量 | **A** |
+| 8 | Q41 | 索引与逐出 | A PostEvictionCallback / B 定期重建 / C 改 InvalidateAll | **A** |
+| 8 | Q42 | 防御拷贝手法 | A 不可变/record DTO / B JSON 往返 / C 深拷贝库 | **A** |
+| 8 | Q43 | 可观测性 | A 日志/计数 / B 对外 stats API / C 不做 | **A** |
+| 8 | Q44 | 清理失败 | A 警告+不失败写 / B 回退 InvalidateAll / C 写 5xx | **A** |

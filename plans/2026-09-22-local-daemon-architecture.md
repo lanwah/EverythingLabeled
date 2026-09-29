@@ -78,11 +78,12 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 
 ### 5.4 失效策略
 
-- SQLite `Meta` 表维护单调 `data_version`；任意标签 / 别名 / 绑定 / **关系** 写成功后递增。
+- SQLite `Meta` 表维护单调 `data_version`；任意标签 / 别名 / 绑定 / **关系** 写成功后递增（实现：同事务**原子 +1**，见 [CRUD + 查询解析](./2026-09-29-crud-and-query.md)）。
 - 缓存键（query / preview）：
   `v{data_version}:{op}:{normalized_query}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}`  
   规范化与未展开占位见 [查询语言细则](./2026-09-26-query-language.md)。
-- 写后不必逐键删除：version 前进即失效；可异步清理旧前缀。
+- **逻辑失效**：写后不必逐键删除；version 前进即旧键不再被查找。
+- **物理清理 / 防撑爆**（#10，[CRUD §2.3](./2026-09-29-crud-and-query.md)）：可配 `Cache:*`（SizeLimit / MaxEntrySize / TTL）；旁路键索引 + 逐出回调；异步清旧 version（失败只告警）；绝对短 TTL；singleflight；不可变 DTO；仅成功入缓存；#9 写路径已调 `InvalidatePrefix`。
 
 ### 5.5 未命中缓存时的库侧保障
 

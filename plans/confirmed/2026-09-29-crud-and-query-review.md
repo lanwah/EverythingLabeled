@@ -1,7 +1,7 @@
 # CRUD + 查询解析（#9）讨论确认记录
 
 日期：2026-09-29  
-方式：主线澄清（brainstorm，带推荐答案 → 用户确认）+ 设计 §1–§5 逐节确认 + grill Round 1–4  
+方式：主线澄清（brainstorm，带推荐答案 → 用户确认）+ 设计 §1–§5 逐节确认 + grill Round 1–8  
 已落盘同步：
 
 - [CRUD + 查询解析规格](../2026-09-29-crud-and-query.md)
@@ -401,6 +401,222 @@
 
 ---
 
+## G. Grill Round 5（缓存写后正确性）
+
+背景：审核「增/删/改后 query/preview/suggest 能否经 `data_version` 键拿到准确数据」。机制结论成立；补钉并发 bump 与读路径 Set 竞态。
+
+### Q27 — `CommitAsync` 如何 bump，避免并发丢更新？
+
+**问题**：两写并发若都对早期加载的 Meta 做内存 `++` 再写回，可能把 version 写成同一值，导致库已变但键前缀未跟上 → 缓存脏命中。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `CommitAsync` 内对 Meta 原子 `+1`（`ExecuteUpdate` 或等价 SQL）；不依赖请求早期跟踪实体 |
+| **B** | 事务内 `Reload` Meta 再 `++`，并配并发令牌；冲突重试 |
+| **C** | v1 本机单写为主，接受极少丢 bump；不特化 |
+
+**确认**：选推荐 **A**。
+
+### Q28 — 读路径 `Set` 前是否复核 `data_version`？
+
+**问题**：先读 version 组键 → 查库 → Set；若其间发生写 bump，可能把旧快照写入**当前** version 键。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `Set` 前再读 Meta；与组键 version 不同则 **不 Set**，仍返回本次查库结果（**不**强制按新 version 重查）；`suggest` 同规则 |
+| **B** | 不复核；接受孤儿键 / 极罕见错填 |
+| **C** | 整段读（version + 查库 + Set）包在同一只读事务 / 快照 |
+
+**确认**：选推荐 **A**。
+
+---
+
+## H. Grill Round 6（缓存容量与物理清理 → #10 硬约束）
+
+背景：逻辑失效靠 `data_version` 键已够「写后读准」；旧键与键碎片若不清理/不设硬顶，Memory/Redis **可能撑爆**。约束写入规格 §2.3，供 #10 实装。
+
+### Q29 — Memory 提供方的容量上限？
+
+**问题**：仅靠 version 逻辑失效时，旧键仍占内存。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `MemoryCache` + **SizeLimit**（条目 Size 估算）+ 满则压缩/逐出；配置可调；推荐默认约 128 MiB 量级 |
+| **B** | 仅靠 TTL，不设硬上限 |
+| **C** | 无 SizeLimit、无 TTL；只靠写后清旧 version 前缀 |
+
+**确认**：选推荐 **A**。
+
+### Q30 — 旧 `v{旧}:*` 物理清理时机？
+
+**问题**：version 前进后孤儿键何时从存储移除？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | dirty 写成功后**异步** `InvalidatePrefix("v{previous}:")`（与 bump 配合） |
+| **B** | 不主动清前缀；只靠 SizeLimit/LRU/TTL 自然挤掉 |
+| **C** | 写路径**同步** `InvalidateAll` |
+
+**确认**：选推荐 **A**。
+
+### Q31 — TTL 是否分层？
+
+**问题**：suggest/preview 键多易碎；query 更吃命中率。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `suggest` / `preview` 短 TTL（推荐默认 60s，可配）；`query` 默认不靠短 TTL，主要靠 version + SizeLimit |
+| **B** | 三类同一 TTL |
+| **C** | 全部不过期，只靠 version + 容量逐出 |
+
+**确认**：选推荐 **A**。
+
+---
+
+## I. Grill Round 7（缓存专题：空结果 / 击穿 / 前缀删 / 单条上限 / 形态 / 错误 / TTL / 接线）
+
+补充：用户确认 **`SizeLimit` 与 `MaxEntrySize` 均须可配置，禁止写死**（默认值仅为推荐）。
+
+### Q32 — 合法空结果要不要 Set？
+
+**问题**：解析成功、库侧 0 命中（非未知正词软失败）。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 缓存合法空结果（与非空相同：TryGet/Set + version 复核） |
+| **B** | 空结果不 Set |
+| **C** | 空结果单独更短 TTL |
+
+**确认**：选推荐 **A**。
+
+### Q33 — 同一键并发 miss 是否 singleflight？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | #10 按 cache key singleflight；#9 Null 不需要 |
+| **B** | v1 不做 |
+| **C** | 全局查询信号量，不按键合并 |
+
+**确认**：选推荐 **A**。
+
+### Q34 — Memory 下 `InvalidatePrefix` 怎么做？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 旁路「version → 键集合」索引；按索引删键 |
+| **B** | Memory bump 时改异步 `InvalidateAll`；Redis 仍前缀删 |
+| **C** | 不真前缀删；只靠 SizeLimit/TTL |
+
+**确认**：选推荐 **A**。
+
+### Q35 — 单条目过大？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 超过可配 `MaxEntrySize` 则跳过 Set，仍返回查库结果（**必须可配置，禁止写死**；推荐默认 1–2 MiB） |
+| **B** | 不设单条上限 |
+| **C** | 超大则压缩后再 Set |
+
+**确认**：选推荐 **A**（并强调与 `SizeLimit` 一样可配）。
+
+### Q36 — Memory 存值形态？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Memory：不可变/防御拷贝对象图；Redis：序列化字节 |
+| **B** | Memory/Redis 统一只存字节 |
+| **C** | Memory 存可变 DTO 引用，约定只读 |
+
+**确认**：选推荐 **A**。
+
+### Q37 — 非成功读路径能否 Set？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 仅成功执行结果（含合法空列表）可 Set |
+| **B** | 可缓存部分 4xx |
+| **C** | 展开触顶 422 也缓存 |
+
+**确认**：选推荐 **A**。
+
+### Q38 — suggest/preview 短 TTL：绝对还是滑动？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 绝对 TTL（写入起算；命中不续期） |
+| **B** | 滑动过期 |
+| **C** | suggest 滑动、preview 绝对 |
+
+**确认**：选推荐 **A**。
+
+### Q39 — 写成功异步清理由谁接线？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | #9 `CommitAsync` dirty bump 后已调异步 `InvalidatePrefix(previous)`（Null no-op） |
+| **B** | #9 不调用；#10 装饰器再挂 |
+| **C** | 仅 Redis 实现内自行处理 |
+
+**确认**：选推荐 **A**。
+
+---
+
+## J. Grill Round 8（配置 / 索引逐出 / 拷贝手法 / 可观测性 / 清理失败）
+
+### Q40 — 配置面与推荐默认？
+
+**问题**：SizeLimit、MaxEntrySize、TTL 等如何暴露？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `Cache:*`；推荐默认 SizeLimit≈128MiB、MaxEntrySize≈2MiB、Suggest/Preview TTL=60s；**全部可配**；键名 #10 定但须进 appsettings 示例 |
+| **B** | 仅 SizeLimit + MaxEntrySize 可配；TTL 写死 60s |
+| **C** | 全部仅代码常量 + 环境变量 |
+
+**确认**：选推荐 **A**。
+
+### Q41 — SizeLimit 逐出时旁路键索引如何同步？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `PostEvictionCallback`（或等价）逐出/过期时从索引移除 |
+| **B** | 不回调；Invalidate 忽略缺失键 + 定期重建索引 |
+| **C** | 不用索引；bump 时 Memory `InvalidateAll` |
+
+**确认**：选推荐 **A**。
+
+### Q42 — Memory 防御拷贝手法？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 缓存专用不可变/record DTO；Set 拷入，TryGet 返回拷贝或只读视图 |
+| **B** | Set/Get 都 JSON 往返 |
+| **C** | 深拷贝库 + 可变类型 |
+
+**确认**：选推荐 **A**。
+
+### Q43 — #10 可观测性？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 日志或简易计数：hit/miss/skip(MaxEntrySize)/invalidate；不强制对外 stats 端点 |
+| **B** | 暴露 meta 或 `/v1/cache/stats` |
+| **C** | v1 不做 |
+
+**确认**：选推荐 **A**。
+
+### Q44 — 异步 InvalidatePrefix 失败？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 警告日志；不失败写请求；SizeLimit/TTL 兜底 |
+| **B** | 失败则回退同步 InvalidateAll |
+| **C** | 失败则写请求 5xx |
+
+**确认**：选推荐 **A**。
+
+---
+
 ## 实现入口
 
-Grill frontier 已空。规格（含 grill 修订）为实现权威。下一动作：起草 #9 实现计划，或直接按规格 §8 顺序开工。
+**缓存专题 grill frontier 已空**（Round 5–8）。规格（含 §2.3）为实现与 #10 权威约束。下一动作：起草 #9 实现计划，或直接按规格 §8 顺序开工。
