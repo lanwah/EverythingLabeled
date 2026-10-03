@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8 Service 骨架已实现 → [规格](plans/2026-09-27-service-skeleton.md) · [实现说明](docs/service-skeleton.md)
-- #9 实现规格已确认（含 grill Round 1–8；缓存专题 frontier 已空）→ [CRUD + 查询解析](plans/2026-09-29-crud-and-query.md) · [审核](plans/confirmed/2026-09-29-crud-and-query-review.md)
+- #9 规格已确认；实现计划已起草（Task 1–6）→ [CRUD 规格](plans/2026-09-29-crud-and-query.md) · [实现计划](plans/2026-10-03-crud-and-query-impl.md)
 - #10–#14 仍待讨论/实现；延后：多机同步、托盘/跟标、全盘索引、HTTP MCP
 
 ## 关键决策
@@ -19,7 +19,7 @@
 - #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；Null 缓存；Set 前复核；#10 须可配 Cache:*（SizeLimit/MaxEntrySize/TTL）+ 键索引/逐出回调 + singleflight + 不可变 DTO → [CRUD §2.3](plans/2026-09-29-crud-and-query.md)
 
 ## 待办
-- [ ] #9 CRUD + 查询解析（规格已确认，待实现）
+- [ ] #9 CRUD + 查询解析（规格与实现计划已齐，待开工）
 - [ ] #10 查询缓存 `ITagQueryCache`
 - [ ] #11 CLI `el` + 共享 `EverythingLabeled.Client`
 - [ ] #12 MCP stdio host
@@ -35,4 +35,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-起草 #9 实现计划，或直接按 [CRUD + 查询解析 §8](plans/2026-09-29-crud-and-query.md) 顺序开工
+确认是否按 [#9 实现计划](plans/2026-10-03-crud-and-query-impl.md) 从 Task 1（横切 Result / UoW / Null 缓存）开工
