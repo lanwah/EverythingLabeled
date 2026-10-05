@@ -105,6 +105,8 @@ internal static class ServiceRuntime
             app.UseV1EnvelopeStatusPages();
 
             app.MapHealthEndpoints();
+            app.MapMetaEndpoints();
+            app.MapTagEndpoints();
 
             await app.RunAsync();
             return 0;

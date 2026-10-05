@@ -12,6 +12,8 @@ public static class ServiceRegistration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<ITagQueryCache, NullTagQueryCache>();
         services.AddSingleton<INameInitialsGenerator, NameInitialsGenerator>();
+        services.AddScoped<TagService>();
+        services.AddScoped<SuggestService>();
         return services;
     }
 }

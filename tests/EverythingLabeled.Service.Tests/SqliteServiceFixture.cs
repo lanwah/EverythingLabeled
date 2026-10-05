@@ -2,6 +2,7 @@ using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Services;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
+using EverythingLabeled.Service.Services.Tags;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -28,6 +29,12 @@ public sealed class SqliteServiceFixture : IAsyncDisposable
     public ElDbContext Db { get; }
     public IUnitOfWork Uow { get; }
     public ITagQueryCache Cache { get; }
+
+    public TagService GetTagService() =>
+        new(Db, Uow, new NameInitialsGenerator());
+
+    public SuggestService GetSuggestService() =>
+        new(Db, Cache);
 
     public static async Task<SqliteServiceFixture> CreateAsync(ITagQueryCache? cache = null)
     {
