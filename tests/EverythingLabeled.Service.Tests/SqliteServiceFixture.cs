@@ -3,6 +3,7 @@ using EverythingLabeled.Service.Services;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace EverythingLabeled.Service.Tests;
 
@@ -42,11 +43,13 @@ public sealed class SqliteServiceFixture : IAsyncDisposable
 
     public ElDbContext OpenNewContext() => OpenContext(DbPath);
 
-    public static ElDbContext OpenContext(string dbPath)
+    public static ElDbContext OpenContext(string dbPath, params IInterceptor[] interceptors)
     {
-        var options = new DbContextOptionsBuilder<ElDbContext>()
-            .UseSqlite(DatabaseInitializer.BuildConnectionString(dbPath))
-            .Options;
+        var builder = new DbContextOptionsBuilder<ElDbContext>()
+            .UseSqlite(DatabaseInitializer.BuildConnectionString(dbPath));
+        if (interceptors.Length > 0)
+            builder.AddInterceptors(interceptors);
+        var options = builder.Options;
         var db = new ElDbContext(options);
         db.Database.OpenConnection();
         db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=5000;");

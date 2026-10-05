@@ -20,8 +20,8 @@ public sealed class UnitOfWork(ElDbContext db, ITagQueryCache cache) : IUnitOfWo
         }
 
         await using var tx = await db.Database.BeginTransactionAsync(cancellationToken);
-        var previous = await DatabaseInitializer.GetDataVersionAsync(db, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+        var previous = await DatabaseInitializer.GetDataVersionAsync(db, cancellationToken);
         await db.Database.ExecuteSqlInterpolatedAsync(
             $"UPDATE Meta SET Value = CAST(Value AS INTEGER) + 1 WHERE Key = {ElDbContext.DataVersionKey}",
             cancellationToken);
@@ -29,8 +29,7 @@ public sealed class UnitOfWork(ElDbContext db, ITagQueryCache cache) : IUnitOfWo
         await tx.CommitAsync(cancellationToken);
         _dirty = false;
 
-        var prefix = $"v{previous}:";
-        _ = InvalidateQuietlyAsync(prefix);
+        _ = InvalidateQuietlyAsync($"v{previous}:");
 
         return next;
     }

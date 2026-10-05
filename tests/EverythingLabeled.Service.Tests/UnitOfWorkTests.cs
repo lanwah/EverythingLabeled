@@ -1,6 +1,7 @@
 using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Data.Entities;
 using EverythingLabeled.Service.Services;
+using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
 
 namespace EverythingLabeled.Service.Tests;
@@ -19,6 +20,23 @@ public sealed class UnitOfWorkTests
         await using var check = fx.OpenNewContext();
         Assert.Equal(3, await DatabaseInitializer.GetDataVersionAsync(check, CancellationToken.None));
         Assert.Equal(new[] { 2, 3 }, bumped.OrderBy(v => v).ToArray());
+    }
+
+    [Fact]
+    public async Task Concurrent_dirty_commits_invalidate_each_vacated_prefix()
+    {
+        var cache = new RecordingCache();
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        fx.Db.Tags.Add(MinimalTag("a"));
+        fx.Uow.MarkDirty();
+        await fx.Uow.CommitAsync(CancellationToken.None); // version 1
+
+        await Task.WhenAll(BumpAsync(fx.DbPath, cache), BumpAsync(fx.DbPath, cache));
+        await cache.WaitForInvalidateCountAsync(2);
+
+        Assert.Contains("v1:", cache.InvalidatedPrefixes);
+        Assert.Contains("v2:", cache.InvalidatedPrefixes);
+        Assert.Equal(2, cache.InvalidatedPrefixes.Distinct(StringComparer.Ordinal).Count());
     }
 
     [Fact]
@@ -56,10 +74,13 @@ public sealed class UnitOfWorkTests
         Assert.Empty(cache.InvalidatedPrefixes);
     }
 
-    private static async Task<int> BumpAsync(string dbPath)
+    private static Task<int> BumpAsync(string dbPath) =>
+        BumpAsync(dbPath, new NullTagQueryCache());
+
+    private static async Task<int> BumpAsync(string dbPath, ITagQueryCache cache)
     {
         await using var db = SqliteServiceFixture.OpenContext(dbPath);
-        var uow = new UnitOfWork(db, new NullTagQueryCache());
+        var uow = new UnitOfWork(db, cache);
         db.Tags.Add(MinimalTag(Guid.NewGuid().ToString("N")));
         uow.MarkDirty();
         return await uow.CommitAsync(CancellationToken.None);
