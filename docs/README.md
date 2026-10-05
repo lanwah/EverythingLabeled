@@ -5,5 +5,4 @@
 | 文档 | 对应实现 | 说明 |
 |---|---|---|
 | [Service 骨架](./service-skeleton.md) | backlog **#8** | 守护进程工程结构、启动、配置、health/鉴权、测试 |
-
-后续 #9+ 落地后在此表追加条目。
+| [CRUD 与查询](./crud-and-query.md) | backlog **#9** | 标签/资源/关系/查询落地布局、写路径 bump、缓存桩、如何跑测试 |
