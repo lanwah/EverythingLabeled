@@ -1,0 +1,18 @@
+namespace EverythingLabeled.Service.Services.Caching;
+
+public static class QueryCacheKeyFactory
+{
+    public static string ForQuery(
+        int dataVersion,
+        string op,
+        string normalizedQuery,
+        string expand,
+        int maxDepth,
+        int expandedTagLimit,
+        int limit,
+        int offset) =>
+        $"v{dataVersion}:{op}:{normalizedQuery}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}";
+
+    public static string ForSuggest(int dataVersion, string normalizedPrefix, int limit) =>
+        $"v{dataVersion}:suggest:{normalizedPrefix}:{limit}";
+}

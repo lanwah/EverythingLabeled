@@ -76,6 +76,7 @@ internal static class ServiceRuntime
 
             var connectionString = DatabaseInitializer.BuildConnectionString(paths.DatabasePath);
             builder.Services.AddDbContext<ElDbContext>(options => options.UseSqlite(connectionString));
+            builder.Services.AddEverythingLabeledServices();
 
             await using var app = builder.Build();
 
