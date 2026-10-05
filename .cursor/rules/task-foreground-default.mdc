@@ -1,0 +1,21 @@
+---
+description: SDD / Task 子代理默认前台执行，避免后台完成通知丢失导致停等「继续」
+alwaysApply: true
+---
+
+# Task 子代理默认前台
+
+在本仓库用 Task 工具派实现 / 复审 / 修复子代理时：
+
+## Do
+
+- **默认前台**：不设 `run_in_background: true`（或显式 `false`），父代理阻塞到子代理返回后，在同一回合内立刻复审、修问题或开下一任务。
+- 仅当任务彼此独立、可真正并行，且用户明确要求后台时，才用 `run_in_background: true`。
+- 子代理 `DONE` / `DONE_WITH_CONCERNS` / 崩溃（`Premature close` / `WritableIterable is closed`）后：父代理自己 harvest（ledger、`git log`、report），**禁止**停下来等用户发「继续」。
+- 只有需要用户拍板的决策才打断用户。
+
+## Do not
+
+- 串行 SDD（实现 → 复审 → 修 → 下一任务）不要用后台 Task。
+- 不要依赖本地 shell 轮询 transcript 当主唤醒链路。
+- 不要在子代理仍在跑时用「进度汇报 + 收工」代替前台等待。

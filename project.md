@@ -4,8 +4,7 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8 Service 骨架已实现 → [规格](plans/2026-09-27-service-skeleton.md) · [实现说明](docs/service-skeleton.md)
-- #9 规格已确认；实现计划已按 grill Q1–Q11 修订 → [CRUD 规格](plans/2026-09-29-crud-and-query.md) · [实现计划](plans/2026-10-03-crud-and-query-impl.md)
+- v1 设计基线已齐；#8 Service 骨架与 #9 CRUD + 查询解析已合入 `master`（117 测通过）→ [骨架规格](plans/2026-09-27-service-skeleton.md) · [CRUD 规格](plans/2026-09-29-crud-and-query.md) · [实现计划](plans/2026-10-03-crud-and-query-impl.md) · [说明](docs/crud-and-query.md)
 - #10–#14 仍待讨论/实现；延后：多机同步、托盘/跟标、全盘索引、HTTP MCP
 
 ## 关键决策
@@ -19,7 +18,6 @@
 - #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；Null 缓存；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [实现计划](plans/2026-10-03-crud-and-query-impl.md)
 
 ## 待办
-- [ ] #9 CRUD + 查询解析（规格与实现计划已齐，待开工）
 - [ ] #10 查询缓存 `ITagQueryCache`
 - [ ] #11 CLI `el` + 共享 `EverythingLabeled.Client`
 - [ ] #12 MCP stdio host
@@ -30,9 +28,9 @@
 已完成记录 → [plans/done.md](plans/done.md)
 
 ## 风险
-- 查询「必须快」依赖缓存与查询引擎一次做对；#9 先做对冷路径，#10 接缓存
+- 查询「必须快」依赖缓存与查询引擎一次做对；#9 冷路径已落地，#10 接可插拔缓存
 - Explorer / 浏览器扩展联调依赖 Service 业务 API，易成进度瓶颈
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-确认是否按 [#9 实现计划](plans/2026-10-03-crud-and-query-impl.md) 从 Task 1（横切 Result / UoW / Null 缓存）开工
+与用户确认是否按 backlog 开工 #10 查询缓存 `ITagQueryCache`（规格讨论 / 起草实现计划）→ [roadmap](plans/2026-09-23-roadmap-backlog.md) · [CRUD §2.3](plans/2026-09-29-crud-and-query.md)
