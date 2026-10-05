@@ -89,4 +89,46 @@ public sealed class TagServiceTests
         Assert.False(r.IsSuccess);
         Assert.Equal(ErrorCodes.BadRequest, r.Code);
     }
+
+    [Fact]
+    public async Task Create_duplicate_normalized_aliases_is_alias_conflict_without_bump()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var r = await fx.GetTagService().CreateAsync(
+            new CreateTagRequest("Work", null, null, ["Foo", "foo"]),
+            CancellationToken.None);
+        Assert.False(r.IsSuccess);
+        Assert.Equal(ErrorCodes.AliasConflict, r.Code);
+        Assert.Equal(0, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Create_with_null_name_fails_without_throwing()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var r = await fx.GetTagService().CreateAsync(
+            new CreateTagRequest(null, null, null, null),
+            CancellationToken.None);
+        Assert.False(r.IsSuccess);
+        Assert.True(
+            r.Code is ErrorCodes.ValidationFailed or ErrorCodes.BadRequest,
+            $"expected validation_failed or bad_request, got {r.Code}");
+        Assert.Equal(0, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AddAlias_with_null_alias_fails_without_throwing()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var tags = fx.GetTagService();
+        var created = await tags.CreateAsync(new CreateTagRequest("工作", null, null, null), CancellationToken.None);
+        Assert.True(created.IsSuccess);
+
+        var r = await tags.AddAliasAsync(created.Data!.Id, null, CancellationToken.None);
+        Assert.False(r.IsSuccess);
+        Assert.True(
+            r.Code is ErrorCodes.ValidationFailed or ErrorCodes.BadRequest,
+            $"expected validation_failed or bad_request, got {r.Code}");
+        Assert.Equal(created.Data.DataVersion, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    }
 }

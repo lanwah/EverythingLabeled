@@ -4,8 +4,14 @@ public static class AliasRules
 {
     public static string Normalize(string alias) => alias.Trim().ToLowerInvariant();
 
-    public static bool TryValidate(string alias, out string reason)
+    public static bool TryValidate(string? alias, out string reason)
     {
+        if (alias is null)
+        {
+            reason = "alias_rejected_empty";
+            return false;
+        }
+
         var trimmed = alias.Trim();
         if (trimmed.Length == 0)
         {

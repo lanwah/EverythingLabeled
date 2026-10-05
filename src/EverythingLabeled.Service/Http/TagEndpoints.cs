@@ -29,8 +29,7 @@ public static class TagEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            var decoded = Uri.UnescapeDataString(alias);
-            await context.WriteAsync(await tags.GetByAliasAsync(decoded, cancellationToken));
+            await context.WriteAsync(await tags.GetByAliasAsync(alias, cancellationToken));
         });
 
         app.MapGet("/v1/tags", async (
@@ -108,8 +107,7 @@ public static class TagEndpoints
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            var decoded = Uri.UnescapeDataString(alias);
-            await context.WriteAsync(await tags.DeleteAliasAsync(id, decoded, cancellationToken));
+            await context.WriteAsync(await tags.DeleteAliasAsync(id, alias, cancellationToken));
         });
     }
 

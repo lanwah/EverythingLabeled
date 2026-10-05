@@ -35,11 +35,11 @@ public sealed record SuggestItemDto(
     string NameInitials);
 
 public sealed record CreateTagRequest(
-    string Name,
+    string? Name,
     string? Namespace,
     int? Seq,
     IReadOnlyList<string>? Aliases);
 
 public sealed record PatchTagRequest(string? Name, string? Namespace, int? Seq);
 
-public sealed record AddAliasRequest(string Alias);
+public sealed record AddAliasRequest(string? Alias);

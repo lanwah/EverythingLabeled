@@ -75,13 +75,25 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
 
     public async Task<ServiceResult<TagWriteDto>> CreateAsync(CreateTagRequest body, CancellationToken ct)
     {
-        var aliases = body.Aliases is { Count: > 0 } ? body.Aliases : [body.Name];
+        if (string.IsNullOrWhiteSpace(body.Name))
+        {
+            return ServiceResult<TagWriteDto>.Fail(
+                ErrorCodes.ValidationFailed,
+                "Name is required.");
+        }
+
+        var name = body.Name;
+        var aliases = body.Aliases is { Count: > 0 } ? body.Aliases : [name];
         var rejected = RejectAliases<TagWriteDto>(aliases);
         if (rejected is not null)
             return rejected;
 
-        if (await NameTakenAsync(body.Namespace, body.Name, excludeId: null, ct))
-            return NameConflict<TagWriteDto>(body.Name);
+        var intraConflict = DuplicateNormalizedAlias<TagWriteDto>(aliases);
+        if (intraConflict is not null)
+            return intraConflict;
+
+        if (await NameTakenAsync(body.Namespace, name, excludeId: null, ct))
+            return NameConflict<TagWriteDto>(name);
 
         foreach (var alias in aliases)
         {
@@ -94,9 +106,9 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         var tag = new Tag
         {
             Id = Guid.NewGuid(),
-            Name = body.Name,
-            NameNormalized = NormalizeName(body.Name),
-            NameInitials = initials.FromName(body.Name),
+            Name = name,
+            NameNormalized = NormalizeName(name),
+            NameInitials = initials.FromName(name),
             Namespace = body.Namespace,
             Seq = body.Seq,
             CreatedAt = now,
@@ -178,25 +190,26 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         return ServiceResult<DataVersionDto>.Ok(new DataVersionDto(version));
     }
 
-    public async Task<ServiceResult<TagWriteDto>> AddAliasAsync(Guid id, string alias, CancellationToken ct)
+    public async Task<ServiceResult<TagWriteDto>> AddAliasAsync(Guid id, string? alias, CancellationToken ct)
     {
         var rejected = RejectAliases<TagWriteDto>([alias]);
         if (rejected is not null)
             return rejected;
 
+        var value = alias!;
         var tag = await LoadTagAsync(id, ct);
         if (tag is null)
             return NotFound<TagWriteDto>();
 
-        var conflict = await AliasTakenAsync(alias, ct);
+        var conflict = await AliasTakenAsync(value, ct);
         if (conflict is not null)
             return conflict;
 
         tag.Aliases.Add(new TagAlias
         {
             TagId = tag.Id,
-            Alias = alias,
-            AliasNormalized = AliasRules.Normalize(alias),
+            Alias = value,
+            AliasNormalized = AliasRules.Normalize(value),
         });
         uow.MarkDirty();
         var version = await uow.CommitAsync(ct);
@@ -250,12 +263,24 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         if (!exists)
             return null;
 
-        return ServiceResult<TagWriteDto>.Fail(
-            ErrorCodes.AliasConflict,
-            $"Alias '{alias}' already exists.");
+        return AliasConflict<TagWriteDto>(alias);
     }
 
-    private static ServiceResult<T>? RejectAliases<T>(IReadOnlyList<string> aliases)
+    private static ServiceResult<T>? DuplicateNormalizedAlias<T>(IReadOnlyList<string?> aliases)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var alias in aliases)
+        {
+            if (alias is null)
+                continue;
+            if (!seen.Add(AliasRules.Normalize(alias)))
+                return AliasConflict<T>(alias);
+        }
+
+        return null;
+    }
+
+    private static ServiceResult<T>? RejectAliases<T>(IReadOnlyList<string?> aliases)
     {
         foreach (var alias in aliases)
         {
@@ -277,6 +302,9 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
 
     private static ServiceResult<T> NameConflict<T>(string name) =>
         ServiceResult<T>.Fail(ErrorCodes.NameConflict, $"Name '{name}' already exists in this namespace.");
+
+    private static ServiceResult<T> AliasConflict<T>(string alias) =>
+        ServiceResult<T>.Fail(ErrorCodes.AliasConflict, $"Alias '{alias}' already exists.");
 
     private static string NormalizeName(string name) => name.ToLowerInvariant();
 

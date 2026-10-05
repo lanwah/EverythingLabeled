@@ -46,6 +46,32 @@ public sealed class HttpCrudIntegrationTests
         Assert.Equal(dataVersion, metaJson.GetProperty("data").GetProperty("dataVersion").GetInt32());
     }
 
+    [Fact]
+    public async Task By_alias_route_uses_single_url_decode()
+    {
+        // Client sends %2541; ASP.NET binds {alias} as "%41". A second UnescapeDataString
+        // would turn that into "A" and miss the stored alias.
+        await using var fx = ServiceProcessFixture.CreateIsolated();
+        fx.WriteConfigForFreePort();
+        await fx.StartAsync();
+
+        using var client = fx.CreateClient(fx.Config!.Token);
+        using var createdResponse = await client.PostAsJsonAsync(
+            "/v1/tags",
+            new { name = "pct", aliases = new[] { "%41" } });
+        Assert.Equal(HttpStatusCode.OK, createdResponse.StatusCode);
+        var createdJson = await ReadJsonAsync(createdResponse);
+        Assert.Equal("ok", createdJson.GetProperty("status").GetString());
+        var id = createdJson.GetProperty("data").GetProperty("id").GetGuid();
+
+        using var byAlias = await client.GetAsync("/v1/tags/by-alias/%2541");
+        Assert.Equal(HttpStatusCode.OK, byAlias.StatusCode);
+        var byAliasJson = await ReadJsonAsync(byAlias);
+        Assert.Equal("ok", byAliasJson.GetProperty("status").GetString());
+        Assert.Equal(id, byAliasJson.GetProperty("data").GetProperty("id").GetGuid());
+        Assert.Contains("%41", byAliasJson.GetProperty("data").GetProperty("aliases").EnumerateArray().Select(e => e.GetString()));
+    }
+
     private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response)
     {
         await using var stream = await response.Content.ReadAsStreamAsync();
