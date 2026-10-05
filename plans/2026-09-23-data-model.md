@@ -158,7 +158,7 @@ Meta (key-value，含 data_version)
 - 去掉 `#fragment`
 - 保留 query（不同 query 视为不同资源）
 
-`Kind` 由调用方或根据 URI 判定：目录显式标 `folder`，普通文件 `file`，`http(s)` 为 `url`。
+`Kind` 由调用方或根据 URI 判定：目录须**显式** `folder`，普通文件 `file`，`http(s)` 为 `url`。规范化后 scheme 与 kind 不兼容 → HTTP `422`（`kind_uri_mismatch`）；`file://` 不得标成 `url`，`http(s)` 不得标成 `file`/`folder`。
 
 ## 3. 索引
 

@@ -27,3 +27,4 @@
 - 2026-09-29 — grill Round 7 缓存专题（合法空可缓存；singleflight；键索引前缀删；可配 MaxEntrySize；Memory 防御拷贝；仅成功 Set；绝对 TTL；#9 Commit 接线 InvalidatePrefix）→ [审核 §I](./confirmed/2026-09-29-crud-and-query-review.md)
 - 2026-09-29 — grill Round 8 缓存专题收束（Cache:* 可配默认；PostEviction 同步索引；record DTO；日志计数；清理失败不翻写）→ [审核 §J](./confirmed/2026-09-29-crud-and-query-review.md) · [CRUD §2.3](./2026-09-29-crud-and-query.md)
 - 2026-10-03 — 起草 #9 CRUD + 查询解析实现计划（Task 1–6）→ [实现计划](./2026-10-03-crud-and-query-impl.md)
+- 2026-10-05 — grill 实现计划 Q1–Q11 并回写计划与契约（preview limit=50、写回执 dataVersion、分页 400、suggest 无 offset、kind 校验、Cache 键名等）→ [实现计划](./2026-10-03-crud-and-query-impl.md) · [审核 §K](./confirmed/2026-09-29-crud-and-query-review.md)

@@ -8,7 +8,7 @@
 
 **Tech Stack:** .NET 8、EF Core 8 + SQLite、Minimal API、xunit、Serilog。拼音库实现时选定（黄金用例锁定行为）。测试：单元不碰库；Service 层用临时 SQLite 文件（禁止 EF InMemory）；HTTP 用现有 `ServiceProcessFixture`。
 
-**Spec:** [plans/2026-09-29-crud-and-query.md](./2026-09-29-crud-and-query.md)（实现边界）。契约全文：[HTTP API](./2026-09-26-http-api.md)、[查询语言](./2026-09-26-query-language.md)、[数据模型](./2026-09-23-data-model.md)。审核：[confirmed/2026-09-29-crud-and-query-review.md](./confirmed/2026-09-29-crud-and-query-review.md)。
+**Spec:** [plans/2026-09-29-crud-and-query.md](./2026-09-29-crud-and-query.md)（实现边界）。契约全文：[HTTP API](./2026-09-26-http-api.md)、[查询语言](./2026-09-26-query-language.md)、[数据模型](./2026-09-23-data-model.md)。审核：[confirmed/2026-09-29-crud-and-query-review.md](./confirmed/2026-09-29-crud-and-query-review.md)（含实现计划 grill Round 1–3，2026-10-03）。
 
 ## Global Constraints
 
@@ -22,9 +22,14 @@
 - 新建 Tag / Resource / TagRelation 的 `Revision = 0`；更新该行 `Revision++`。仅插删 `ResourceTag` **不**碰 Resource 的 `UpdatedAt`/`Revision`。
 - 查询未知正词：`Ok` + 空列表 + 英文 `Message`：`Unknown positive term '{token}'; returning empty result.`；不展开、不查集合、不走缓存。
 - 缓存键为不透明相等串；**禁止**按 `:` split 解析字段。
-- #9 只接线 `NullTagQueryCache`；Memory/Redis、singleflight、SizeLimit 实装 → #10。但 `appsettings.json` 的 `Cache:*` 须含可配键占位（Provider / SizeLimit / MaxEntrySize / SuggestTtl / PreviewTtl），**禁止把 SizeLimit/MaxEntrySize 写死在业务代码里**。
-- Service 测试 **不用** EF InMemory。提交说明格式：`#9 …`（本仓库约定，不用 conventional commits）。
-- 路由：字面量段先于 `{id}`（`by-alias`、`resources/tags`、`by-uri`、`relations/batch`、`relations/reorder`）。
+- #9 只接线 `NullTagQueryCache`；Memory/Redis、singleflight、SizeLimit 实装 → #10。`Cache:*` 键名已钉死（#9 写入 appsettings，#10 只绑定不改名）：`Provider`、`SizeLimit`、`MaxEntrySize`、`SuggestTtl`、`PreviewTtl`。数值：SizeLimit/MaxEntrySize 为**字节整数**；TTL 为 `"00:01:00"`。**禁止把 SizeLimit/MaxEntrySize 写死在业务代码里**。
+- Service 测试 **不用** EF InMemory。commit subject 用仓库递增 `#序号`（当前之后为 `#27` 起），**不要**写成 backlog `#9`；conventional commits 不用。
+- 路由：字面量段先于 `{id}`。`GET /v1/tags/suggest` 与 `by-alias` 注册在 **`TagEndpoints`**（先于 `{id}`）。`QueryEndpoints` **只**映射 `/v1/query` 与 `/v1/query/preview`。
+- 分页：`offset` 默认 0、`limit` 默认 50、上限 1024。非整数、负数、`limit=0`、`limit>1024` → `400 bad_request`（`param_invalid`），**不** clamp。`query` 与 `preview` 省略 `limit` 均为 **50**（**不**读 `AppConfig.PreviewLimit`）。
+- `GET /v1/tags/suggest`：只第一页；省略 `offset` 或 `offset=0`；`offset>0` → `400`。响应含 `total`，`offset` 恒为 0。缓存键不含 offset。
+- 写成功 `data`：实体字段与读模型相同，**扁平多** `dataVersion`（`TagWriteDto` / `ResourceWriteDto` 等）。删除成功 `data` 至少 `{ "dataVersion": n }`。列表/详情分 DTO（资源列表无 `tags` 属性）；**不**改 `ApiEnvelope` 的 `DefaultIgnoreCondition.Never`。
+- URI：规范化后校验 scheme 与 `kind`；不兼容 → `422 validation_failed`，`details.reason=kind_uri_mismatch`。`http(s)` 只能 `url`；`file://` 默认 `file`，目录必须显式 `folder`。
+- Suggest 与 query/preview 共用 `QueryCachePipeline`（TryGet → load → 复核 version → 条件 Set）。`HttpErrorMap` 穷尽 `switch`；漏码编译不过；运行期默认分支记 Error 再 500。
 - 契约细节以 HTTP API / 查询语言 / 数据模型为准；本计划不覆盖 OpenAPI、CLI、MCP、拆 Core。
 
 ---
@@ -46,7 +51,8 @@ src/EverythingLabeled.Service/
 ├── Services/UnitOfWork.cs
 ├── Services/Caching/
 │   ├── NullTagQueryCache.cs
-│   └── QueryCacheKeyFactory.cs
+│   ├── QueryCacheKeyFactory.cs
+│   └── QueryCachePipeline.cs           # TryGet / load / 复核 version / Set
 ├── Services/Tags/
 │   ├── AliasRules.cs
 │   ├── NameInitialsGenerator.cs
@@ -76,7 +82,7 @@ src/EverythingLabeled.Service/
 │   ├── TagEndpoints.cs
 │   ├── ResourceEndpoints.cs
 │   ├── RelationEndpoints.cs
-│   └── QueryEndpoints.cs                   # query / preview / suggest
+│   └── QueryEndpoints.cs                   # 仅 /v1/query 与 /preview
 tests/EverythingLabeled.Service.Tests/
 ├── SqliteServiceFixture.cs                 # 临时 el.db + Migrate + 可选 RecordingCache
 ├── AliasRulesTests.cs
@@ -155,7 +161,7 @@ public readonly record struct Paging(int Offset, int Limit)
 {
     public const int DefaultLimit = 50;
     public const int MaxLimit = 1024;
-    // TryParse query strings → Ok or Fail(bad_request). over MaxLimit → bad_request.
+    // 缺省 offset=0、limit=50。非整数 / 负数 / limit=0 / limit>1024 → Fail(bad_request)。不 clamp。
 }
 
 public sealed class Paged<T>
@@ -206,9 +212,23 @@ public static class AliasRules
     //         | alias_rejected_control | alias_rejected_reserved
 }
 
+public static class QueryCachePipeline
+{
+    // load 仅在 miss 时调用。versionAfter != versionAtKey → 不 Set，仍返回 load 结果。
+    public static Task<T> GetOrLoadAsync<T>(
+        ITagQueryCache cache,
+        string key,
+        int versionAtKey,
+        Func<CancellationToken, Task<int>> readDataVersion,
+        Func<CancellationToken, Task<T>> load,
+        CancellationToken cancellationToken) where T : class;
+}
+
 public static class UriNormalizer
 {
-    public static ServiceResult<(string Uri, string InferredKind)> Normalize(string uri, string? kindHint);
+    // 规范化字符串；再按 kindHint 与 scheme 校验。不兼容 → Fail(validation_failed, details.reason=kind_uri_mismatch)。
+    // kindHint 为空：http(s)→url；file→file（folder 不得仅靠推断）。
+    public static ServiceResult<(string Uri, string Kind)> Normalize(string uri, string? kindHint);
 }
 
 public static class QueryExpansionLimits
@@ -328,7 +348,7 @@ public sealed class UriNormalizerTests
         var r = UriNormalizer.Normalize(@"C:\Users\example\doc.txt", "file");
         Assert.True(r.IsSuccess);
         Assert.Equal("file:///C:/Users/example/doc.txt", r.Data.Uri);
-        Assert.Equal("file", r.Data.InferredKind);
+        Assert.Equal("file", r.Data.Kind);
     }
 
     [Fact]
@@ -337,7 +357,15 @@ public sealed class UriNormalizerTests
         var r = UriNormalizer.Normalize("HTTPS://Example.COM:443/a?x=1#frag", null);
         Assert.True(r.IsSuccess);
         Assert.Equal("https://example.com/a?x=1", r.Data.Uri);
-        Assert.Equal("url", r.Data.InferredKind);
+        Assert.Equal("url", r.Data.Kind);
+    }
+
+    [Fact]
+    public void Https_with_file_kind_is_mismatch()
+    {
+        var r = UriNormalizer.Normalize("https://example.com/a", "file");
+        Assert.False(r.IsSuccess);
+        Assert.Equal(ErrorCodes.ValidationFailed, r.Code);
     }
 }
 ```
@@ -412,7 +440,9 @@ await _db.Database.ExecuteSqlInterpolatedAsync(
 | not_found, tag_not_found, resource_not_found | 404 |
 | alias_conflict, name_conflict, uri_conflict, relation_conflict, relation_cycle, resource_id_uri_mismatch | 409 |
 | validation_failed, batch_limit_exceeded, expansion_limit_exceeded | 422 |
-| internal_error 及其它未知 | 500 |
+| internal_error | 500 |
+
+`StatusFor` 必须穷尽 `ErrorCodes` 全部常量（switch 无 `default` 吞未知码，或 `_ =>` 仅 `internal_error` 且单测锁死码表）。漏映射 = 编译失败或测试失败，禁止静默当 500 当「还没写映射」。
 
 `EndpointExtensions.WriteAsync(HttpContext, ServiceResult<T>)`：成功 → `ApiEnvelope.WriteOkAsync(data, message)`；失败 → `WriteErrorAsync(StatusFor(code), message, code, details)`。
 
@@ -436,8 +466,10 @@ Expected: PASS。再跑全量确认 #8 骨架测试仍绿：`dotnet test Everyth
 
 ```bash
 git add src/EverythingLabeled.Service tests/EverythingLabeled.Service.Tests
-git commit -m "#9 横切 ServiceResult、原子 bump UoW、Null 缓存与键工厂"
+git commit -m "#27 横切 ServiceResult、原子 bump UoW、Null 缓存与键工厂"
 ```
+
+序号以提交时 `git log -1` 的 `#N` +1 为准（此处 `#27` 示意）；后续 Task 的 commit 同样递增，禁止写 backlog `#9`。
 
 ---
 
@@ -459,21 +491,29 @@ public sealed class TagService
     public Task<ServiceResult<Paged<TagDto>>> ListAsync(string? ns, string? q, Paging paging, CancellationToken ct);
     public Task<ServiceResult<TagDto>> GetAsync(Guid id, CancellationToken ct);
     public Task<ServiceResult<TagDto>> GetByAliasAsync(string alias, CancellationToken ct);
-    public Task<ServiceResult<TagDto>> CreateAsync(CreateTagRequest body, CancellationToken ct);
-    public Task<ServiceResult<TagDto>> PatchAsync(Guid id, PatchTagRequest body, CancellationToken ct);
-    public Task<ServiceResult<object?>> DeleteAsync(Guid id, CancellationToken ct);
-    public Task<ServiceResult<TagDto>> AddAliasAsync(Guid id, string alias, CancellationToken ct);
-    public Task<ServiceResult<TagDto>> DeleteAliasAsync(Guid id, string alias, CancellationToken ct);
+    public Task<ServiceResult<TagWriteDto>> CreateAsync(CreateTagRequest body, CancellationToken ct);
+    public Task<ServiceResult<TagWriteDto>> PatchAsync(Guid id, PatchTagRequest body, CancellationToken ct);
+    public Task<ServiceResult<DataVersionDto>> DeleteAsync(Guid id, CancellationToken ct);
+    public Task<ServiceResult<TagWriteDto>> AddAliasAsync(Guid id, string alias, CancellationToken ct);
+    public Task<ServiceResult<TagWriteDto>> DeleteAliasAsync(Guid id, string alias, CancellationToken ct);
 }
 
 public sealed class SuggestService
 {
+    // paging.Offset 必须为 0（省略视为 0）；>0 → Fail(bad_request)。走 QueryCachePipeline。
     public Task<ServiceResult<Paged<SuggestItemDto>>> SuggestAsync(string q, Paging paging, CancellationToken ct);
 }
 
 public sealed record TagDto(
     Guid Id, string Name, string? Namespace, int? Seq, string NameInitials,
     IReadOnlyList<string> Aliases, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision);
+
+public sealed record TagWriteDto(
+    Guid Id, string Name, string? Namespace, int? Seq, string NameInitials,
+    IReadOnlyList<string> Aliases, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision,
+    int DataVersion);
+
+public sealed record DataVersionDto(int DataVersion);
 
 public sealed record SuggestItemDto(Guid TagId, string Alias, string Name, string? Namespace, string NameInitials);
 ```
@@ -482,11 +522,11 @@ public sealed record SuggestItemDto(Guid TagId, string Alias, string Name, strin
 
 列表排序：数据模型 §3.1（Tag.Seq nulls last 语义：`(Seq IS NULL) ASC, Seq ASC, CreatedAt ASC, Id ASC`）。`q` 空白且提供了 q → `bad_request`；无 q = 全表分页。`q` 前缀：**仅** `AliasNormalized LIKE prefix%` **OR** `NameInitials LIKE prefix%`。用户输入的 `%` `_` `\` 必须转义后再拼 LIKE，禁止 `%q%`。
 
-`suggest`：**不**走查询语法。空/空白 `q` → `bad_request`。`normalizedPrefix = AliasRules.Normalize(q)`（trim+lower）。缓存：读 `data_version` → `ForSuggest` → `TryGet`；miss 则查库；**Set 前再读 version**，不同则不 Set；成功空列表也可 Set。简拼命中时 `alias` = 与 `name` 相同的别名，否则该 Tag 别名插入序第一条。
+`suggest`：**不**走查询语法。空/空白 `q` → `bad_request`。`offset>0` → `bad_request`。`normalizedPrefix = AliasRules.Normalize(q)`（trim+lower）。经 **`QueryCachePipeline`** + `ForSuggest`（键不含 offset）。简拼命中时 `alias` = 与 `name` 相同的别名，否则该 Tag 别名插入序第一条。
 
 `GET /v1/meta`：`{ dataVersion }`。`GET /v1/tags/by-alias/{alias}`：UrlDecode 后按 `AliasNormalized`。
 
-路由注册顺序：`/v1/tags/suggest`、`/v1/tags/by-alias/{alias}` 先于 `/v1/tags/{id}`。
+路由：全部挂 **`TagEndpoints`**。注册顺序：`/v1/tags/suggest`、`/v1/tags/by-alias/{alias}` 先于 `/v1/tags/{id}`。
 
 Neighbors **本 Task 不实现**（Task 4）；`GET .../neighbors` 可暂不 Map。
 
@@ -503,7 +543,7 @@ public async Task Create_without_aliases_inserts_default_alias_revision_zero()
     Assert.Equal(0, created.Data!.Revision);
     Assert.Equal("gz", created.Data.NameInitials); // 与黄金用例一致；「工作」→ gz
     Assert.Equal(new[] { "工作" }, created.Data.Aliases);
-    Assert.Equal(1, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    Assert.Equal(1, created.Data.DataVersion);
 }
 
 [Fact]
@@ -533,6 +573,12 @@ public async Task Prefix_search_does_not_use_substring()
 {
     // tags named/aliased "abcdef" vs q=cde → empty; q=abc → hit
 }
+
+[Fact]
+public async Task Suggest_offset_greater_than_zero_is_bad_request()
+{
+    // SuggestAsync(q, paging with Offset=1) → bad_request
+}
 ```
 
 - [ ] **Step 2: 运行确认失败**
@@ -541,24 +587,11 @@ Run: `dotnet test --filter FullyQualifiedName~TagServiceTests`
 
 Expected: FAIL。
 
-- [ ] **Step 3: 实现 TagService / SuggestService / Endpoints**
+- [ ] **Step 3: 实现 TagService / SuggestService / TagEndpoints**
 
-写回执 DTO 可在 `data` 内带 `dataVersion`（与 HTTP API §2.6 推荐一致）。列表 `Paged<TagDto>` 不含 dataVersion。
+写回执用 `TagWriteDto`（扁平 `dataVersion`）。读列表/详情用 `TagDto`（无 `dataVersion`）。删除用 `DataVersionDto`。
 
-Suggest 读路径伪代码：
-
-```csharp
-var version = await DatabaseInitializer.GetDataVersionAsync(_db, ct);
-var key = QueryCacheKeyFactory.ForSuggest(version, normalizedPrefix, paging.Limit);
-var cached = await _cache.TryGetAsync<Paged<SuggestItemDto>>(key, ct);
-if (cached is not null)
-    return ServiceResult<Paged<SuggestItemDto>>.Ok(cached);
-var page = await QueryPrefixAsync(...);
-var versionAfter = await DatabaseInitializer.GetDataVersionAsync(_db, ct);
-if (versionAfter == version)
-    await _cache.SetAsync(key, page, ct);
-return ServiceResult<Paged<SuggestItemDto>>.Ok(page);
-```
+Suggest **必须**调用 `QueryCachePipeline.GetOrLoadAsync`，禁止再手写一套 TryGet/Set。
 
 - [ ] **Step 4: 单测 + HTTP 抽样**
 
@@ -571,7 +604,7 @@ Expected: PASS（含 #8）。
 - [ ] **Step 5: Commit**
 
 ```bash
-git commit -m "#9 实现标签 CRUD、别名与 suggest"
+git commit -m "#28 实现标签 CRUD、别名与 suggest"
 ```
 
 ---
@@ -591,12 +624,12 @@ git commit -m "#9 实现标签 CRUD、别名与 suggest"
 ```csharp
 public sealed class ResourceService
 {
-    public Task<ServiceResult<Paged<ResourceDto>>> ListAsync(string? kind, string? uriExact, Paging paging, CancellationToken ct);
-    public Task<ServiceResult<ResourceDto>> GetAsync(Guid id, bool includeTags, CancellationToken ct);
-    public Task<ServiceResult<ResourceDto>> GetByUriAsync(string uri, bool includeTags, CancellationToken ct);
-    public Task<ServiceResult<ResourceDto>> CreateAsync(CreateResourceRequest body, CancellationToken ct);
-    public Task<ServiceResult<ResourceDto>> PatchAsync(Guid id, PatchResourceRequest body, CancellationToken ct); // 禁止改 uri
-    public Task<ServiceResult<object?>> DeleteAsync(Guid id, CancellationToken ct);
+    public Task<ServiceResult<Paged<ResourceListDto>>> ListAsync(string? kind, string? uriExact, Paging paging, CancellationToken ct);
+    public Task<ServiceResult<ResourceDetailDto>> GetAsync(Guid id, CancellationToken ct);
+    public Task<ServiceResult<ResourceDetailDto>> GetByUriAsync(string uri, CancellationToken ct);
+    public Task<ServiceResult<ResourceWriteDto>> CreateAsync(CreateResourceRequest body, CancellationToken ct);
+    public Task<ServiceResult<ResourceWriteDto>> PatchAsync(Guid id, PatchResourceRequest body, CancellationToken ct); // 禁止改 uri；kind 须与现 uri 兼容
+    public Task<ServiceResult<DataVersionDto>> DeleteAsync(Guid id, CancellationToken ct);
 }
 
 public sealed class ResourceTagService
@@ -605,20 +638,30 @@ public sealed class ResourceTagService
     public Task<ServiceResult<Paged<TagDto>>> ListTagsAsync(Guid? resourceId, string? uri, Paging paging, CancellationToken ct);
 }
 
-public sealed record ResourceDto(
+public sealed record ResourceListDto(
+    Guid Id, string Uri, string Kind, string? DisplayName,
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision);
+
+public sealed record ResourceDetailDto(
     Guid Id, string Uri, string Kind, string? DisplayName,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision,
-    IReadOnlyList<TagDto>? Tags);
+    IReadOnlyList<TagDto> Tags);
+
+public sealed record ResourceWriteDto(
+    Guid Id, string Uri, string Kind, string? DisplayName,
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision,
+    IReadOnlyList<TagDto> Tags,
+    int DataVersion);
 
 public sealed record TagApplyResultDto(
-    ResourceDto Resource,
+    ResourceDetailDto Resource,
     IReadOnlyList<TagDto> CreatedTags,
     IReadOnlyList<Guid> Added,
     IReadOnlyList<Guid> Removed,
     int DataVersion);
 ```
 
-打标规则（HTTP API §3.4）：`resourceId`/`uri` 至少其一；都有则以 id 为准且须与库存 uri 一致否则 `resource_id_uri_mismatch`。未知 uri → 隐式建资源；kind 显式或由 scheme 推断（http/https→url）；无法推断 → `validation_failed`。`add`+`remove` 元素总数 >100 → `batch_limit_exceeded`。元素：string=alias 或 `{ "id": guid }`。`createMissing` 仅对 **add 的未知 alias 字符串** 建标；未知 Guid → `tag_not_found`。add/remove **幂等**；无绑定变更则不 MarkDirty。有 `ResourceTag` 插删则 MarkDirty，**不**改 Resource.UpdatedAt/Revision。
+打标规则（HTTP API §3.4）：`resourceId`/`uri` 至少其一；都有则以 id 为准且须与库存 uri 一致否则 `resource_id_uri_mismatch`。未知 uri → 隐式建资源；kind 显式或由 scheme 推断（http/https→url）；无法推断 → `validation_failed`。规范化后 **kind 与 scheme 不兼容** → `validation_failed`（`kind_uri_mismatch`）。`add`+`remove` 元素总数 >100 → `batch_limit_exceeded`。元素：string=alias 或 `{ "id": guid }`。`createMissing` 仅对 **add 的未知 alias 字符串** 建标；未知 Guid → `tag_not_found`。add/remove **幂等**；无绑定变更则不 MarkDirty。有 `ResourceTag` 插删则 MarkDirty，**不**改 Resource.UpdatedAt/Revision。`TagApplyResultDto.Resource` 用详情形状（含 tags）。
 
 列表 `uri` **仅精确**（先 Normalize 再比）。资源序：CreatedAt ASC, Id ASC。`GET /v1/resources/tags` 与 `/v1/resources/{id}` 字面量优先。
 
@@ -638,6 +681,11 @@ public async Task CreateMissing_creates_tag_and_bind()
 }
 
 [Fact]
+public async Task Https_uri_with_file_kind_is_validation_failed()
+{
+}
+
+[Fact]
 public async Task Add_plus_remove_over_100_is_batch_limit()
 {
 }
@@ -649,7 +697,7 @@ public async Task Add_plus_remove_over_100_is_batch_limit()
 
 - [ ] **Step 4: 测试绿灯** — 全量 `dotnet test`
 
-- [ ] **Step 5: Commit** — `#9 实现资源 CRUD 与打标`
+- [ ] **Step 5: Commit** — 递增序号；正文如 `实现资源 CRUD 与打标`
 
 ---
 
@@ -667,15 +715,20 @@ public sealed class RelationService
 {
     public Task<ServiceResult<Paged<RelationDto>>> ListAsync(Guid? from, Guid? to, string? kind, Paging paging, CancellationToken ct);
     public Task<ServiceResult<RelationDto>> GetAsync(Guid id, CancellationToken ct);
-    public Task<ServiceResult<RelationDto>> CreateAsync(CreateRelationRequest body, CancellationToken ct);
+    public Task<ServiceResult<RelationWriteDto>> CreateAsync(CreateRelationRequest body, CancellationToken ct);
     public Task<ServiceResult<RelationBatchResultDto>> CreateBatchAsync(IReadOnlyList<CreateRelationRequest> items, CancellationToken ct);
-    public Task<ServiceResult<RelationDto>> PatchSeqAsync(Guid id, int? seq, CancellationToken ct);
-    public Task<ServiceResult<object?>> DeleteAsync(Guid id, CancellationToken ct);
+    public Task<ServiceResult<RelationWriteDto>> PatchSeqAsync(Guid id, int? seq, CancellationToken ct);
+    public Task<ServiceResult<DataVersionDto>> DeleteAsync(Guid id, CancellationToken ct);
     public Task<ServiceResult<RelationReorderResultDto>> ReorderAsync(Guid fromTagId, string kind, IReadOnlyList<Guid> orderedToTagIds, CancellationToken ct);
     public Task<ServiceResult<Paged<NeighborDto>>> NeighborsAsync(Guid tagId, string direction, string? kindsCsv, Paging paging, CancellationToken ct);
 }
 
 public sealed record RelationBatchResultDto(IReadOnlyList<RelationDto> Items, int DataVersion);
+
+public sealed record RelationWriteDto(
+    Guid Id, Guid FromTagId, Guid ToTagId, string Kind, int? Seq,
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, long Revision,
+    int DataVersion);
 ```
 
 约束：
@@ -718,7 +771,7 @@ public async Task Reorder_same_order_does_not_bump() { }
 
 - [ ] **Step 4: `dotnet test` 全绿**
 
-- [ ] **Step 5: Commit** — `#9 实现标签关系约束、batch 与 reorder`
+- [ ] **Step 5: Commit** — 递增序号；正文如 `实现标签关系约束、batch 与 reorder`
 
 ---
 
@@ -870,11 +923,11 @@ Expander：链深度 3、`maxDepth=1` 不 422 且日志路径可测（可用测�
 
 - [ ] **Step 3: 实现四分组件 + QueryEndpoints**
 
-`GET /v1/query` 与 `GET /v1/query/preview`。preview 默认 limit 可用 `AppConfig.PreviewLimit`（16），仍受 Paging.MaxLimit。
+`GET /v1/query` 与 `GET /v1/query/preview`。省略 `limit` 均为 **50**（与 `Paging.DefaultLimit` 相同；**不**读 `AppConfig.PreviewLimit`）。QueryService 经 **`QueryCachePipeline`** 做 TryGet/Set。
 
 - [ ] **Step 4: `dotnet test` 全绿**
 
-- [ ] **Step 5: Commit** — `#9 实现查询解析、展开与冷路径执行`
+- [ ] **Step 5: Commit** — 递增序号；正文如 `实现查询解析、展开与冷路径执行`
 
 ---
 
@@ -895,7 +948,8 @@ HTTP 集成（`ServiceProcessFixture` + Bearer）至少覆盖：
 4. `GET /v1/query` 与 `preview`：合法 AND/OR/`-tag`；未知正词英文 message + 空 items；preview JSON **无** `total` 属性。
 5. 一例 `expand=child`（父标查询命中只打了子标的资源）。
 6. `POST /v1/relations/batch` 成功体为 `{ items, dataVersion }`。
-7. 性能边界抽样：`add+remove` 101 → 422 `batch_limit_exceeded`；relations batch 0 或 101 → 同码；`GET /v1/relations` 无过滤 → 400 `relations_filter_required`；`suggest?q=` 空白 → 400；`GET /v1/tags?q=` 空白 → 400。
+7. 性能边界抽样：`add+remove` 101 → 422 `batch_limit_exceeded`；relations batch 0 或 101 → 同码；`GET /v1/relations` 无过滤 → 400 `relations_filter_required`；`suggest?q=` 空白 → 400；`GET /v1/tags?q=` 空白 → 400；`suggest?q=工作&offset=1` → 400；`limit=0` 或 `limit=1025` → 400。
+8. 写回执含扁平 `dataVersion`；preview JSON **无** `total`；资源列表 JSON **无** `tags` 属性。
 
 `docs/crud-and-query.md` 写实现说明（目录、写路径 bump、查询流水线、Null 缓存、如何跑测试）；**链到** plans，不抄契约全文。`docs/README.md` 表追加一行 #9。
 
@@ -903,7 +957,7 @@ HTTP 集成（`ServiceProcessFixture` + Bearer）至少覆盖：
 - [ ] **Step 2: 跑集成测试，修到绿**
 - [ ] **Step 3: 撰写 `docs/crud-and-query.md` 并更新 README**
 - [ ] **Step 4: `dotnet test EverythingLabeled.sln` 全绿**
-- [ ] **Step 5: Commit** — `#9 补齐 HTTP 验收与 crud-and-query 说明`
+- [ ] **Step 5: Commit** — 递增序号；正文如 `补齐 HTTP 验收与 crud-and-query 说明`
 
 ---
 
@@ -942,12 +996,12 @@ HTTP 集成（`ServiceProcessFixture` + Bearer）至少覆盖：
 | §4 原子 bump、dirty、Revision、打标不碰 Resource | 1 + 3 |
 | §4 别名/最后别名 | 2 |
 | §4 关系再读/成环/batch | 4 |
-| §5 流水线与 Set 前复核 | 5 |
+| §5 流水线与 Set 前复核 | 1 pipeline + 2 suggest + 5 query |
 | §6 ServiceResult + 中央映射 | 1 + endpoints |
-| §7 测试分层 DoD | 1–6；文档 Task 6 |
+| 实现计划 grill Q1–Q11 | Global Constraints + 各 Task DTO/路由 |
 
 **Placeholder scan:** 无 TBD。拼音包名允许实现时替换，但黄金用例不可删。
 
-**Type consistency:** `ServiceResult<T>`、`Paging`、`QueryCacheKeyFactory.ForQuery/ForSuggest`、`IUnitOfWork.CommitAsync → int`、`RelationBatchResultDto` 在后续任务中同名。
+**Type consistency:** `ServiceResult<T>`、`Paging`、`QueryCacheKeyFactory`、`QueryCachePipeline`、`IUnitOfWork.CommitAsync → int`、`TagWriteDto` / `ResourceWriteDto` / `RelationWriteDto`、`DataVersionDto`、`RelationBatchResultDto` 在后续任务中同名。
 
 **非目标确认：** Memory/Redis 实装、CLI、Core 拆分、OpenAPI、Accept-Language notice 均不在任务中。

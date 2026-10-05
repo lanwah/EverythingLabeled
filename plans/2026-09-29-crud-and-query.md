@@ -1,7 +1,7 @@
 # EverythingLabeled CRUD + 查询解析（#9）
 
 日期：2026-09-29  
-状态：已确认（v1 实现基线；主线澄清 + 设计 §1–§5 + grill Round 1–8）  
+状态：已确认（v1 实现基线；主线澄清 + 设计 §1–§5 + grill Round 1–8 + 实现计划 grill 2026-10-03）  
 审核记录：[CRUD + 查询解析讨论确认](./confirmed/2026-09-29-crud-and-query-review.md)  
 关联：
 
@@ -55,7 +55,7 @@
 
 | 项 | 约束 |
 |---|---|
-| 配置面 | 节 `Cache:*`（精确键名 #10 定，须进 appsettings 示例）。至少可配：`Provider`、**SizeLimit**、**MaxEntrySize**、`SuggestTtl`、`PreviewTtl`。**禁止把 SizeLimit / MaxEntrySize 写死在代码里**；推荐默认：SizeLimit≈**128 MiB**、MaxEntrySize≈**2 MiB**、Suggest/Preview TTL=**60s**（均可覆盖） |
+| 配置面 | 节 `Cache:*`。**键名已钉死**（#9 写入 appsettings 示例，#10 只绑定不改名）：`Provider`、`SizeLimit`、`MaxEntrySize`、`SuggestTtl`、`PreviewTtl`。SizeLimit/MaxEntrySize 为字节整数；TTL 为 `"00:01:00"` 形式。**禁止把 SizeLimit / MaxEntrySize 写死在业务代码里**；推荐默认：SizeLimit=**134217728**（128 MiB）、MaxEntrySize=**2097152**（2 MiB）、Suggest/Preview TTL=**60s**（均可覆盖） |
 | Memory 容量 | 必须 SizeLimit + 条目 Size 估算；满则压缩/逐出 |
 | 单条上限 | 超过 MaxEntrySize → **跳过 Set**，仍返回查库结果 |
 | 旧前缀清理 | dirty bump 后异步 `InvalidatePrefix`（旁路 version→键索引）；**不**默认同步 `InvalidateAll`。索引须在 **PostEvictionCallback**（或等价）中随逐出/过期同步移除，避免幽灵键 |
@@ -78,7 +78,7 @@ src/EverythingLabeled.Service/
 │   ├── Relations/
 │   ├── Query/                # QueryParser, QueryExpander, QueryExecutor, NormalizeQuery, 键工厂
 │   ├── Suggest/
-│   └── Caching/              # NullTagQueryCache（#9）
+│   └── Caching/              # NullTagQueryCache、QueryCacheKeyFactory、QueryCachePipeline（#9）
 ├── Http/                     # *Endpoints + code→HTTP 中央映射；绑定 → Service → ApiEnvelope
 ├── Data/                     # 已有
 ├── Auth/ / Hosting/ / Logging/
@@ -114,6 +114,7 @@ src/EverythingLabeled.Service/
 ### 4.3 Resource / 打标
 
 - URI 规范化与 Kind（`file` / `folder` / `url`）对齐数据模型；实现位于 Service，不预拆共享包。
+- 规范化后若 scheme 与 `kind` 不兼容 → `422 validation_failed`（`details.reason=kind_uri_mismatch`）。`http(s)` 只能 `url`；`file://` 默认 `file`，目录必须显式 `folder`。PATCH 只改 `kind` 时同样校验。
 - 打标：未知 uri 隐式建资源；`createMissing: true` 时未知别名自动建标；`add` / `remove` 幂等。
 - **仅**插删 `ResourceTag` 时 **不**更新 Resource 的 `UpdatedAt` / `Revision`；有绑定变更则 dirty → bump `data_version`。
 
@@ -161,12 +162,16 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 ### 5.2 `suggest`
 
 - **不**使用查询语法；`AliasNormalized` 前缀 **OR** `NameInitials` 前缀（禁止 `%x%` substring）。
-- 经 `ITagQueryCache`；组键 / TryGet / Set 与 §5.1 相同（含 **Set 前 version 复核**）；简拚命中时 `alias` 字段规则见 HTTP API。
+- 经 `ITagQueryCache`；与 query **共用** `QueryCachePipeline`（组键 / TryGet / Set 前 version 复核）；简拚命中时 `alias` 字段规则见 HTTP API。
+- v1 **只第一页**：省略 `offset` 或 `offset=0`；`offset>0` → `400 bad_request`。响应仍为列表信封（含 `total`，`offset` 恒 0）。缓存键 **不含** offset。
 
 ### 5.3 其它列表读
 
 - `GET /v1/tags`、`GET /v1/resources` 等走对应 Service + 契约排序；**不**强制过查询缓存。
 - `GET /v1/relations` **必须** `fromTagId` 或 `toTagId`，否则 `400`。
+- 分页形状非法（非整数、负数、`limit=0`、`limit>1024`）→ `400 bad_request`，**不** clamp。`query`/`preview` 省略 `limit` → **50**（不读 `config.previewLimit`）。
+- 列表/详情分 DTO：资源列表省略 `tags` 属性（不要靠 `"tags": null`）；preview 省略 `total` 属性。不改信封全局 `Never`。
+- 写成功 `data`：实体字段扁平多 `dataVersion`；删除至少 `{ "dataVersion": n }`。
 
 ## 6. HTTP 与错误映射
 
@@ -196,7 +201,7 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 
 ## 8. 实现顺序建议
 
-1. 横切：`ServiceResult`、code→HTTP 映射、`IUnitOfWork`（dirty + **原子 bump**）、`INameInitialsGenerator`、别名校验、`UriNormalizer`、缓存键工厂 + Null 缓存
+1. 横切：`ServiceResult`、穷尽 `HttpErrorMap`、`IUnitOfWork`（dirty + **原子 bump**）、`INameInitialsGenerator`、别名校验、`UriNormalizer`（含 kind 校验）、键工厂 + Null 缓存 + `QueryCachePipeline`
 2. Tags + Aliases + Suggest（无关系）
 3. Resources + 打标
 4. Relations（约束 / 再读校验 / neighbors / batch / reorder）
@@ -267,3 +272,22 @@ v{data_version}:suggest:{normalizedPrefix}:{limit}
 | 8 | Q42 | 防御拷贝手法 | A 不可变/record DTO / B JSON 往返 / C 深拷贝库 | **A** |
 | 8 | Q43 | 可观测性 | A 日志/计数 / B 对外 stats API / C 不做 | **A** |
 | 8 | Q44 | 清理失败 | A 警告+不失败写 / B 回退 InvalidateAll / C 写 5xx | **A** |
+
+## 11. 实现计划 grill（2026-10-03）
+
+候选与问答全文见[审核记录 §K](./confirmed/2026-09-29-crud-and-query-review.md)。实现计划：[2026-10-03-crud-and-query-impl.md](./2026-10-03-crud-and-query-impl.md)。
+
+| # | 议题 | 确认 |
+|---|---|---|
+| Q1 | preview 默认 limit | 省略 → **50**；不读 `config.previewLimit` |
+| Q2 | 写成功 dataVersion | 实体字段扁平多 `dataVersion`；删除至少 `{ dataVersion }` |
+| Q3 | 分页越界 | 形状非法含 `limit=0` / `>1024` → **400**，不 clamp |
+| Q4 | 列表省略字段 | 分 DTO；不改全局 `Never` |
+| Q5 | commit 前缀 | 递增 `#序号`，不用 backlog `#9` |
+| Q6 | Cache:* 键名 | #9 钉死；#10 只绑定 |
+| Q7 | kind 与 scheme | 不兼容 → `422`（`kind_uri_mismatch`） |
+| Q8 | cache-aside | 共用 `QueryCachePipeline` |
+| Q9 | suggest 路由 | `TagEndpoints` |
+| Q10 | ErrorCodes 映射 | 穷尽 switch |
+| Q11 | suggest offset | 只第一页；`offset>0` → 400；键不含 offset |
+

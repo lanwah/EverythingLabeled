@@ -617,6 +617,28 @@
 
 ---
 
+## K. 实现计划 grill（2026-10-03）
+
+方式：对照已确认规格审 [`2026-10-03-crud-and-query-impl.md`](../2026-10-03-crud-and-query-impl.md)；三轮全选推荐答案。已回写实现计划、CRUD §2.3/§4.3/§5.2/§5.3/§11、HTTP API §2.4/§2.6/§3.3–§3.4/§3.6/§5/§9、数据模型 §2 Kind 句。
+
+| Round | # | 议题 | 确认 |
+|---|---|---|---|
+| 1 | Q1 | preview 默认 limit | **A** 省略 → 50；不读 config.previewLimit |
+| 1 | Q2 | 写成功 dataVersion 形状 | **A** 扁平多 dataVersion；删除至少 `{ dataVersion }` |
+| 1 | Q3 | limit/offset 越界 | **A** 形状非法 → 400；不 clamp；limit=0 非法 |
+| 1 | Q4 | 列表省略 tags/total | **A** 分 DTO；不改全局 Never |
+| 1 | Q5 | commit subject | **A** 递增 #序号；不用 backlog #9 |
+| 2 | Q6 | Cache:* 键名 | **A** #9 钉死；#10 只绑定 |
+| 2 | Q7 | kind 与 scheme | **A** 不兼容 422 kind_uri_mismatch |
+| 2 | Q8 | cache-aside | **A** QueryCachePipeline 共用 |
+| 2 | Q9 | suggest Endpoints | **A** TagEndpoints |
+| 2 | Q10 | ErrorCodes 映射 | **A** 穷尽 switch |
+| 3 | Q11 | suggest offset | **A** 只第一页；offset>0 → 400；键不含 offset |
+
+Frontier 已空。
+
+---
+
 ## 实现入口
 
-**缓存专题 grill frontier 已空**（Round 5–8）。规格（含 §2.3）为实现与 #10 权威约束。下一动作：起草 #9 实现计划，或直接按规格 §8 顺序开工。
+规格（含 §2.3、§11）与 [实现计划](../2026-10-03-crud-and-query-impl.md) 为实现权威。下一动作：按实现计划 Task 1 开工。
