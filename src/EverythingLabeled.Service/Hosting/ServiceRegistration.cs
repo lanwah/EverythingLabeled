@@ -1,6 +1,7 @@
 using EverythingLabeled.Service.Services;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
+using EverythingLabeled.Service.Services.Relations;
 using EverythingLabeled.Service.Services.Resources;
 using EverythingLabeled.Service.Services.Tags;
 
@@ -18,6 +19,7 @@ public static class ServiceRegistration
         services.AddScoped<SuggestService>();
         services.AddScoped<ResourceService>();
         services.AddScoped<ResourceTagService>();
+        services.AddScoped<RelationService>();
         return services;
     }
 }

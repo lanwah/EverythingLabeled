@@ -2,6 +2,7 @@ using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Services;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
+using EverythingLabeled.Service.Services.Relations;
 using EverythingLabeled.Service.Services.Resources;
 using EverythingLabeled.Service.Services.Tags;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,9 @@ public sealed class SqliteServiceFixture : IAsyncDisposable
         new(Db, Uow);
 
     public ResourceTagService GetResourceTagService() =>
+        new(Db, Uow, GetTagService());
+
+    public RelationService GetRelationService() =>
         new(Db, Uow, GetTagService());
 
     public static async Task<SqliteServiceFixture> CreateAsync(ITagQueryCache? cache = null)

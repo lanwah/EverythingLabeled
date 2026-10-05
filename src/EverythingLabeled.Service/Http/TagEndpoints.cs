@@ -1,3 +1,4 @@
+using EverythingLabeled.Service.Services.Relations;
 using EverythingLabeled.Service.Services.Tags;
 
 namespace EverythingLabeled.Service.Http;
@@ -55,6 +56,31 @@ public static class TagEndpoints
             CancellationToken cancellationToken) =>
         {
             await context.WriteAsync(await tags.CreateAsync(body, cancellationToken));
+        });
+
+        app.MapGet("/v1/tags/{id:guid}/neighbors", async (
+            Guid id,
+            HttpContext context,
+            RelationService relations,
+            CancellationToken cancellationToken) =>
+        {
+            var paging = context.TryParsePaging();
+            if (!paging.IsSuccess)
+            {
+                await context.WriteAsync(paging);
+                return;
+            }
+
+            var direction = context.OptionalQuery("direction");
+            if (string.IsNullOrWhiteSpace(direction))
+                direction = "both";
+
+            await context.WriteAsync(await relations.NeighborsAsync(
+                id,
+                direction,
+                context.OptionalQuery("kind"),
+                paging.Data,
+                cancellationToken));
         });
 
         app.MapGet("/v1/tags/{id:guid}", async (

@@ -108,6 +108,7 @@ internal static class ServiceRuntime
             app.MapMetaEndpoints();
             app.MapTagEndpoints();
             app.MapResourceEndpoints();
+            app.MapRelationEndpoints();
 
             await app.RunAsync();
             return 0;
