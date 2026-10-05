@@ -109,8 +109,10 @@ internal static class ServiceRuntime
             app.MapTagEndpoints();
             app.MapResourceEndpoints();
             app.MapRelationEndpoints();
+            app.MapQueryEndpoints();
 
             await app.RunAsync();
+
             return 0;
         }
         catch (IOException ex) when (IsAddressInUse(ex))
