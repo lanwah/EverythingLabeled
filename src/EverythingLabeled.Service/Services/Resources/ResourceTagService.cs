@@ -206,7 +206,17 @@ public sealed class ResourceTagService(ElDbContext db, IUnitOfWork uow, TagServi
         CancellationToken ct)
     {
         if (item.Id is { } tagId)
+        {
+            var localById = db.Tags.Local.FirstOrDefault(t => t.Id == tagId);
+            if (localById is not null)
+                return ServiceResult<Tag>.Ok(localById);
+
             return await tags.ResolveByAliasOrId(null, tagId, ct);
+        }
+
+        var tracked = FindTrackedByAlias(item.Alias);
+        if (tracked is not null)
+            return ServiceResult<Tag>.Ok(tracked);
 
         var resolved = await tags.ResolveByAliasOrId(item.Alias, null, ct);
         if (resolved.IsSuccess || !createMissing)
@@ -220,6 +230,21 @@ public sealed class ResourceTagService(ElDbContext db, IUnitOfWork uow, TagServi
 
         createdTags.Add(TagService.ToDto(created.Data!));
         return created;
+    }
+
+    private Tag? FindTrackedByAlias(string? alias)
+    {
+        if (alias is null)
+            return null;
+
+        var normalized = AliasRules.Normalize(alias);
+        var localAlias = db.TagAliases.Local.FirstOrDefault(a =>
+            string.Equals(a.AliasNormalized, normalized, StringComparison.Ordinal));
+        if (localAlias is not null)
+            return localAlias.Tag ?? db.Tags.Local.FirstOrDefault(t => t.Id == localAlias.TagId);
+
+        return db.Tags.Local.FirstOrDefault(t =>
+            t.Aliases.Any(a => string.Equals(a.AliasNormalized, normalized, StringComparison.Ordinal)));
     }
 
     private Task<Resource?> LoadWithTagsAsync(Guid id, CancellationToken ct) =>

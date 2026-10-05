@@ -105,4 +105,23 @@ public sealed class ResourceTagServiceTests
         Assert.Equal(ErrorCodes.BatchLimitExceeded, result.Code);
         Assert.Equal(0, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task CreateMissing_duplicate_add_aliases_creates_one_tag_and_one_bind()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var add = new[] { TagApplyItem.FromAlias("工作"), TagApplyItem.FromAlias("工作") };
+
+        var result = await fx.GetResourceTagService().ApplyAsync(
+            new TagApplyRequest(null, "file:///C:/dup.txt", "file", null, add, null, true),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data!.CreatedTags);
+        Assert.Equal("工作", result.Data.CreatedTags[0].Name);
+        Assert.Equal(result.Data.CreatedTags[0].Id, Assert.Single(result.Data.Added));
+        Assert.Single(result.Data.Resource.Tags);
+        Assert.Equal(1, result.Data.DataVersion);
+        Assert.Equal(1, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    }
 }
