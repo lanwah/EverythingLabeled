@@ -16,4 +16,10 @@ public static class EndpointExtensions
             result.Code ?? ErrorCodes.InternalError,
             result.Details);
     }
+
+    public static ServiceResult<Paging> TryParsePaging(this HttpContext context) =>
+        Paging.TryParse(OptionalQuery(context, "offset"), OptionalQuery(context, "limit"));
+
+    public static string? OptionalQuery(this HttpContext context, string key) =>
+        context.Request.Query.ContainsKey(key) ? context.Request.Query[key].ToString() : null;
 }

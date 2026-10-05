@@ -1,4 +1,3 @@
-using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Tags;
 
 namespace EverythingLabeled.Service.Http;
@@ -12,7 +11,7 @@ public static class TagEndpoints
             SuggestService suggest,
             CancellationToken cancellationToken) =>
         {
-            var paging = TryParsePaging(context);
+            var paging = context.TryParsePaging();
             if (!paging.IsSuccess)
             {
                 await context.WriteAsync(paging);
@@ -37,19 +36,15 @@ public static class TagEndpoints
             TagService tags,
             CancellationToken cancellationToken) =>
         {
-            var paging = TryParsePaging(context);
+            var paging = context.TryParsePaging();
             if (!paging.IsSuccess)
             {
                 await context.WriteAsync(paging);
                 return;
             }
 
-            string? q = context.Request.Query.ContainsKey("q")
-                ? context.Request.Query["q"].ToString()
-                : null;
-            string? ns = context.Request.Query.ContainsKey("namespace")
-                ? context.Request.Query["namespace"].ToString()
-                : null;
+            string? q = context.OptionalQuery("q");
+            string? ns = context.OptionalQuery("namespace");
             await context.WriteAsync(await tags.ListAsync(ns, q, paging.Data, cancellationToken));
         });
 
@@ -110,10 +105,4 @@ public static class TagEndpoints
             await context.WriteAsync(await tags.DeleteAliasAsync(id, alias, cancellationToken));
         });
     }
-
-    private static ServiceResult<Paging> TryParsePaging(HttpContext context) =>
-        Paging.TryParse(OptionalQuery(context, "offset"), OptionalQuery(context, "limit"));
-
-    private static string? OptionalQuery(HttpContext context, string key) =>
-        context.Request.Query.ContainsKey(key) ? context.Request.Query[key].ToString() : null;
 }

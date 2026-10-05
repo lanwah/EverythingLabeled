@@ -6,7 +6,7 @@ using Serilog;
 
 namespace EverythingLabeled.Service.Services.Tags;
 
-public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGenerator initials)
+public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGenerator initials) : ITagResolver
 {
     public async Task<ServiceResult<Paged<TagDto>>> ListAsync(
         string? ns,
@@ -57,49 +57,86 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
 
     public async Task<ServiceResult<TagDto>> GetByAliasAsync(string alias, CancellationToken ct)
     {
+        var resolved = await ResolveByAliasOrId(alias, null, ct);
+        return resolved.IsSuccess
+            ? ServiceResult<TagDto>.Ok(ToDto(resolved.Data!))
+            : ServiceResult<TagDto>.Fail(resolved.Code!, resolved.Message!, resolved.Details);
+    }
+
+    public async Task<ServiceResult<Tag>> ResolveByAliasOrId(string? alias, Guid? id, CancellationToken ct)
+    {
+        if (id is { } tagId)
+        {
+            var tag = await LoadTagAsync(tagId, ct);
+            return tag is null
+                ? ServiceResult<Tag>.Fail(ErrorCodes.TagNotFound, "Tag not found.")
+                : ServiceResult<Tag>.Ok(tag);
+        }
+
+        if (alias is null)
+        {
+            return ServiceResult<Tag>.Fail(
+                ErrorCodes.ValidationFailed,
+                "Tag alias or id is required.");
+        }
+
         var normalized = AliasRules.Normalize(alias);
-        var tagId = await db.TagAliases.AsNoTracking()
+        var resolvedId = await db.TagAliases.AsNoTracking()
             .Where(a => a.AliasNormalized == normalized)
             .Select(a => a.TagId)
             .FirstOrDefaultAsync(ct);
-        if (tagId == Guid.Empty)
+        if (resolvedId == Guid.Empty)
         {
-            return ServiceResult<TagDto>.Fail(
+            return ServiceResult<Tag>.Fail(
                 ErrorCodes.TagNotFound,
                 $"Alias '{alias}' not found.",
                 new { alias });
         }
 
-        return await GetAsync(tagId, ct);
+        var loaded = await LoadTagAsync(resolvedId, ct);
+        return loaded is null
+            ? ServiceResult<Tag>.Fail(ErrorCodes.TagNotFound, "Tag not found.")
+            : ServiceResult<Tag>.Ok(loaded);
     }
 
     public async Task<ServiceResult<TagWriteDto>> CreateAsync(CreateTagRequest body, CancellationToken ct)
     {
+        var created = await CreateUncommittedAsync(body, ct);
+        if (!created.IsSuccess)
+            return ServiceResult<TagWriteDto>.Fail(created.Code!, created.Message!, created.Details);
+
+        uow.MarkDirty();
+        var version = await uow.CommitAsync(ct);
+        return ServiceResult<TagWriteDto>.Ok(ToWrite(created.Data!, version));
+    }
+
+    public async Task<ServiceResult<Tag>> CreateUncommittedAsync(CreateTagRequest body, CancellationToken ct)
+    {
         if (string.IsNullOrWhiteSpace(body.Name))
         {
-            return ServiceResult<TagWriteDto>.Fail(
+            return ServiceResult<Tag>.Fail(
                 ErrorCodes.ValidationFailed,
                 "Name is required.");
         }
 
         var name = body.Name;
         var aliases = body.Aliases is { Count: > 0 } ? body.Aliases : [name];
-        var rejected = RejectAliases<TagWriteDto>(aliases);
+        var rejected = RejectAliases<Tag>(aliases);
         if (rejected is not null)
             return rejected;
 
-        var intraConflict = DuplicateNormalizedAlias<TagWriteDto>(aliases);
+        var intraConflict = DuplicateNormalizedAlias<Tag>(aliases);
         if (intraConflict is not null)
             return intraConflict;
 
         if (await NameTakenAsync(body.Namespace, name, excludeId: null, ct))
-            return NameConflict<TagWriteDto>(name);
+            return NameConflict<Tag>(name);
 
         foreach (var alias in aliases)
         {
             var conflict = await AliasTakenAsync(alias, ct);
             if (conflict is not null)
-                return conflict;
+                return ServiceResult<Tag>.Fail(conflict.Code!, conflict.Message!, conflict.Details);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -127,9 +164,7 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         }
 
         db.Tags.Add(tag);
-        uow.MarkDirty();
-        var version = await uow.CommitAsync(ct);
-        return ServiceResult<TagWriteDto>.Ok(ToWrite(tag, version));
+        return ServiceResult<Tag>.Ok(tag);
     }
 
     public async Task<ServiceResult<TagWriteDto>> PatchAsync(Guid id, PatchTagRequest body, CancellationToken ct)
@@ -308,7 +343,7 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
 
     private static string NormalizeName(string name) => name.ToLowerInvariant();
 
-    private static TagDto ToDto(Tag tag) =>
+    internal static TagDto ToDto(Tag tag) =>
         new(
             tag.Id,
             tag.Name,

@@ -107,6 +107,7 @@ internal static class ServiceRuntime
             app.MapHealthEndpoints();
             app.MapMetaEndpoints();
             app.MapTagEndpoints();
+            app.MapResourceEndpoints();
 
             await app.RunAsync();
             return 0;
