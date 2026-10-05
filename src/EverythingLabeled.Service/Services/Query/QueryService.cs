@@ -168,9 +168,10 @@ public sealed class QueryService(
 
     private static ExpandedQuery BuildNoExpand(ParsedQuery parsed, IReadOnlyList<ResolvedTerm> resolved)
     {
-        var byKey = resolved.ToDictionary(
-            t => (t.ClauseIndex, t.IsPositive, t.AliasNormalized),
-            t => new HashSet<Guid> { t.TagId });
+        // Last-wins: duplicate aliases in one clause (e.g. "工作 工作") must not throw.
+        var byKey = new Dictionary<(int Clause, bool Positive, string Alias), HashSet<Guid>>();
+        foreach (var t in resolved)
+            byKey[(t.ClauseIndex, t.IsPositive, t.AliasNormalized)] = new HashSet<Guid> { t.TagId };
 
         var all = new HashSet<Guid>();
         var clauses = new List<ExpandedClause>(parsed.Clauses.Count);
@@ -178,8 +179,11 @@ public sealed class QueryService(
         {
             var clause = parsed.Clauses[i];
             var positives = new List<IReadOnlySet<Guid>>();
+            var seenPositive = new HashSet<string>(StringComparer.Ordinal);
             foreach (var alias in clause.PositiveAliasNormalized)
             {
+                if (!seenPositive.Add(alias))
+                    continue;
                 if (byKey.TryGetValue((i, true, alias), out var set))
                 {
                     positives.Add(set);
@@ -188,8 +192,11 @@ public sealed class QueryService(
             }
 
             var negatives = new HashSet<Guid>();
+            var seenNegative = new HashSet<string>(StringComparer.Ordinal);
             foreach (var alias in clause.NegativeAliasNormalized)
             {
+                if (!seenNegative.Add(alias))
+                    continue;
                 if (byKey.TryGetValue((i, false, alias), out var set))
                 {
                     negatives.UnionWith(set);

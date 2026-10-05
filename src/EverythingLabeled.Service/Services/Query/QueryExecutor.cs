@@ -1,4 +1,5 @@
 using EverythingLabeled.Service.Data;
+using EverythingLabeled.Service.Data.Entities;
 using EverythingLabeled.Service.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,22 +13,13 @@ public sealed class QueryExecutor(ElDbContext db)
         bool includeTotal,
         CancellationToken ct)
     {
-        // SQLite cannot translate complex nested Any/All over in-memory sets reliably;
-        // load tag bindings then filter/sort in memory (same pattern as ResourceService list).
-        var resources = await db.Resources.AsNoTracking()
-            .Select(r => new
-            {
-                r.Id,
-                r.Uri,
-                r.Kind,
-                r.DisplayName,
-                r.CreatedAt,
-                TagIds = r.ResourceTags.Select(rt => rt.TagId).ToList(),
-            })
-            .ToListAsync(ct);
-
-        var matched = resources
-            .Where(r => MatchesAnyClause(r.TagIds, expanded.Clauses))
+        // Filter in SQL via ResourceTags Any/Contains (SQLite translates closed-over Guid[]).
+        // Clause OR uses Union. Sort/skip/take stay in-memory because SQLite cannot ORDER BY
+        // DateTimeOffset (same constraint as ResourceService.ListAsync).
+        var filtered = FilterInSql(expanded.Clauses);
+        var matched = (await filtered
+                .Select(r => new { r.Id, r.Uri, r.Kind, r.DisplayName, r.CreatedAt })
+                .ToListAsync(ct))
             .OrderBy(r => r.CreatedAt)
             .ThenBy(r => r.Id)
             .ToList();
@@ -47,29 +39,36 @@ public sealed class QueryExecutor(ElDbContext db)
         };
     }
 
-    private static bool MatchesAnyClause(IReadOnlyList<Guid> tagIds, IReadOnlyList<ExpandedClause> clauses)
+    private IQueryable<Resource> FilterInSql(IReadOnlyList<ExpandedClause> clauses)
     {
-        var owned = tagIds as HashSet<Guid> ?? tagIds.ToHashSet();
+        IQueryable<Resource>? combined = null;
         foreach (var clause in clauses)
         {
-            if (MatchesClause(owned, clause))
-                return true;
+            if (clause.Positives.Count == 0)
+                continue;
+
+            var clauseQuery = ApplyClause(db.Resources.AsNoTracking(), clause);
+            combined = combined is null ? clauseQuery : combined.Union(clauseQuery);
         }
 
-        return false;
+        return combined ?? db.Resources.AsNoTracking().Where(_ => false);
     }
 
-    private static bool MatchesClause(HashSet<Guid> owned, ExpandedClause clause)
+    private static IQueryable<Resource> ApplyClause(IQueryable<Resource> query, ExpandedClause clause)
     {
         foreach (var positive in clause.Positives)
         {
-            if (!positive.Any(owned.Contains))
-                return false;
+            // Local array so EF Core closes over a constant collection (translates to SQL IN).
+            var set = positive.ToArray();
+            query = query.Where(r => r.ResourceTags.Any(rt => set.Contains(rt.TagId)));
         }
 
-        if (clause.Negatives.Count > 0 && clause.Negatives.Any(owned.Contains))
-            return false;
+        if (clause.Negatives.Count > 0)
+        {
+            var neg = clause.Negatives.ToArray();
+            query = query.Where(r => !r.ResourceTags.Any(rt => neg.Contains(rt.TagId)));
+        }
 
-        return clause.Positives.Count > 0;
+        return query;
     }
 }

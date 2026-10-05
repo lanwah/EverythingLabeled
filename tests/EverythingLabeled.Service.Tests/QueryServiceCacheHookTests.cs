@@ -113,6 +113,29 @@ public sealed class QueryServiceCacheHookTests
         Assert.NotEmpty(cache.Sets);
     }
 
+    [Fact]
+    public async Task Duplicate_positive_aliases_do_not_throw()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var tags = fx.GetTagService();
+        var resources = fx.GetResourceService();
+        var apply = fx.GetResourceTagService();
+
+        Assert.True((await tags.CreateAsync(new CreateTagRequest("工作", null, null, null), CancellationToken.None)).IsSuccess);
+        var resource = await resources.CreateAsync(
+            new CreateResourceRequest("file:///C:/dup-alias.txt", "file", null),
+            CancellationToken.None);
+        Assert.True(resource.IsSuccess);
+        Assert.True((await apply.ApplyAsync(
+            new TagApplyRequest(resource.Data!.Id, null, null, null, [TagApplyItem.FromAlias("工作")], null, false),
+            CancellationToken.None)).IsSuccess);
+
+        var r = await fx.GetQueryService().QueryAsync(QueryRequest.Parse("工作 工作"), CancellationToken.None);
+        Assert.True(r.IsSuccess, r.Message);
+        Assert.Single(r.Data!.Items);
+        Assert.Equal(resource.Data.Id, r.Data.Items[0].Id);
+    }
+
     private sealed class BumpingDataVersionReader(ElDbContext db) : IDataVersionReader
     {
         private int _reads;
