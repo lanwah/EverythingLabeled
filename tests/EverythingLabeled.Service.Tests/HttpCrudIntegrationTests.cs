@@ -390,6 +390,8 @@ public sealed class HttpCrudIntegrationTests
         var writeJson = await ReadJsonAsync(write);
         Assert.True(writeJson.GetProperty("data").TryGetProperty("dataVersion", out _));
 
+        await ApplyTagsAsync(client, "file:///C:/receipt-list.txt", ["receipt-shape"]);
+
         using var preview = await client.GetAsync("/v1/query/preview?q=" + Uri.EscapeDataString("receipt-shape"));
         Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
         Assert.False((await ReadJsonAsync(preview)).GetProperty("data").TryGetProperty("total", out _));
@@ -397,7 +399,9 @@ public sealed class HttpCrudIntegrationTests
         using var resources = await client.GetAsync("/v1/resources");
         Assert.Equal(HttpStatusCode.OK, resources.StatusCode);
         var list = await ReadJsonAsync(resources);
-        foreach (var item in list.GetProperty("data").GetProperty("items").EnumerateArray())
+        var items = list.GetProperty("data").GetProperty("items").EnumerateArray().ToList();
+        Assert.NotEmpty(items);
+        foreach (var item in items)
             Assert.False(item.TryGetProperty("tags", out _));
     }
 
