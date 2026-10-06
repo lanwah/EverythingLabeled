@@ -110,7 +110,11 @@ public sealed class MemoryTagQueryCache : ITagQueryCache, IDisposable
             return;
 
         inner.TryRemove(logicalKey, out _);
-        if (inner.IsEmpty)
-            _index.TryRemove(new KeyValuePair<string, ConcurrentDictionary<string, byte>>(prefix, inner));
+        if (!inner.IsEmpty)
+            return;
+        if (!_index.TryRemove(new KeyValuePair<string, ConcurrentDictionary<string, byte>>(prefix, inner)))
+            return;
+        if (!inner.IsEmpty)
+            _index.GetOrAdd(prefix, inner);
     }
 }
