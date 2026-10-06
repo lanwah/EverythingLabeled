@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8 / #9 / #10 已合入 `master`（163 测通过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [说明](docs/query-cache.md)
-- #11 实现计划已落盘（grill Q1–Q21 均推荐 A）→ [CLI 规格](plans/2026-09-26-cli.md) · [实现计划](plans/2026-10-06-cli-impl.md) · [审核](plans/confirmed/2026-10-06-cli-impl-review.md)
+- #11 实现计划已落盘（grill Q1–Q33 均推荐 A；含 `--json` 字段保真、`IElApi` 在 Task 3 钉死）→ [CLI 规格](plans/2026-09-26-cli.md) · [实现计划](plans/2026-10-06-cli-impl.md) · [审核](plans/confirmed/2026-10-06-cli-impl-review.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -16,7 +16,7 @@
 - MCP v1 仅 stdio；HTTP MCP 延后 → [MCP](plans/2026-09-27-mcp.md)
 - Service 骨架：单项目文件夹分层、EF Core Migrations、`el.db`、Serilog、health+鉴权最小集 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
 - #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；可插拔缓存（默认 Memory）；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md)
-- #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`）+ `el`（SCL 2.0.12）；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
+- #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）+ `el`（SCL 2.0.12）；`--json` 对齐 API 字段；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
 
 ## 待办
 - [ ] #11 CLI `el` + 共享 `EverythingLabeled.Client`
@@ -33,4 +33,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-与用户确认是否按 [CLI 实现计划](plans/2026-10-06-cli-impl.md) 开工 #11（SDD 或本会话逐 Task）
+按 [CLI 实现计划](plans/2026-10-06-cli-impl.md) 用 SDD 执行 Task 1（抽出 PathUri 并由 Service 薄封装）

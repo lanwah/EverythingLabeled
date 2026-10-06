@@ -1,7 +1,7 @@
 # CLI（#11）实现计划讨论确认记录
 
 日期：2026-10-06  
-方式：主线澄清（brainstorm，带推荐答案 → 用户确认）Round 1–3  
+方式：主线澄清（brainstorm，带推荐答案 → 用户确认）Round 1–5  
 已落盘同步：
 
 - [CLI 规格](../2026-09-26-cli.md)（产品规格不改；[规格审核](./2026-09-26-cli-review.md)）
@@ -291,15 +291,171 @@ Path 解析、存在性、`kind`、config、untag 确认不在 `IElApi`。`expan
 
 ---
 
+## D. Round 4 — `--json` 保真、签名冻结、HTTP 拼接
+
+对已落盘实现计划的第二轮 grill（Q1–Q21 不变）。事实：`HealthAsync` 对应现网 **`GET /v1/health`**，无 Bearer。离线 `--help` / `--version` / `completion powershell` 忽略 `--json`（规格里 `--json` 只约束 API `data`）。
+
+### Q22 — `--json` 要不要跟 API `data` 字段集一致
+
+**问题**：规格写成功 stdout 仅 API `data`。Service `TagDto` / `ResourceDetailDto` / `TagApplyResultDto` 含 `namespace`、`seq`、`nameInitials`、时间戳、`revision`。计划里的瘦 `TagInfo` 只有 `id`/`name`/`aliases`。人类输出仍只用别名/`Name`。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Client DTO 对齐 Service 同名形状（`TagInfo`=`TagDto` 字段；`ResourceDetail` 含 `createdAt`/`updatedAt`/`revision`/`tags`；`createdTags` 用完整 Tag）。JSON：`JsonSerializerDefaults.Web` + **不省略 null**（对齐 `ApiEnvelope` 的 `DefaultIgnoreCondition.Never`）。人类格式仍按 Q8–Q10。仍不建 Contracts 工程、不引用 Service |
+| B | 维持计划子集；`--json` 允许比 HTTP 瘦 |
+| C | 本轮引用 Service DTO（打破「Client.Tests 不引用 Service」） |
+
+**确认**：选推荐 **A**。
+
+### Q23 — `IElApi` / DTO 在哪一 Task 钉死
+
+**问题**：计划 Task 3 的 `TagApplyData` 无 `resource`、`GetTagsAsync`/`SuggestAsync` 返回扁平列表；Task 6/7 再改签名。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | **Task 3 一次写最终形状**：`TagApplyData` 含 `Resource`；`GetTagsAsync` → `TagsPage(items, offset:0, limit:count, total:count)`（翻页拼完后的合成 `data`）；`SuggestAsync` → `SuggestPage`。Task 6/7 **不得**再改 `IElApi` 签名 |
+| B | 保持原计划：Task 3 先瘦实现，6/7 再改签名 |
+| C | `GetTagsAsync` 仍返回列表，只由 CLI 包一层 JSON |
+
+**确认**：选推荐 **A**。
+
+### Q24 — `baseUrl` 怎么拼路径
+
+**问题**：`HttpClient.BaseAddress` 有无尾 `/`、请求是 `/v1/...` 还是 `v1/...`，会拼错 URL。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | trim `baseUrl`，**保证恰好一个尾 `/`**；请求用相对路径 **`v1/...`（无前导 `/`）**。测试钉有/无尾斜杠两种输入最终请求 URI 相同 |
+| B | 调用方原样传入；请求一律 `/v1/...` |
+| C | 每次用绝对 `new Uri(baseUrl + "/v1/...")` 手拼 |
+
+**确认**：选推荐 **A**。
+
+### Q25 — `HttpClient` 寿命
+
+**问题**：`ElApp` 在 `Api==null` 时现造 client。进程内测试注入假 API。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 每次 `RunAsync` 需要网络时 `new HttpClient`，`using` 掉；不设静态单例。不引入 `IHttpClientFactory` |
+| B | 静态共用一个 `HttpClient`（改 token 靠改 DefaultHeaders） |
+| C | Generic Host + Factory |
+
+**确认**：选推荐 **A**。
+
+### Q26 — `el --version` 打什么
+
+**问题**：计划写 InformationalVersion；csproj 未定 Version，空字符串会让测试发虚。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Cli csproj 设 `<Version>0.1.0</Version>`。`--version` stdout 一行含 `0.1.0`，stderr 空，exit 0 |
+| B | 硬编码 `"el"`，不绑 SemVer |
+| C | 打 git commit hash |
+
+**确认**：选推荐 **A**。
+
+### Q27 — SCL 解析失败时的 `--json`
+
+**问题**：未知选项、缺位置参数等，SCL 会自己打英文用法；计划的 `bad_request` JSON 管不到解析器。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | handler 前能拦的走 `WriteError`。SCL 解析失败：人类模式保留 SCL 英文 stderr，exit **1**；若已出现 `--json`，stderr 额外或改为标准 error JSON，stdout 空。不把整份 help 塞进 JSON |
+| B | 全部改写 SCL，任何解析失败都只输出我们的 error，永远不出现 SCL help |
+| C | 解析失败不管：SCL 默认输出 + 非 0，`--json` 也可以没有 error 对象 |
+
+**确认**：选推荐 **A**。（Q29 把「额外或改为」收束为 **只** JSON。）
+
+### Q28 — 补全脚本运行时怎么调 `suggest`
+
+**问题**：计划写 `--json` 或解析人类 TSV。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 脚本只调 `el suggest --json -- <prefix>`，解析 `items[].alias`；非 0 / 非 JSON → 空补全。不解析人类 TSV。打印脚本本身仍离线、不读 config |
+| B | 调人类模式 `el suggest <prefix>`，按 tab 切列 |
+| C | 脚本内嵌 `Invoke-RestMethod` 打 API |
+
+**确认**：选推荐 **A**。
+
+---
+
+## E. Round 5 — 解析失败 JSON、非法 url、重复 alias、reparse、`ElJson`
+
+### Q29 — `--json` 遇上 SCL 解析失败，stderr 能不能混 SCL help
+
+**问题**：Q27 允许「额外或改为」。脚本若解析 stderr 为 JSON，前面再跟用法文本会失败。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 命令行已出现 `--json`：stderr **只**打标准 error JSON，**不要** SCL help；stdout 空；exit 1。人类模式仍用 SCL 英文用法 |
+| B | `--json` 时 stderr 先 SCL help 再跟一行 JSON |
+| C | `--json` 时把 help 塞进 `error.message` |
+
+**确认**：选推荐 **A**。
+
+### Q30 — 合并后的 `baseUrl` 不是绝对 http(s)
+
+**问题**：例如 `localhost:5123`、`file:///...`。规格只写了缺文件/缺必填。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | trim 后必须是绝对 URI 且 scheme 为 `http`/`https`。否则 `config_missing`，exit **2**，不发请求。`token` 只要求非空白 |
+| B | 非法 url → 本地 `bad_request`，exit 1 |
+| C | 原样交给 `HttpClient`，失败再算 `connection_failed` |
+
+**确认**：选推荐 **A**。
+
+### Q31 — 一次 `tag`/`untag` 里重复 alias
+
+**问题**：如 `el tag f.txt 工作 工作`。规格没写本地去重。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 只 trim；空段仍 `bad_request`。**不去重、不改大小写**，按用户顺序发给 API |
+| B | 本地按规范化别名去重（保序）再发送 |
+| C | 发现重复 → 本地 `bad_request` |
+
+**确认**：选推荐 **A**。
+
+### Q32 — junction / 非 symlink 的 reparse
+
+**问题**：计划只写 symlink + `ResolveLinkTarget`。Windows 上目录 junction 常见；无权限时 symlink 测会 skip。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 身份仍是用户给出的路径/URI。存在性/`kind`：`ResolveLinkTarget(..., returnFinalTarget: true)`；null 则回退 `File.Exists` / `Directory.Exists`。断链 → `path_not_found`。测试：symlink 无权限则 skip；不强制测 junction |
+| B | 只处理明确是 symlink 的 reparse；junction 当普通目录，不解析目标 |
+| C | 任何 reparse 一律 `path_not_found` |
+
+**确认**：选推荐 **A**。
+
+### Q33 — JSON 选项放哪
+
+**问题**：Q22 要求与 `ApiEnvelope` 同策略。HttpElApi 反序列化与 CLI `--json` 序列化若各写一份会分叉。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Client 公开 `ElJson.Options`（`JsonSerializerDefaults.Web` + `DefaultIgnoreCondition.Never`）。`HttpElApi` 与 CLI `--json` **只准用这一份**。不引用 Service |
+| B | Client 与 CLI 各 new 一份相同选项 |
+| C | 直接默认 `JsonSerializer.Serialize` |
+
+**确认**：选推荐 **A**。
+
+---
+
 ## 落盘对照
 
 | 主题 | 位置 |
 |---|---|
 | 交付面 / IElApi / PathUri / SCL / Result / 测 / 补全 | 实现计划 Global Constraints、Task 1–8 |
 | 人类输出原文 | 实现计划 Task 6–7 |
-| `GetTags` 翻页、DTO 不共享 | Task 3 |
-| UTF-8、紧凑 JSON、英文 help | Task 5 |
-| 进程内 `ElApp`、config、30s、取消 exit 2 | Task 2、3、5 |
+| `GetTags` 翻页、DTO 不共享、字段对齐 Service、`ElJson`、`SuggestPage`/`TagsPage` | Task 2–3（Q22–Q23、Q33） |
+| UTF-8、紧凑 JSON、英文 help、`0.1.0`、SCL `--json` 纯 error | Task 5（Q26、Q27、Q29） |
+| 进程内 `ElApp`、config、30s、取消 exit 2、HttpClient `using`、baseUrl | Task 2、3、5（Q24–Q25、Q30） |
 | Service 薄封装 | Task 1 |
+| FileTarget reparse | Task 4（Q32） |
+| 重复 alias、completion `suggest --json` | Task 6、8（Q31、Q28） |
 
-写计划时一条收束：Q12 曾写 `SuggestAsync → IReadOnlyList<SuggestItem>`，与 API `data` 分页信封及 `--json` 仅 `data` 冲突。**Ruling：`SuggestAsync` 返回 `SuggestPage`**（见实现计划 Task 7）。若错，代价是改 Client 签名一次。
+Q12 曾写 `SuggestAsync` / `GetTagsAsync` 返回 list。**Q23：Task 3 即 `SuggestPage` / `TagsPage` / 带 `resource` 的 `TagApplyData`**，后续 Task 不改签名。
