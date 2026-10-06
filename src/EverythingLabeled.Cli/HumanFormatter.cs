@@ -27,6 +27,24 @@ internal static class HumanFormatter
             stdout.WriteLine("created: " + string.Join(", ", data.CreatedTags.Select(t => t.Name)));
     }
 
+    public static void WriteHits(TextWriter stdout, IReadOnlyList<QueryHit> items)
+    {
+        foreach (var hit in items)
+            stdout.WriteLine(hit.DisplayName ?? hit.Uri);
+    }
+
+    public static void WriteQueryMeta(TextWriter stderr, int offset, int limit, int total) =>
+        stderr.WriteLine($"offset={offset} limit={limit} total={total}");
+
+    public static void WritePreviewMeta(TextWriter stderr, int offset, int limit) =>
+        stderr.WriteLine($"offset={offset} limit={limit}");
+
+    public static void WriteSuggest(TextWriter stdout, SuggestPage page)
+    {
+        foreach (var item in page.Items)
+            stdout.WriteLine($"{item.Alias}\t{item.Name}\t{item.NameInitials}");
+    }
+
     public static void WriteTags(TextWriter stdout, TagsPage page)
     {
         foreach (var tag in page.Items)

@@ -123,6 +123,31 @@ public static class ElApp
         Description = "Skip untag confirmation.",
     };
 
+    internal static readonly Option<string?> ExpandOption = new("--expand")
+    {
+        Description = "Expand related tags (child only).",
+    };
+
+    internal static readonly Option<string?> LimitOption = new("--limit")
+    {
+        Description = "Page size.",
+    };
+
+    internal static readonly Option<string?> OffsetOption = new("--offset")
+    {
+        Description = "Page offset (query only).",
+    };
+
+    internal static readonly Option<string?> MaxDepthOption = new("--max-depth")
+    {
+        Description = "Expansion max depth (requires --expand).",
+    };
+
+    internal static readonly Option<string?> ExpandedTagLimitOption = new("--expanded-tag-limit")
+    {
+        Description = "Expansion tag cap (requires --expand).",
+    };
+
     private static RootCommand BuildRoot(ElInvocation inv)
     {
         var root = new RootCommand("Tag local files and URLs via the EverythingLabeled service.");
@@ -151,6 +176,35 @@ public static class ElApp
         root.Subcommands.Add(tag);
         root.Subcommands.Add(untag);
         root.Subcommands.Add(tags);
+
+        var queryText = new Argument<string>("q") { Description = "Query expression." };
+        var query = new Command("query", "Search resources by tag query.");
+        query.Arguments.Add(queryText);
+        query.Options.Add(ExpandOption);
+        query.Options.Add(LimitOption);
+        query.Options.Add(OffsetOption);
+        query.Options.Add(MaxDepthOption);
+        query.Options.Add(ExpandedTagLimitOption);
+        query.SetAction((parseResult, _) => HandleQueryAsync(inv, parseResult, queryText));
+
+        var previewText = new Argument<string>("q") { Description = "Query expression." };
+        var preview = new Command("preview", "Preview a tag query without paging totals.");
+        preview.Arguments.Add(previewText);
+        preview.Options.Add(ExpandOption);
+        preview.Options.Add(LimitOption);
+        preview.Options.Add(MaxDepthOption);
+        preview.Options.Add(ExpandedTagLimitOption);
+        preview.SetAction((parseResult, _) => HandlePreviewAsync(inv, parseResult, previewText));
+
+        var suggestText = new Argument<string>("prefix") { Description = "Alias prefix." };
+        var suggest = new Command("suggest", "Suggest tag aliases.");
+        suggest.Arguments.Add(suggestText);
+        suggest.Options.Add(LimitOption);
+        suggest.SetAction((parseResult, _) => HandleSuggestAsync(inv, parseResult, suggestText));
+
+        root.Subcommands.Add(query);
+        root.Subcommands.Add(preview);
+        root.Subcommands.Add(suggest);
         return root;
     }
 
@@ -238,6 +292,175 @@ public static class ElApp
                     HumanFormatter.WriteTags(inv.Stdout, result.Data!);
                 return ExitCodes.Ok;
             }).ConfigureAwait(false);
+    }
+
+    private static Task<int> HandleQueryAsync(ElInvocation inv, ParseResult parseResult, Argument<string> qArg)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        if (!TryParseSearchArgs(inv, parseResult, json, qArg, defaultLimit: 50, includeOffset: true,
+                out var q, out var expand, out var limit, out var offset, out var localCode))
+            return Task.FromResult(localCode);
+
+        return RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, _, token) =>
+            {
+                var result = await api.QueryAsync(
+                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, offset, token)
+                    .ConfigureAwait(false);
+                if (!result.IsSuccess)
+                {
+                    WriteError(inv, json, result.Error!.Value);
+                    return ExitCodeFor(result.Error.Value);
+                }
+
+                WriteSuccessMessage(inv, result.Message);
+                if (json)
+                    inv.Stdout.Write(JsonSerializer.Serialize(result.Data, ElJson.Options));
+                else
+                {
+                    HumanFormatter.WriteHits(inv.Stdout, result.Data!.Items);
+                    HumanFormatter.WriteQueryMeta(
+                        inv.Stderr, result.Data.Offset, result.Data.Limit, result.Data.Total);
+                }
+
+                return ExitCodes.Ok;
+            });
+    }
+
+    private static Task<int> HandlePreviewAsync(ElInvocation inv, ParseResult parseResult, Argument<string> qArg)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        if (!TryParseSearchArgs(inv, parseResult, json, qArg, defaultLimit: 10, includeOffset: false,
+                out var q, out var expand, out var limit, out _, out var localCode))
+            return Task.FromResult(localCode);
+
+        return RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, _, token) =>
+            {
+                var result = await api.PreviewAsync(
+                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, token)
+                    .ConfigureAwait(false);
+                if (!result.IsSuccess)
+                {
+                    WriteError(inv, json, result.Error!.Value);
+                    return ExitCodeFor(result.Error.Value);
+                }
+
+                WriteSuccessMessage(inv, result.Message);
+                if (json)
+                    inv.Stdout.Write(JsonSerializer.Serialize(result.Data, ElJson.Options));
+                else
+                {
+                    HumanFormatter.WriteHits(inv.Stdout, result.Data!.Items);
+                    HumanFormatter.WritePreviewMeta(inv.Stderr, result.Data.Offset, result.Data.Limit);
+                }
+
+                return ExitCodes.Ok;
+            });
+    }
+
+    private static Task<int> HandleSuggestAsync(ElInvocation inv, ParseResult parseResult, Argument<string> prefixArg)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        var prefix = CommandSupport.ParseRequiredText(parseResult.GetValue(prefixArg), "prefix must not be empty.");
+        if (!prefix.IsSuccess)
+        {
+            WriteError(inv, json, prefix.Error!.Value);
+            return Task.FromResult(ExitCodes.Usage);
+        }
+
+        var limit = CommandSupport.ParseLimit(parseResult.GetValue(LimitOption), 10);
+        if (!limit.IsSuccess)
+        {
+            WriteError(inv, json, limit.Error!.Value);
+            return Task.FromResult(ExitCodes.Usage);
+        }
+
+        return RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, _, token) =>
+            {
+                var result = await api.SuggestAsync(prefix.Data!, limit.Data, token).ConfigureAwait(false);
+                if (!result.IsSuccess)
+                {
+                    WriteError(inv, json, result.Error!.Value);
+                    return ExitCodeFor(result.Error.Value);
+                }
+
+                WriteSuccessMessage(inv, result.Message);
+                if (json)
+                    inv.Stdout.Write(JsonSerializer.Serialize(result.Data, ElJson.Options));
+                else
+                    HumanFormatter.WriteSuggest(inv.Stdout, result.Data!);
+                return ExitCodes.Ok;
+            });
+    }
+
+    private static bool TryParseSearchArgs(
+        ElInvocation inv,
+        ParseResult parseResult,
+        bool json,
+        Argument<string> qArg,
+        int defaultLimit,
+        bool includeOffset,
+        out string q,
+        out QueryExpand expand,
+        out int limit,
+        out int offset,
+        out int localCode)
+    {
+        q = "";
+        expand = new QueryExpand(null, null, null);
+        limit = defaultLimit;
+        offset = 0;
+        localCode = ExitCodes.Usage;
+
+        var parsedQ = CommandSupport.ParseRequiredText(parseResult.GetValue(qArg), "q must not be empty.");
+        if (!parsedQ.IsSuccess)
+        {
+            WriteError(inv, json, parsedQ.Error!.Value);
+            return false;
+        }
+
+        var parsedExpand = CommandSupport.ParseExpand(
+            parseResult.GetValue(ExpandOption),
+            parseResult.GetValue(MaxDepthOption),
+            parseResult.GetValue(ExpandedTagLimitOption));
+        if (!parsedExpand.IsSuccess)
+        {
+            WriteError(inv, json, parsedExpand.Error!.Value);
+            return false;
+        }
+
+        var parsedLimit = CommandSupport.ParseLimit(parseResult.GetValue(LimitOption), defaultLimit);
+        if (!parsedLimit.IsSuccess)
+        {
+            WriteError(inv, json, parsedLimit.Error!.Value);
+            return false;
+        }
+
+        var parsedOffset = includeOffset
+            ? CommandSupport.ParseOffset(parseResult.GetValue(OffsetOption))
+            : ElResult<int>.Ok(0);
+        if (!parsedOffset.IsSuccess)
+        {
+            WriteError(inv, json, parsedOffset.Error!.Value);
+            return false;
+        }
+
+        q = parsedQ.Data!;
+        expand = parsedExpand.Data;
+        limit = parsedLimit.Data;
+        offset = parsedOffset.Data;
+        return true;
     }
 
     private static int? ParseTargetAndAliases(
