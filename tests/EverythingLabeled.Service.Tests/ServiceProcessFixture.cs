@@ -47,7 +47,9 @@ internal sealed class ServiceProcessFixture : IAsyncDisposable
         Config = config;
     }
 
-    public async Task StartAsync(TimeSpan? readyTimeout = null)
+    public async Task StartAsync(
+        TimeSpan? readyTimeout = null,
+        IReadOnlyDictionary<string, string>? extraEnv = null)
     {
         if (_process is not null)
             throw new InvalidOperationException("Already started.");
@@ -67,6 +69,7 @@ internal sealed class ServiceProcessFixture : IAsyncDisposable
         startInfo.Environment["EL_MUTEX_NAME"] = MutexName;
         startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         startInfo.Environment.Remove("ASPNETCORE_URLS");
+        ApplyExtraEnv(startInfo, extraEnv);
 
         _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         var stdout = new StringBuilder();
@@ -112,7 +115,9 @@ internal sealed class ServiceProcessFixture : IAsyncDisposable
             $"Service did not become ready within {timeout}.\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}");
     }
 
-    public async Task<int> RunExpectExitAsync(TimeSpan? timeout = null)
+    public async Task<int> RunExpectExitAsync(
+        TimeSpan? timeout = null,
+        IReadOnlyDictionary<string, string>? extraEnv = null)
     {
         var dll = FindServiceDll();
         var startInfo = new ProcessStartInfo
@@ -129,6 +134,7 @@ internal sealed class ServiceProcessFixture : IAsyncDisposable
         startInfo.Environment["EL_APPDATA"] = AppDataRoot;
         startInfo.Environment["EL_MUTEX_NAME"] = MutexName;
         startInfo.Environment.Remove("ASPNETCORE_URLS");
+        ApplyExtraEnv(startInfo, extraEnv);
 
         using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.Start();
@@ -217,6 +223,14 @@ internal sealed class ServiceProcessFixture : IAsyncDisposable
         {
             // temp cleanup best-effort
         }
+    }
+
+    private static void ApplyExtraEnv(ProcessStartInfo startInfo, IReadOnlyDictionary<string, string>? extraEnv)
+    {
+        if (extraEnv is null)
+            return;
+        foreach (var (key, value) in extraEnv)
+            startInfo.Environment[key] = value;
     }
 
     private async Task<bool> TryHealthAsync()

@@ -5,6 +5,8 @@ using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Hosting;
 using EverythingLabeled.Service.Http;
 using EverythingLabeled.Service.Logging;
+using EverythingLabeled.Service.Services.Abstractions;
+using EverythingLabeled.Service.Services.Caching;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -93,6 +95,9 @@ internal static class ServiceRuntime
                 Log.Fatal(ex, "Database migration failed; leaving database file in place at {DatabasePath}", paths.DatabasePath);
                 return 1;
             }
+
+            _ = app.Services.GetRequiredService<ITagQueryCache>();
+            _ = app.Services.GetRequiredService<QueryCachePipeline>();
 
             app.UseMiddleware<ExceptionEnvelopeMiddleware>();
             app.UseSerilogRequestLogging(options =>

@@ -5,6 +5,8 @@ using EverythingLabeled.Service.Services.Query;
 using EverythingLabeled.Service.Services.Relations;
 using EverythingLabeled.Service.Services.Resources;
 using EverythingLabeled.Service.Services.Tags;
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace EverythingLabeled.Service.Hosting;
 
@@ -18,8 +20,44 @@ public static class ServiceRegistration
             .Bind(configuration.GetSection(CacheOptions.SectionName));
         services.AddSingleton<QueryCacheMetrics>();
         services.AddSingleton<QueryCacheSingleflight>();
-        services.AddSingleton<ITagQueryCache, NullTagQueryCache>();
         services.AddSingleton<QueryCachePipeline>();
+
+        var bootstrap = new CacheOptions();
+        configuration.GetSection(CacheOptions.SectionName).Bind(bootstrap);
+        if (bootstrap.IsRedis())
+        {
+            services.AddSingleton(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<CacheOptions>>().Value;
+                options.Validate();
+                return RedisConnection.Connect(options);
+            });
+        }
+
+        services.AddSingleton<ITagQueryCache>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<CacheOptions>>().Value;
+            options.Validate();
+            var metrics = sp.GetRequiredService<QueryCacheMetrics>();
+            if (options.IsMemory())
+            {
+                return new MemoryTagQueryCache(
+                    options,
+                    metrics,
+                    sp.GetRequiredService<ILogger<MemoryTagQueryCache>>());
+            }
+
+            if (options.IsNull())
+                return new NullTagQueryCache();
+
+            var mux = sp.GetRequiredService<ConnectionMultiplexer>();
+            return new RedisTagQueryCache(
+                options,
+                new StackExchangeRedisDatabase(mux.GetDatabase()),
+                metrics,
+                sp.GetRequiredService<ILogger<RedisTagQueryCache>>());
+        });
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<INameInitialsGenerator, NameInitialsGenerator>();
         services.AddScoped<IDataVersionReader, DbDataVersionReader>();

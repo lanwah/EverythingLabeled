@@ -16,7 +16,7 @@
 ```text
 Services/
 ├── Abstractions/          # ServiceResult、Paging、ErrorCodes、IUnitOfWork、ITagQueryCache …
-├── Caching/            # NullTagQueryCache、QueryCacheKeyFactory、QueryCachePipeline、DbDataVersionReader
+├── Caching/            # Memory/Redis/Null、Pipeline、Singleflight、Sizer、Metrics
 ├── Tags/               # TagService、SuggestService、别名/简拼规则
 ├── Resources/          # ResourceService、ResourceTagService、UriNormalizer
 ├── Relations/          # RelationService、RelationGraph（成环/单父/batch 上限）
@@ -50,10 +50,11 @@ DI 集中在 `ServiceRegistration`；`Program` 挂载上述 Map*Endpoints。骨�
 5. `QueryCachePipeline`：TryGet → 冷路径 `QueryExecutor` → 版本复核后 Set。
 6. preview 映射为 `PreviewResultDto`：**JSON 无 `total` 属性**；query 含 `total`。
 
-## 4. 缓存（#9 范围）
+## 4. 缓存
 
-- 默认：`NullTagQueryCache`（TryGet 未命中；Set / Invalidate 空操作）。
-- 读路径（suggest / query / preview）已走 `QueryCachePipeline` + `QueryCacheKeyFactory`；换 Memory/Redis 属 #10，只需替换 `ITagQueryCache` 实现并改 `Cache:Provider`。
+默认 **Memory**（`Cache:Provider=Memory`）。`Provider=Null` 永不命中。接线与 Redis 运维见 [query-cache.md](./query-cache.md)。
+
+读路径（suggest / query / preview）走实例 `QueryCachePipeline` + `QueryCacheKeyFactory`；写后按旧 `v{n}:` 前缀失效。
 
 ## 5. 资源列表形状
 
