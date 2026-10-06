@@ -45,3 +45,4 @@
 - 2026-10-06 — #11 Task 1：抽出 `EverythingLabeled.PathUri`，Service `UriNormalizer` 薄封装（8+165 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 2：Client `ElResult`/`ElConfig`/`ElJson`（9 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 3：钉死 `IElApi`/`HttpElApi`（Client 19 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 4：Client `FileTarget` 推断 file/folder（含 symlink，Client 24 测通过）→ [实现计划](./2026-10-06-cli-impl.md)

@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8 / #9 / #10 已合入 `master`（163 测通过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [说明](docs/query-cache.md)
-- #11 在 `feat/cli-el`：Task 1–3 PathUri / ElConfig / `HttpElApi` 已落地 → [实现计划](plans/2026-10-06-cli-impl.md)
+- #11 在 `feat/cli-el`：Task 1–4 PathUri / Client HTTP / FileTarget 已落地 → [实现计划](plans/2026-10-06-cli-impl.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -33,4 +33,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [CLI 实现计划](plans/2026-10-06-cli-impl.md) 执行 Task 4（`FileTarget` 存在性 / symlink / kind）
+按 [CLI 实现计划](plans/2026-10-06-cli-impl.md) 执行 Task 5（`el` 骨架：SCL、UTF-8、离线 help/version）
