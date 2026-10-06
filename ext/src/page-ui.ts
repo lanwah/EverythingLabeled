@@ -99,6 +99,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let pageUrl = "";
   let pageTitle = "";
   let resourceExists = false;
+  let tagsRequestId = 0;
   let hits: QueryHit[] = [];
   let selected = new Set<string>();
   let tagActionsEnabled = false;
@@ -211,14 +212,20 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     return window.confirm(copy.untagConfirm);
   }
 
+  function resetTagsState(): void {
+    resourceExists = false;
+    renderChips([]);
+  }
+
   async function refreshTags(): Promise<void> {
-    if (!tagActionsEnabled || pageUrl === "") {
-      resourceExists = false;
-      renderChips([]);
-      return;
-    }
-    const result = await send<PageTags>({ type: "getTags", uri: pageUrl });
+    const requestId = ++tagsRequestId;
+    resetTagsState();
+    if (!tagActionsEnabled || pageUrl === "") return;
+    const uri = pageUrl;
+    const result = await send<PageTags>({ type: "getTags", uri });
+    if (requestId !== tagsRequestId) return;
     if (!result.ok) {
+      resetTagsState();
       showFailure(result);
       return;
     }
@@ -227,8 +234,10 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   }
 
   async function applyPage(url: string | undefined, title: string | undefined): Promise<void> {
+    ++tagsRequestId;
     pageUrl = url ?? "";
     pageTitle = title ?? "";
+    resetTagsState();
     renderPage();
     await refreshTags();
   }
