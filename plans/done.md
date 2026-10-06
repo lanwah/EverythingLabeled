@@ -39,3 +39,4 @@
 - 2026-10-06 — grill #10 规格 Round 1–3（私有 MemoryCache、KeyPrefix、可配 RedisConnectTimeout 默认 5s、await 完 load 等）并回写 → [审核](./confirmed/2026-10-06-query-cache-review.md) · [查询缓存](./2026-10-06-query-cache.md)
 - 2026-10-06 — 起草 #10 查询缓存实现计划（Memory/Redis/Null、Pipeline singleflight、启动校验）→ [实现计划](./2026-10-06-query-cache-impl.md)
 - 2026-10-06 — grill #10 实现计划 Q1–Q15 并回写（Task 3 先接 Pipeline 仍 Null；Redis Connect 仅 DI；进程测收缩）→ [审核 §G](./confirmed/2026-10-06-query-cache-review.md) · [实现计划](./2026-10-06-query-cache-impl.md)
+- 2026-10-06 — #10 查询缓存合入 `master`（fast-forward `54222ca`，Memory/Redis/Null，163 测通过）→ [实现计划](./2026-10-06-query-cache-impl.md) · [说明](../docs/query-cache.md)

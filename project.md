@@ -4,8 +4,7 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8 / #9 已合入 `master` → [骨架规格](plans/2026-09-27-service-skeleton.md) · [CRUD 规格](plans/2026-09-29-crud-and-query.md) · [说明](docs/crud-and-query.md)
-- #10 查询缓存已在 `feature/query-cache` 实现（Memory / Redis / Null，163 测通过）→ [规格](plans/2026-10-06-query-cache.md) · [实现计划](plans/2026-10-06-query-cache-impl.md) · [说明](docs/query-cache.md)
+- v1 设计基线已齐；#8 / #9 / #10 已合入 `master`（163 测通过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [说明](docs/query-cache.md)
 - #11–#14 仍待讨论/实现
 
 ## 关键决策
@@ -16,10 +15,9 @@
 - 查询缓存可插拔：默认 Memory，可配 Redis/Null；无缓存基类，只换 `ITagQueryCache`；Redis 用 StackExchange.Redis（非 IDistributedCache）→ [查询缓存](plans/2026-10-06-query-cache.md) · [实现计划](plans/2026-10-06-query-cache-impl.md) · [架构 §5](plans/2026-09-22-local-daemon-architecture.md)
 - MCP v1 仅 stdio；HTTP MCP 延后 → [MCP](plans/2026-09-27-mcp.md)
 - Service 骨架：单项目文件夹分层、EF Core Migrations、`el.db`、Serilog、health+鉴权最小集 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
-- #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；Null 缓存；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [实现计划](plans/2026-10-03-crud-and-query-impl.md)
+- #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；可插拔缓存（默认 Memory）；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md)
 
 ## 待办
-- [ ] #10 查询缓存 `ITagQueryCache`
 - [ ] #11 CLI `el` + 共享 `EverythingLabeled.Client`
 - [ ] #12 MCP stdio host
 - [ ] #13 浏览器扩展（Windows 联调）
@@ -29,9 +27,9 @@
 已完成记录 → [plans/done.md](plans/done.md)
 
 ## 风险
-- 查询「必须快」依赖缓存与查询引擎；#10 可插拔缓存已在功能分支落地，待合入
+- 查询「必须快」依赖缓存与查询引擎；#10 默认 Memory 已合入，Redis 为可选项
 - Explorer / 浏览器扩展联调依赖 Service 业务 API，易成进度瓶颈
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-确认是否将 `feature/query-cache` 合入 `master`（#10 实现完毕，`dotnet test` 163 通过）
+与用户确认是否按 [CLI 规格](plans/2026-09-26-cli.md) 开工 #11（先写实现计划）
