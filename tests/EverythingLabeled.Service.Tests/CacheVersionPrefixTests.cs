@@ -23,4 +23,11 @@ public sealed class CacheVersionPrefixTests
     {
         Assert.False(CacheVersionPrefix.TryParse(prefix, out _));
     }
+
+    [Fact]
+    public void TryGetLogicalPrefix_from_logical_key()
+    {
+        Assert.True(CacheVersionPrefix.TryGetLogicalPrefix("v12:query:x", out var prefix));
+        Assert.Equal("v12:", prefix);
+    }
 }

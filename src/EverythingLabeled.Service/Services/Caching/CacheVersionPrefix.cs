@@ -15,4 +15,15 @@ public static class CacheVersionPrefix
             CultureInfo.InvariantCulture,
             out version);
     }
+
+    public static bool TryGetLogicalPrefix(string logicalKey, out string prefix)
+    {
+        prefix = "";
+        var colon = logicalKey.IndexOf(':');
+        if (colon <= 1) return false;
+        var candidate = logicalKey[..(colon + 1)];
+        if (!TryParse(candidate, out _)) return false;
+        prefix = candidate;
+        return true;
+    }
 }
