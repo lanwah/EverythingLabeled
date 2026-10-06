@@ -28,7 +28,7 @@ EverythingLabeled.sln
 ## 2. 本地运行
 
 ```powershell
-# 仓库根目录
+# 仓库根目录（或 build.bat / .\build.ps1，见 [文档首页](./README.md#编译)）
 dotnet build EverythingLabeled.sln
 dotnet run --project src/EverythingLabeled.Service
 ```

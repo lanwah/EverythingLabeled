@@ -63,7 +63,7 @@ DI 集中在 `ServiceRegistration`；`Program` 挂载上述 Map*Endpoints。骨�
 ## 6. 本地运行与测试
 
 ```powershell
-# 仓库根目录
+# 仓库根目录（或 build.bat / .\build.ps1，见 [文档首页](./README.md#编译)）
 dotnet build EverythingLabeled.sln
 dotnet run --project src/EverythingLabeled.Service
 

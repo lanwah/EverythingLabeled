@@ -212,5 +212,5 @@ Chromium 扩展在已授权 host 上 `fetch` 一般不依赖网页 CORS；Servic
 
 ## 8. 后续
 
-- 实现跟踪：Backlog **#11** 浏览器扩展（Windows 联调）
+- 实现跟踪：Backlog **#13** 浏览器扩展（Windows 联调）→ [实现计划](./2026-10-06-browser-extension-impl.md)
 - 依赖：Service HTTP（#7–#9）可用；手动 Options 配置即可联调，不阻塞于 #6 安装程序
