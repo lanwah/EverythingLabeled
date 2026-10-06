@@ -4,7 +4,7 @@ Chrome / Edge MV3 扩展，源码与构建产物在 `ext/`。只走本机 Servic
 
 ## 工程布局
 
-- `ext/` — Manifest V3、Popup / Options / background service worker、content script、双 Vite 构建
+- `ext/` — Manifest V3、Popup / Options / background service worker、双 Vite 构建
 - 对应测试：`ext/` 内 Vitest（`npm test`）
 
 需要 Node.js ≥ 20。
