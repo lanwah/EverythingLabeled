@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EverythingLabeled.Client\EverythingLabeled.Client.csproj" />
+    <ProjectReference Include="..\EverythingLabeled.PathUri\EverythingLabeled.PathUri.csproj" />
   </ItemGroup>
 
 </Project>

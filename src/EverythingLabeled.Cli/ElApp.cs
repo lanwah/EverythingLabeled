@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using EverythingLabeled.Client;
+using EverythingLabeled.PathUri;
 using System.CommandLine;
 
 namespace EverythingLabeled.Cli;
@@ -42,7 +43,7 @@ public static class ElApp
                 return ExitCodes.Ok;
             }
 
-            var root = BuildRoot();
+            var root = BuildRoot(inv);
             var parseResult = root.Parse(inv.Args);
             var json = HasToken(inv.Args, "--json") || parseResult.GetValue(JsonOption);
 
@@ -101,7 +102,28 @@ public static class ElApp
         Description = "Path to config.json (overrides EL_CONFIG).",
     };
 
-    private static RootCommand BuildRoot()
+    internal static readonly Argument<string> TargetArgument = new("target")
+    {
+        Description = "File path, file:// URI, or http(s) URL.",
+    };
+
+    internal static readonly Argument<string[]> AliasesArgument = new("aliases")
+    {
+        Arity = ArgumentArity.ZeroOrMore,
+        Description = "Tag aliases (1–100).",
+    };
+
+    internal static readonly Option<bool> CreateOption = new("--create", "-c")
+    {
+        Description = "Create missing tags.",
+    };
+
+    internal static readonly Option<bool> YesOption = new("--yes", "-y")
+    {
+        Description = "Skip untag confirmation.",
+    };
+
+    private static RootCommand BuildRoot(ElInvocation inv)
     {
         var root = new RootCommand("Tag local files and URLs via the EverythingLabeled service.");
         root.Options.Add(JsonOption);
@@ -109,7 +131,202 @@ public static class ElApp
         root.Options.Add(TokenOption);
         root.Options.Add(ConfigOption);
         root.Options.Add(new VersionOption());
+
+        var tag = new Command("tag", "Add aliases to a target.");
+        tag.Arguments.Add(TargetArgument);
+        tag.Arguments.Add(AliasesArgument);
+        tag.Options.Add(CreateOption);
+        tag.SetAction((parseResult, _) => HandleTagAsync(inv, parseResult));
+
+        var untag = new Command("untag", "Remove aliases from a target.");
+        untag.Arguments.Add(TargetArgument);
+        untag.Arguments.Add(AliasesArgument);
+        untag.Options.Add(YesOption);
+        untag.SetAction((parseResult, _) => HandleUntagAsync(inv, parseResult));
+
+        var tags = new Command("tags", "List aliases on a target.");
+        tags.Arguments.Add(TargetArgument);
+        tags.SetAction((parseResult, _) => HandleTagsAsync(inv, parseResult));
+
+        root.Subcommands.Add(tag);
+        root.Subcommands.Add(untag);
+        root.Subcommands.Add(tags);
         return root;
+    }
+
+    private static async Task<int> HandleTagAsync(ElInvocation inv, ParseResult parseResult)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        var parsed = ParseTargetAndAliases(parseResult, json, inv, out var canonical, out var aliases);
+        if (parsed is { } localCode)
+            return localCode;
+
+        var kind = CommandSupport.ResolveKind(canonical);
+        if (!kind.IsSuccess)
+        {
+            WriteError(inv, json, kind.Error!.Value);
+            return ExitCodeFor(kind.Error.Value);
+        }
+
+        var createMissing = parseResult.GetValue(CreateOption);
+        return await RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, _, token) =>
+            {
+                var result = await api.TagAsync(canonical.Uri, kind.Data!, aliases, createMissing, token)
+                    .ConfigureAwait(false);
+                return WriteApply(inv, json, aliases, result, untag: false);
+            }).ConfigureAwait(false);
+    }
+
+    private static async Task<int> HandleUntagAsync(ElInvocation inv, ParseResult parseResult)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        var parsed = ParseTargetAndAliases(parseResult, json, inv, out var canonical, out var aliases);
+        if (parsed is { } localCode)
+            return localCode;
+
+        return await RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, config, token) =>
+            {
+                var yes = parseResult.GetValue(YesOption);
+                if (config.ConfirmUntag && !yes)
+                {
+                    var confirm = ConfirmUntag(inv, json, aliases, canonical.Uri);
+                    if (confirm is { } confirmCode)
+                        return confirmCode;
+                }
+
+                var result = await api.UntagAsync(canonical.Uri, aliases, token).ConfigureAwait(false);
+                return WriteApply(inv, json, aliases, result, untag: true);
+            }).ConfigureAwait(false);
+    }
+
+    private static async Task<int> HandleTagsAsync(ElInvocation inv, ParseResult parseResult)
+    {
+        var json = parseResult.GetValue(JsonOption);
+        var target = CommandSupport.ParseTarget(parseResult.GetValue(TargetArgument));
+        if (!target.IsSuccess)
+        {
+            WriteError(inv, json, target.Error!.Value);
+            return ExitCodes.Usage;
+        }
+
+        var canonical = target.Data;
+        return await RunNeedingNetworkAsync(
+            inv,
+            ConfigOverrides(parseResult),
+            json,
+            async (api, _, token) =>
+            {
+                var result = await api.GetTagsAsync(canonical.Uri, token).ConfigureAwait(false);
+                if (!result.IsSuccess)
+                {
+                    WriteError(inv, json, result.Error!.Value);
+                    return ExitCodeFor(result.Error.Value);
+                }
+
+                WriteSuccessMessage(inv, result.Message);
+                if (json)
+                    inv.Stdout.Write(JsonSerializer.Serialize(result.Data, ElJson.Options));
+                else
+                    HumanFormatter.WriteTags(inv.Stdout, result.Data!);
+                return ExitCodes.Ok;
+            }).ConfigureAwait(false);
+    }
+
+    private static int? ParseTargetAndAliases(
+        ParseResult parseResult,
+        bool json,
+        ElInvocation inv,
+        out CanonicalTarget canonical,
+        out IReadOnlyList<string> aliases)
+    {
+        canonical = default;
+        aliases = [];
+        var target = CommandSupport.ParseTarget(parseResult.GetValue(TargetArgument));
+        if (!target.IsSuccess)
+        {
+            WriteError(inv, json, target.Error!.Value);
+            return ExitCodes.Usage;
+        }
+
+        var parsedAliases = CommandSupport.ParseAliases(parseResult.GetValue(AliasesArgument));
+        if (!parsedAliases.IsSuccess)
+        {
+            WriteError(inv, json, parsedAliases.Error!.Value);
+            return ExitCodes.Usage;
+        }
+
+        canonical = target.Data;
+        aliases = parsedAliases.Data!;
+        return null;
+    }
+
+    private static int? ConfirmUntag(ElInvocation inv, bool json, IReadOnlyList<string> aliases, string uri)
+    {
+        if (!inv.IsTty)
+        {
+            WriteError(
+                inv,
+                json,
+                new ElError(ElErrorCodes.BadRequest, "Refusing to untag without --yes when stdin is not a TTY."));
+            return ExitCodes.Usage;
+        }
+
+        inv.Stderr.WriteLine($"Remove alias(es) [{string.Join(", ", aliases)}] from {uri}? [y/N]");
+        var line = inv.Stdin.ReadLine();
+        if (line is "y" or "Y")
+            return null;
+
+        WriteError(inv, json, new ElError(ElErrorCodes.BadRequest, "Untag cancelled."));
+        return ExitCodes.Usage;
+    }
+
+    private static int WriteApply(
+        ElInvocation inv,
+        bool json,
+        IReadOnlyList<string> aliases,
+        ElResult<TagApplyData> result,
+        bool untag)
+    {
+        if (!result.IsSuccess)
+        {
+            WriteError(inv, json, result.Error!.Value);
+            return ExitCodeFor(result.Error.Value);
+        }
+
+        WriteSuccessMessage(inv, result.Message);
+        if (json)
+            inv.Stdout.Write(JsonSerializer.Serialize(result.Data, ElJson.Options));
+        else
+            HumanFormatter.WriteTagApply(inv.Stdout, aliases, result.Data!, untag);
+        return ExitCodes.Ok;
+    }
+
+    private static void WriteSuccessMessage(ElInvocation inv, string? message)
+    {
+        if (!string.IsNullOrEmpty(message))
+            inv.Stderr.WriteLine(message);
+    }
+
+    private static ElConfigOverrides ConfigOverrides(ParseResult parseResult) =>
+        new(parseResult.GetValue(ConfigOption), parseResult.GetValue(BaseUrlOption), parseResult.GetValue(TokenOption));
+
+    internal static int ExitCodeFor(ElError error)
+    {
+        if (error.HttpStatus is >= 500)
+            return ExitCodes.Http5xx;
+        if (error.HttpStatus is >= 400)
+            return ExitCodes.Http4xx;
+        return error.Code is ElErrorCodes.ConfigMissing or ElErrorCodes.ConnectionFailed
+            ? ExitCodes.ConfigOrConnection
+            : ExitCodes.Usage;
     }
 
     internal static void WriteError(ElInvocation inv, bool json, ElError error)
