@@ -25,3 +25,4 @@ build.bat -Configuration Release
 | [查询缓存](./query-cache.md) | backlog **#10** | Memory/Redis/Null、`Cache:*`、opt-in Redis 测 |
 | [CLI](./cli.md) | backlog **#11** | `el` 工程布局、运行、配置优先级、如何跑 PathUri/Client/Cli 测试 |
 | [MCP](./mcp.md) | backlog **#12** | stdio host、`--help`/`--version`、配置优先级、Cursor `mcp.json`、Tools 测试 |
+| [浏览器扩展](./browser-extension.md) | backlog **#13** | `ext/` 构建与加载、Options 手工配置、Service 依赖、手工联调清单 |
