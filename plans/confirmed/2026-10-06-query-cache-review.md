@@ -5,6 +5,7 @@
 已落盘同步：
 
 - [查询缓存规格](../2026-10-06-query-cache.md)
+- [查询缓存实现计划](../2026-10-06-query-cache-impl.md)（grill Q1–Q15 见下文 §G）
 - [路线图 backlog](../2026-09-23-roadmap-backlog.md)（#10 已确认规格）
 - [项目看板](../../project.md)
 
@@ -375,3 +376,194 @@
 **问题**：Connect 超时要不要写死？
 
 **确认**：改为 **可配置** `Cache:RedisConnectTimeout`（`"hh:mm:ss"`）；**省略则默认 5 秒**。`Provider=Redis` 且超时 ≤0 → 启动失败。`AbortOnConnectFail=true` 仍生效。
+
+---
+
+## G. 实现计划 grill（2026-10-06）
+
+对象：[查询缓存实现计划](../2026-10-06-query-cache-impl.md)  
+方式：两轮；Q7「提交」、Q9「推进剂」按推荐 **A**；Q15 用户回「16推荐」按本问计。
+
+### Round 1
+
+### Q1 — Task 3 改构造后全量测试会否红到 Task 5
+
+**问题**：Task 3 把 Query/Suggest 改成注入 `QueryCachePipeline` + `IOptions<CacheOptions>`，DI 要到 Task 5 才注册时，HTTP 进程测会解析失败。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Task 3 **同时** Bind `CacheOptions`、注册 Metrics / Singleflight / Pipeline，缓存仍 Null；Task 5 只换 Provider + 启动期 Connect |
+| **B** | 合并 Task 3 与 Task 5 |
+| **C** | 保持原计划，允许 Task 3～4 解决方案测试红 |
+
+**确认**：选推荐 **A**。
+
+### Q2 — StackExchange.Redis 版本
+
+**问题**：计划钉 2.8.58，NuGet 主线已是 3.3.x。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 维持 **2.8.58** |
+| **B** | 改钉 **3.3.1** |
+| **C** | 计划只写 2.8+，实现时再 add |
+
+**确认**：选推荐 **A**。
+
+### Q3 — `IRedisCacheDatabase` 端口
+
+**问题**：规格禁止跨后端缓存基类；仓库无 mock 库。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 保留薄 `IRedisCacheDatabase`，单测用 Fake |
+| **B** | 不抽接口；命令顺序靠 opt-in 真 Redis |
+| **C** | 引入 NSubstitute/Moq mock `IDatabase` |
+
+**确认**：选推荐 **A**。
+
+### Q4 — Redis Connect 放哪
+
+**问题**：双重构造容易搞混 multiplexer 的 Dispose。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Connect **只**在 DI 工厂；`RedisTagQueryCache` **一个**构造函数收 `IRedisCacheDatabase` |
+| **B** | 类型上两个构造，生产构造内部 Connect |
+| **C** | 类型自己始终 Connect |
+
+**确认**：选推荐 **A**。
+
+### Q5 — Pipeline 快照范围
+
+**问题**：进缓存的是 `Paged<QueryHitDto>` / `Paged<SuggestItemDto>`；计划还写了 QueryResult/Preview DTO。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 只快照 `Paged<>` |
+| **B** | Paged + QueryResultDto + PreviewResultDto |
+| **C** | Memory 也 JSON 往返拷贝 |
+
+**确认**：选推荐 **A**。
+
+### Q6 — Redis SET+SADD 原子性
+
+**问题**：规格允许 CreateBatch 或 ITransaction；原稿只写 batch。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `CreateBatch` + `Execute` |
+| **B** | `ITransaction` 绑 SET+SADD |
+| **C** | 两次独立 await |
+
+**确认**：选推荐 **A**。
+
+### Q7 — 先迁库还是先连 Redis
+
+**问题**：Redis 配错时 SQLite 是否已经 migrate。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 先 DB migrate，再 Resolve 缓存 |
+| **B** | 先 Validate + Redis Connect，再 migrate |
+| **C** | Validate 最先；migrate 与 Connect 并行 |
+
+**确认**：选推荐 **A**（回复「提交」按推荐计）。
+
+### Q8 — MemoryCache Size 超出 int
+
+**问题**：Sizer 为 `long`，`MemoryCacheEntryOptions.Size` 为 `int`。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | skip Set（同超 MaxEntrySize：Warning + `skip_max_entry`） |
+| **B** | clamp 成 `int.MaxValue` 仍写入 |
+| **C** | 抛错 |
+
+**确认**：选推荐 **A**。
+
+### Q9 — 启动失败是否进程测
+
+**问题**：Task 1 已有 `Validate` 单测；Task 5 原稿四条进程测。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 非法数字/Provider 只单测；进程测只留 Null health + Redis 坏连接串非 0 退出 |
+| **B** | Disk / SizeLimit=0 / Redis 连不上 / Null 四条都跑进程 |
+| **C** | 全部只做 Options 单测 |
+
+**确认**：选推荐 **A**（回复「推进剂」按推荐计）。
+
+### Q10 — Metrics 测试缝
+
+**问题**：不要真等 60s 测 Information 汇总。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 公开 `FlushInterval` init（默认 60s），测试设 `Zero` |
+| **B** | 注入 `TimeProvider` |
+| **C** | 不单测汇总日志 |
+
+**确认**：选推荐 **A**。
+
+### Round 2
+
+### Q11 — 测试如何看见 `IRedisCacheDatabase`
+
+**问题**：Q3 已定保留 `internal` 端口。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `<InternalsVisibleTo Include="EverythingLabeled.Service.Tests" />` |
+| **B** | 接口改 `public` |
+| **C** | 接口放测试项目 |
+
+**确认**：选推荐 **A**。
+
+### Q12 — multiplexer 谁 Dispose
+
+**问题**：Q4 已定 Connect 只在 DI。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `ConnectionMultiplexer` Singleton，容器 Dispose；再包 `IRedisCacheDatabase` + `RedisTagQueryCache` |
+| **B** | 另做 `RedisConnectionOwner : IDisposable` |
+| **C** | `RedisTagQueryCache.Dispose` 关 mux |
+
+**确认**：选推荐 **A**。
+
+### Q13 — 无 Redis 时集成测形态
+
+**问题**：提前 `return` 在 xunit 里显示通过。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 维持 `return`（文档写明空跑） |
+| **B** | `Xunit.SkippableFact` |
+| **C** | 无 Redis 则 `Assert.Fail` |
+
+**确认**：选推荐 **A**。
+
+### Q14 — `Connect` 辅助放哪
+
+**问题**：生产 Connect 不再进缓存类型构造。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `RedisConnection.Connect(CacheOptions) → ConnectionMultiplexer` |
+| **B** | 内联在 `ServiceRegistration` lambda |
+| **C** | 仍挂在 `RedisTagQueryCache.internal static Connect` |
+
+**确认**：选推荐 **A**。
+
+### Q15 — Task 3 是否改 `Program.cs`
+
+**问题**：Q1 要求 Task 3 就注册 Pipeline。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | Task 3 改 `AddEverythingLabeledServices(IConfiguration)` 与 `Program` 调用；Task 5 只换工厂 + eager Resolve + Redis Connect |
+| **B** | Task 3 用默认 `new CacheOptions()`，不读 appsettings |
+| **C** | Program 等到 Task 5 再改（Task 3～4 HTTP 测仍红） |
+
+**确认**：选推荐 **A**（回复「16推荐」按 Q15 计）。

@@ -37,3 +37,5 @@
 - 2026-10-06 — #8/#9 本地合入 `master`（fast-forward `18be1bf`，117 测通过；删除分支 `feature/8-service-skeleton`）→ [实现计划](./2026-10-03-crud-and-query-impl.md) · [说明](../docs/crud-and-query.md)
 - 2026-10-06 — 确认 #10 查询缓存规格（Memory/Redis 并列实现 `ITagQueryCache`；Pipeline singleflight；Redis 用 StackExchange.Redis）→ [查询缓存](./2026-10-06-query-cache.md)
 - 2026-10-06 — grill #10 规格 Round 1–3（私有 MemoryCache、KeyPrefix、可配 RedisConnectTimeout 默认 5s、await 完 load 等）并回写 → [审核](./confirmed/2026-10-06-query-cache-review.md) · [查询缓存](./2026-10-06-query-cache.md)
+- 2026-10-06 — 起草 #10 查询缓存实现计划（Memory/Redis/Null、Pipeline singleflight、启动校验）→ [实现计划](./2026-10-06-query-cache-impl.md)
+- 2026-10-06 — grill #10 实现计划 Q1–Q15 并回写（Task 3 先接 Pipeline 仍 Null；Redis Connect 仅 DI；进程测收缩）→ [审核 §G](./confirmed/2026-10-06-query-cache-review.md) · [实现计划](./2026-10-06-query-cache-impl.md)
