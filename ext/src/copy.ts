@@ -1,0 +1,14 @@
+export const copy = {
+  invalidBaseUrl: "地址必须是 http://127.0.0.1，不能带路径或查询",
+  invalidPreviewLimit: "预览条数必须是 1–16 的整数",
+  pageCannotTag: "当前页不可打标",
+  serviceUnreachable: "服务未运行或地址错误",
+  tokenInvalid: "token 无效",
+  tokenMissing: "未配置 token",
+  previewEmpty: "没有匹配的结果",
+  openNone: "没有可打开的网址",
+  openOverLimit: "打开数量超过上限",
+  tagNotFoundWithoutCreate: "未勾选创建缺失标签",
+  cannotOpen: "不可打开",
+  untagConfirm: "确定去掉该标签？",
+} as const;

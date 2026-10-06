@@ -7,3 +7,5 @@
 *.db
 *.db-shm
 *.db-wal
+ext/node_modules/
+ext/dist/
