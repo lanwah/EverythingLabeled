@@ -51,3 +51,4 @@
 - 2026-10-06 — #11 Task 7：`query`/`preview`/`suggest`（#58）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 8：`completion powershell` 与 [CLI 说明](../docs/cli.md)（#59；sln 228 测）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 CLI 合入 `master`（fast-forward `9e6bfd1`，228 测通过）→ [实现计划](./2026-10-06-cli-impl.md) · [说明](../docs/cli.md)
+- 2026-10-06 — grill #12 实现计划 Q1–Q15（均选推荐）并落盘 → [实现计划](./2026-10-06-mcp-impl.md) · [审核](./confirmed/2026-10-06-mcp-impl-review.md)

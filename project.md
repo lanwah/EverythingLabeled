@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#11 已合入 `master`（228 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md)
-- #11：`el` + `PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）→ [CLI 规格](plans/2026-09-26-cli.md) · [实现计划](plans/2026-10-06-cli-impl.md)
+- #12 实现计划已确认（Q1–Q15 均推荐 A）：`Mcp.Tools` + stdio host、SDK 2.2.0、`LoadBaseUrl`/`ElRequestRules` → [MCP 规格](plans/2026-09-27-mcp.md) · [实现计划](plans/2026-10-06-mcp-impl.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -13,7 +13,7 @@
 - 标签：扁平主名 + 可选命名空间；`TagRelation` 网状（`child`/`related`）；查询默认 AND，支持 OR / `-tag` → [数据模型](plans/2026-09-23-data-model.md)
 - 文件身份仅路径；改名/移动不自动跟标
 - 查询缓存可插拔：默认 Memory，可配 Redis/Null；无缓存基类，只换 `ITagQueryCache`；Redis 用 StackExchange.Redis（非 IDistributedCache）→ [查询缓存](plans/2026-10-06-query-cache.md) · [实现计划](plans/2026-10-06-query-cache-impl.md) · [架构 §5](plans/2026-09-22-local-daemon-architecture.md)
-- MCP v1 仅 stdio；HTTP MCP 延后 → [MCP](plans/2026-09-27-mcp.md)
+- MCP v1 仅 stdio；HTTP MCP 延后；#12：官方 SDK 2.2.0；闸门进 Client；health 用 `LoadBaseUrl`；缺配置仍进会话 → [MCP](plans/2026-09-27-mcp.md) · [实现计划](plans/2026-10-06-mcp-impl.md)
 - Service 骨架：单项目文件夹分层、EF Core Migrations、`el.db`、Serilog、health+鉴权最小集 → [Service 骨架](plans/2026-09-27-service-skeleton.md)
 - #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；可插拔缓存（默认 Memory）；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md)
 - #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）+ `el`（SCL 2.0.12）；`--json` 对齐 API 字段；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
@@ -32,4 +32,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [MCP 规格](plans/2026-09-27-mcp.md) 确认是否开工 #12 stdio host
+按 [MCP 实现计划](plans/2026-10-06-mcp-impl.md) 用 Subagent-Driven Development 执行 Task 1（`LoadBaseUrl` + `ElRequestRules`）
