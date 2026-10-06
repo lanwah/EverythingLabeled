@@ -128,6 +128,74 @@ public sealed class ElConfigTests
     }
 
     [Fact]
+    public void LoadBaseUrl_file_without_token_succeeds_with_trailing_slash()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123"}
+            """);
+
+        var load = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+        Assert.False(load.IsSuccess);
+        Assert.Equal(ElErrorCodes.ConfigMissing, load.Error!.Value.Code);
+
+        var r = ElConfigLoader.LoadBaseUrl(EmptyFlags(), EmptyEnv(), path);
+        Assert.True(r.IsSuccess);
+        Assert.Equal("http://127.0.0.1:5123/", r.Data!.BaseUrl);
+        Assert.True(r.Data.ConfirmUntag);
+    }
+
+    [Fact]
+    public void LoadBaseUrl_file_confirm_false_is_kept()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","confirmUntag":false}
+            """);
+
+        var r = ElConfigLoader.LoadBaseUrl(EmptyFlags(), EmptyEnv(), path);
+        Assert.True(r.IsSuccess);
+        Assert.False(r.Data!.ConfirmUntag);
+    }
+
+    [Fact]
+    public void LoadBaseUrl_missing_file_without_overrides_is_config_missing()
+    {
+        var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "config.json");
+        var r = ElConfigLoader.LoadBaseUrl(EmptyFlags(), EmptyEnv(), missing);
+        Assert.False(r.IsSuccess);
+        Assert.Equal(ElErrorCodes.ConfigMissing, r.Error!.Value.Code);
+        Assert.Equal("Configuration is missing or invalid.", r.Error.Value.Message);
+    }
+
+    [Fact]
+    public void LoadBaseUrl_missing_file_with_flag_url_succeeds_with_default_confirm()
+    {
+        var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "config.json");
+        var r = ElConfigLoader.LoadBaseUrl(
+            new ElConfigOverrides(null, "http://127.0.0.1:5123", null),
+            EmptyEnv(),
+            missing);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal("http://127.0.0.1:5123/", r.Data!.BaseUrl);
+        Assert.True(r.Data.ConfirmUntag);
+    }
+
+    [Fact]
+    public void LoadBaseUrl_relative_host_without_scheme_is_config_missing()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"localhost:5123"}
+            """);
+
+        var r = ElConfigLoader.LoadBaseUrl(EmptyFlags(), EmptyEnv(), path);
+        Assert.False(r.IsSuccess);
+        Assert.Equal(ElErrorCodes.ConfigMissing, r.Error!.Value.Code);
+    }
+
+    [Fact]
     public void Base_url_with_and_without_slash_normalize_equal()
     {
         using var dir = new TempDir();

@@ -439,13 +439,13 @@ public static class ElApp
         int defaultLimit,
         bool includeOffset,
         out string q,
-        out QueryExpand expand,
+        out ElQueryExpand expand,
         out int limit,
         out int offset,
         out int localCode)
     {
         q = "";
-        expand = new QueryExpand(null, null, null);
+        expand = new ElQueryExpand(null, null, null);
         limit = defaultLimit;
         offset = 0;
         localCode = ExitCodes.Usage;

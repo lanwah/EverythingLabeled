@@ -4,6 +4,8 @@ namespace EverythingLabeled.Client;
 
 public sealed record ElConfig(string BaseUrl, string Token, bool ConfirmUntag);
 
+public sealed record ElBaseUrlConfig(string BaseUrl, bool ConfirmUntag);
+
 public sealed record ElConfigOverrides(
     string? ConfigPathFlag,
     string? BaseUrlFlag,
@@ -16,6 +18,41 @@ public static class ElConfigLoader
         IReadOnlyDictionary<string, string?> env,
         string defaultConfigPath)
     {
+        if (!TryReadMerged(overrides, env, defaultConfigPath, out var merged, out var error))
+            return ElResult<ElConfig>.Fail(error);
+
+        if (!TryNormalizeBaseUrl(merged.BaseUrlRaw, out var baseUrl) || string.IsNullOrWhiteSpace(merged.TokenRaw))
+            return ElResult<ElConfig>.Fail(MissingError());
+
+        return ElResult<ElConfig>.Ok(new ElConfig(baseUrl, merged.TokenRaw.Trim(), merged.ConfirmUntag));
+    }
+
+    public static ElResult<ElBaseUrlConfig> LoadBaseUrl(
+        ElConfigOverrides overrides,
+        IReadOnlyDictionary<string, string?> env,
+        string defaultConfigPath)
+    {
+        if (!TryReadMerged(overrides, env, defaultConfigPath, out var merged, out var error))
+            return ElResult<ElBaseUrlConfig>.Fail(error);
+
+        if (!TryNormalizeBaseUrl(merged.BaseUrlRaw, out var baseUrl))
+            return ElResult<ElBaseUrlConfig>.Fail(MissingError());
+
+        return ElResult<ElBaseUrlConfig>.Ok(new ElBaseUrlConfig(baseUrl, merged.ConfirmUntag));
+    }
+
+    private static ElError MissingError() =>
+        new(ElErrorCodes.ConfigMissing, "Configuration is missing or invalid.");
+
+    private static bool TryReadMerged(
+        ElConfigOverrides overrides,
+        IReadOnlyDictionary<string, string?> env,
+        string defaultConfigPath,
+        out MergedFields merged,
+        out ElError error)
+    {
+        merged = default;
+        error = default;
         var configPath = FirstNonEmpty(overrides.ConfigPathFlag, Env(env, "EL_CONFIG"), defaultConfigPath);
         FileFields? file = null;
 
@@ -27,26 +64,22 @@ public static class ElConfigLoader
             }
             catch (JsonException)
             {
-                return Missing();
+                error = MissingError();
+                return false;
             }
             catch (IOException)
             {
-                return Missing();
+                error = MissingError();
+                return false;
             }
         }
 
-        var baseUrlRaw = FirstNonEmpty(overrides.BaseUrlFlag, Env(env, "EL_BASE_URL"), file?.BaseUrl);
-        var tokenRaw = FirstNonEmpty(overrides.TokenFlag, Env(env, "EL_TOKEN"), file?.Token);
-        var confirmUntag = file?.ConfirmUntag ?? true;
-
-        if (!TryNormalizeBaseUrl(baseUrlRaw, out var baseUrl) || string.IsNullOrWhiteSpace(tokenRaw))
-            return Missing();
-
-        return ElResult<ElConfig>.Ok(new ElConfig(baseUrl, tokenRaw.Trim(), confirmUntag));
+        merged = new MergedFields(
+            FirstNonEmpty(overrides.BaseUrlFlag, Env(env, "EL_BASE_URL"), file?.BaseUrl),
+            FirstNonEmpty(overrides.TokenFlag, Env(env, "EL_TOKEN"), file?.Token),
+            file?.ConfirmUntag ?? true);
+        return true;
     }
-
-    private static ElResult<ElConfig> Missing() =>
-        ElResult<ElConfig>.Fail(new ElError(ElErrorCodes.ConfigMissing, "Configuration is missing or invalid."));
 
     private static string? Env(IReadOnlyDictionary<string, string?> env, string key) =>
         env.TryGetValue(key, out var value) ? value : null;
@@ -108,4 +141,6 @@ public static class ElConfigLoader
     }
 
     private sealed record FileFields(string? BaseUrl, string? Token, bool? ConfirmUntag);
+
+    private readonly record struct MergedFields(string? BaseUrlRaw, string? TokenRaw, bool ConfirmUntag);
 }
