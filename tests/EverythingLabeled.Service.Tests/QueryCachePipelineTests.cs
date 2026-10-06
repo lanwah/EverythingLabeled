@@ -40,7 +40,7 @@ public sealed class QueryCachePipelineTests
     public async Task Hit_does_not_call_load()
     {
         var cache = new RecordingCache();
-        await cache.SetAsync("k", "cached", CancellationToken.None);
+        await cache.SetAsync("k", "cached", options: null, CancellationToken.None);
         cache.Sets.Clear();
         var loadCalls = 0;
 

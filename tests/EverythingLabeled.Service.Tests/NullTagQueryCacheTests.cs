@@ -9,7 +9,7 @@ public sealed class NullTagQueryCacheTests
     {
         var cache = new NullTagQueryCache();
         Assert.Null(await cache.TryGetAsync<string>("v1:query:a:none:0:0:50:0", CancellationToken.None));
-        await cache.SetAsync("k", new { items = Array.Empty<int>() }, CancellationToken.None);
+        await cache.SetAsync("k", new { items = Array.Empty<int>() }, options: null, CancellationToken.None);
         await cache.InvalidatePrefixAsync("v0:", CancellationToken.None);
         Assert.Null(await cache.TryGetAsync<object>("k", CancellationToken.None));
     }

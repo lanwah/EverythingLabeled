@@ -19,7 +19,7 @@ public static class QueryCachePipeline
         var loaded = await load(cancellationToken);
         var versionAfter = await readDataVersion(cancellationToken);
         if (versionAfter == versionAtKey)
-            await cache.SetAsync(key, loaded, cancellationToken);
+            await cache.SetAsync(key, loaded, options: null, cancellationToken);
 
         return loaded;
     }

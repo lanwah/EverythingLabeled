@@ -23,7 +23,8 @@ public sealed class RecordingCache : ITagQueryCache
         return Task.FromResult<T?>(null);
     }
 
-    public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
+    public Task SetAsync<T>(string key, T value, CacheEntryOptions? options, CancellationToken cancellationToken)
+        where T : class
     {
         Sets.Add(key);
         Store[key] = value;
