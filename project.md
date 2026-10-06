@@ -4,8 +4,8 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8–#11 已合入 `master`（228 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md)
-- #12 实现计划已确认（Q1–Q15 均推荐 A）：`Mcp.Tools` + stdio host、SDK 2.2.0、`LoadBaseUrl`/`ElRequestRules` → [MCP 规格](plans/2026-09-27-mcp.md) · [实现计划](plans/2026-10-06-mcp-impl.md)
+- v1 设计基线已齐；#8–#12 已合入 `master`（257 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md)
+- #12：`Mcp.Tools` 七个 `el_*` + stdio host（SDK 2.2.0）；闸门 `ElRequestRules`；health 用 `LoadBaseUrl`；缺配置仍进会话 → [规格](plans/2026-09-27-mcp.md) · [实现计划](plans/2026-10-06-mcp-impl.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -19,7 +19,6 @@
 - #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）+ `el`（SCL 2.0.12）；`--json` 对齐 API 字段；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
 
 ## 待办
-- [ ] #12 MCP stdio host
 - [ ] #13 浏览器扩展（Windows 联调）
 - [ ] #14 Explorer 上下文菜单包
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
@@ -32,4 +31,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [MCP 实现计划](plans/2026-10-06-mcp-impl.md) 用 Subagent-Driven Development 执行 Task 1（`LoadBaseUrl` + `ElRequestRules`）
+与用户确认是否按 [浏览器扩展规格](plans/2026-09-27-browser-extension.md) 开工 #13（Windows 联调）

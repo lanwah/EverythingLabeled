@@ -38,7 +38,7 @@
 | 9 | **CRUD + 查询解析** — 标签/资源/绑定/**关系**与查询引擎 | [已确认规格](./2026-09-29-crud-and-query.md)（[审核记录](./confirmed/2026-09-29-crud-and-query-review.md)）；[实现计划](./2026-10-03-crud-and-query-impl.md)；待开工 |
 | 10 | **查询缓存** — `ITagQueryCache`（Memory 默认 + Redis）；须遵守 [CRUD §2.3](./2026-09-29-crud-and-query.md) | [已确认规格](./2026-10-06-query-cache.md)（[审核](./confirmed/2026-10-06-query-cache-review.md)）；[实现计划](./2026-10-06-query-cache-impl.md) |
 | 11 | **CLI `el`** — 含共享 `EverythingLabeled.Client`（供 MCP / Explorer 复用） | [已确认规格](./2026-09-26-cli.md)（[规格审核](./confirmed/2026-09-26-cli-review.md)）；[实现计划](./2026-10-06-cli-impl.md)（[实现审核](./confirmed/2026-10-06-cli-impl-review.md)）；[已实现](../docs/cli.md) |
-| 12 | **MCP stdio host** — `Mcp.Tools` + stdio；依赖 Client / Service | [已确认规格](./2026-09-27-mcp.md)（[规格审核](./confirmed/2026-09-27-mcp-review.md)）；[实现计划](./2026-10-06-mcp-impl.md)（[实现审核](./confirmed/2026-10-06-mcp-impl-review.md)） |
+| 12 | **MCP stdio host** — `Mcp.Tools` + stdio；依赖 Client / Service | [已确认规格](./2026-09-27-mcp.md)（[规格审核](./confirmed/2026-09-27-mcp-review.md)）；[实现计划](./2026-10-06-mcp-impl.md)（[实现审核](./confirmed/2026-10-06-mcp-impl-review.md)）；[已实现](../docs/mcp.md) |
 | 13 | **浏览器扩展（Windows 联调）** | 待讨论 |
 | 14 | **Explorer 上下文菜单包** | 待讨论 |
 
