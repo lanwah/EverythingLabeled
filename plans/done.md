@@ -49,4 +49,5 @@
 - 2026-10-06 — #11 Task 5：`el` 骨架 SCL 2.0.12、离线 `--help`/`--version`（#56）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 6：`tag`/`untag`/`tags` 与 untag 确认（#57）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 7：`query`/`preview`/`suggest`（#58）→ [实现计划](./2026-10-06-cli-impl.md)
-- 2026-10-06 — #11 Task 8：`completion powershell` 与 [CLI 说明](../docs/cli.md)（#59；sln 228 测，待合入）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 8：`completion powershell` 与 [CLI 说明](../docs/cli.md)（#59；sln 228 测）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 CLI 合入 `master`（fast-forward `9e6bfd1`，228 测通过）→ [实现计划](./2026-10-06-cli-impl.md) · [说明](../docs/cli.md)
