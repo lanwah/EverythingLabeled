@@ -11,4 +11,7 @@ export const copy = {
   tagNotFoundWithoutCreate: "未勾选创建缺失标签",
   cannotOpen: "不可打开",
   untagConfirm: "确定去掉该标签？",
+  saved: "已保存",
+  probeHealthOk: "服务可达（未校验 token）",
+  probeTokenOk: "服务可达，token 有效",
 } as const;

@@ -1,2 +1,3 @@
-const root = document.querySelector("#app") ?? document.body;
-root.replaceChildren();
+import { mountPageUi } from "./page-ui";
+
+mountPageUi(document.getElementById("app")!, "popup");
