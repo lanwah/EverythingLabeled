@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#12 已合入 `master`（257 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md)
-- #13 实现计划已确认（Q1–Q28 均推荐 A）：`ext/` MV3、双 Vite、SW 统一 `fetch`+`openTabs`、Vitest 门禁 → [规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
+- #13 实现计划 Task 1–7 + 终审修复已合入 `#70`–`#79`：`ext/` MV3（71 测）+ [加载说明](docs/browser-extension.md) → [实现计划](plans/2026-10-06-browser-extension-impl.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
 ## 关键决策
@@ -33,4 +33,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [浏览器扩展实现计划](plans/2026-10-06-browser-extension-impl.md) 开工 #13 Task 1（`ext/` 配置校验与 Vitest 骨架）
+按 [浏览器扩展加载说明](docs/browser-extension.md) 完成 #13 Windows 联调清单（Chrome/Edge 加载 `ext/dist`、Options 填配置、七项手工验收）

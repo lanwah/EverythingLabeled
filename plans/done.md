@@ -57,3 +57,11 @@
 - 2026-10-06 — grill #13 实现计划审核 Q21–Q28（均选推荐）并回写：连接态不自动探测、非法 baseUrl=`bad_request`、SW `openTabs`、双 Vite 单文件 SW → [实现计划](./2026-10-06-browser-extension-impl.md) · [审核 §C](./confirmed/2026-10-06-browser-extension-impl-review.md)
 - 2026-10-06 — 根目录增加 `build.ps1` / `build.bat`（`dotnet build EverythingLabeled.sln`，bat 已实测 Debug 成功）
 - 2026-10-06 — 编译脚本用法写入 [docs/README.md](../docs/README.md#编译)
+- 2026-10-06 — #13 Task 1：`ext/` 配置校验与 Vitest 骨架（#70，13 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-06 — #13 Task 2：URI fragment、打开硬顶、芯片文案（#71，24 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-06 — #13 Task 3：可注入 fetch 的 HTTP 信封客户端（#72，38 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-06 — #13 Task 4：SW 消息闸门（probe/config/业务纯函数，#73，60 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-06 — #13 Task 5：双 Vite、MV3 manifest、SW 壳与占位图标（#74；`npm run build` 出可加载 dist；60 测仍绿）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-06 — #13 Task 6：Options + Popup/app 共用 UI（#75/#76；含过期 getTags 修复；67 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-07 — #13 Task 7：扩展加载说明与 docs 索引（#77/#78；无 Content Script 修正）→ [说明](../docs/browser-extension.md) · [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-07 — #13 终审：修复跟随按钮快照扩展页 + 联调菜单文案（#79，71 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
