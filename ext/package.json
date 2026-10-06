@@ -6,7 +6,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "vitest run",
-    "build": "vite build"
+    "build": "vite build && vite build --config vite.background.ts"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.287",
