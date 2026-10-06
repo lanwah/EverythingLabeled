@@ -10,10 +10,17 @@ namespace EverythingLabeled.Service.Hosting;
 
 public static class ServiceRegistration
 {
-    public static IServiceCollection AddEverythingLabeledServices(this IServiceCollection services)
+    public static IServiceCollection AddEverythingLabeledServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddOptions<CacheOptions>()
+            .Bind(configuration.GetSection(CacheOptions.SectionName));
+        services.AddSingleton<QueryCacheMetrics>();
+        services.AddSingleton<QueryCacheSingleflight>();
         services.AddSingleton<ITagQueryCache, NullTagQueryCache>();
+        services.AddSingleton<QueryCachePipeline>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<INameInitialsGenerator, NameInitialsGenerator>();
         services.AddScoped<IDataVersionReader, DbDataVersionReader>();
         services.AddScoped<TagService>();

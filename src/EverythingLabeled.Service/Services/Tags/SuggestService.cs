@@ -2,10 +2,14 @@ using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace EverythingLabeled.Service.Services.Tags;
 
-public sealed class SuggestService(ElDbContext db, ITagQueryCache cache)
+public sealed class SuggestService(
+    ElDbContext db,
+    QueryCachePipeline pipeline,
+    IOptions<CacheOptions> cacheOptions)
 {
     public async Task<ServiceResult<Paged<SuggestItemDto>>> SuggestAsync(
         string q,
@@ -29,12 +33,12 @@ public sealed class SuggestService(ElDbContext db, ITagQueryCache cache)
         var normalizedPrefix = AliasRules.Normalize(q);
         var versionAtKey = await DatabaseInitializer.GetDataVersionAsync(db, ct);
         var key = QueryCacheKeyFactory.ForSuggest(versionAtKey, normalizedPrefix, paging.Limit);
-        var page = await QueryCachePipeline.GetOrLoadAsync(
-            cache,
+        var page = await pipeline.GetOrLoadAsync(
             key,
             versionAtKey,
             token => DatabaseInitializer.GetDataVersionAsync(db, token),
             token => LoadAsync(normalizedPrefix, paging.Limit, token),
+            new CacheEntryOptions(cacheOptions.Value.SuggestTtl),
             ct);
         return ServiceResult<Paged<SuggestItemDto>>.Ok(page);
     }

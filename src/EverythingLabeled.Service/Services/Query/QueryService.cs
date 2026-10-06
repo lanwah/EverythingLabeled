@@ -4,13 +4,15 @@ using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
 using EverythingLabeled.Service.Services.Relations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace EverythingLabeled.Service.Services.Query;
 
 public sealed class QueryService(
     ElDbContext db,
-    ITagQueryCache cache,
+    QueryCachePipeline pipeline,
+    IOptions<CacheOptions> cacheOptions,
     QueryParser parser,
     QueryExpander expander,
     QueryExecutor executor,
@@ -105,12 +107,15 @@ public sealed class QueryService(
             req.Paging.Limit,
             req.Paging.Offset);
 
-        var page = await QueryCachePipeline.GetOrLoadAsync(
-            cache,
+        var entryOptions = op == "preview"
+            ? new CacheEntryOptions(cacheOptions.Value.PreviewTtl)
+            : null;
+        var page = await pipeline.GetOrLoadAsync(
             key,
             versionAtKey,
             dataVersion.GetAsync,
             token => executor.ExecuteAsync(expanded, req.Paging, includeTotal, token),
+            entryOptions,
             ct);
 
         return ServiceResult<QueryResultDto>.Ok(

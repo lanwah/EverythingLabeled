@@ -8,6 +8,8 @@ using EverythingLabeled.Service.Services.Resources;
 using EverythingLabeled.Service.Services.Tags;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace EverythingLabeled.Service.Tests;
 
@@ -36,8 +38,15 @@ public sealed class SqliteServiceFixture : IAsyncDisposable
     public TagService GetTagService() =>
         new(Db, Uow, new NameInitialsGenerator());
 
+    public QueryCachePipeline CreatePipeline() =>
+        new(
+            Cache,
+            new QueryCacheSingleflight(),
+            new QueryCacheMetrics(NullLogger<QueryCacheMetrics>.Instance) { FlushInterval = TimeSpan.FromHours(1) },
+            NullLogger<QueryCachePipeline>.Instance);
+
     public SuggestService GetSuggestService() =>
-        new(Db, Cache);
+        new(Db, CreatePipeline(), Options.Create(new CacheOptions()));
 
     public ResourceService GetResourceService() =>
         new(Db, Uow);
@@ -51,7 +60,8 @@ public sealed class SqliteServiceFixture : IAsyncDisposable
     public QueryService GetQueryService() =>
         new(
             Db,
-            Cache,
+            CreatePipeline(),
+            Options.Create(new CacheOptions()),
             new QueryParser(),
             new QueryExpander(Db),
             new QueryExecutor(Db),

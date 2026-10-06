@@ -1,9 +1,12 @@
 using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Services.Abstractions;
+using EverythingLabeled.Service.Services.Caching;
 using EverythingLabeled.Service.Services.Query;
 using EverythingLabeled.Service.Services.Resources;
 using EverythingLabeled.Service.Services.Tags;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace EverythingLabeled.Service.Tests;
 
@@ -81,7 +84,12 @@ public sealed class QueryServiceCacheHookTests
         var bumping = new BumpingDataVersionReader(fx.Db);
         var query = new QueryService(
             fx.Db,
-            cache,
+            new QueryCachePipeline(
+                cache,
+                new QueryCacheSingleflight(),
+                new QueryCacheMetrics(NullLogger<QueryCacheMetrics>.Instance) { FlushInterval = TimeSpan.FromHours(1) },
+                NullLogger<QueryCachePipeline>.Instance),
+            Options.Create(new CacheOptions()),
             new QueryParser(),
             new QueryExpander(fx.Db),
             new QueryExecutor(fx.Db),
