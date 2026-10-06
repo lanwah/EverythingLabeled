@@ -202,9 +202,36 @@ public static class ElApp
         suggest.Options.Add(LimitOption);
         suggest.SetAction((parseResult, _) => HandleSuggestAsync(inv, parseResult, suggestText));
 
+        var shellArg = new Argument<string>("shell")
+        {
+            Arity = ArgumentArity.ZeroOrOne,
+            Description = "Shell name (powershell).",
+        };
+        var completion = new Command("completion", "Print a shell completion script.");
+        completion.Arguments.Add(shellArg);
+        completion.SetAction(parseResult =>
+        {
+            var json = parseResult.GetValue(JsonOption);
+            var shell = parseResult.GetValue(shellArg);
+            if (!string.Equals(shell, "powershell", StringComparison.Ordinal))
+            {
+                WriteError(
+                    inv,
+                    json,
+                    new ElError(ElErrorCodes.BadRequest, "Only completion powershell is supported."));
+                return ExitCodes.Usage;
+            }
+
+            inv.Stdout.Write(CompletionScript.PowerShell);
+            if (!CompletionScript.PowerShell.EndsWith('\n'))
+                inv.Stdout.WriteLine();
+            return ExitCodes.Ok;
+        });
+
         root.Subcommands.Add(query);
         root.Subcommands.Add(preview);
         root.Subcommands.Add(suggest);
+        root.Subcommands.Add(completion);
         return root;
     }
 
