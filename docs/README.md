@@ -8,3 +8,4 @@
 | [CRUD 与查询](./crud-and-query.md) | backlog **#9** | 标签/资源/关系/查询落地布局、写路径 bump、缓存桩、如何跑测试 |
 | [查询缓存](./query-cache.md) | backlog **#10** | Memory/Redis/Null、`Cache:*`、opt-in Redis 测 |
 | [CLI](./cli.md) | backlog **#11** | `el` 工程布局、运行、配置优先级、如何跑 PathUri/Client/Cli 测试 |
+| [MCP](./mcp.md) | backlog **#12** | stdio host、`--help`/`--version`、配置优先级、Cursor `mcp.json`、Tools 测试 |

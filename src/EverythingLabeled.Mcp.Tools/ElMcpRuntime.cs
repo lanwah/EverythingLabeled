@@ -2,7 +2,7 @@ using EverythingLabeled.Client;
 
 namespace EverythingLabeled.Mcp.Tools;
 
-public sealed class ElMcpRuntime
+public sealed record ElMcpRuntime
 {
     public required IElApi? Api { get; init; }
     public required bool HasBaseUrl { get; init; }
