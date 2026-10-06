@@ -46,3 +46,7 @@
 - 2026-10-06 — #11 Task 2：Client `ElResult`/`ElConfig`/`ElJson`（9 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 3：钉死 `IElApi`/`HttpElApi`（Client 19 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
 - 2026-10-06 — #11 Task 4：Client `FileTarget` 推断 file/folder（含 symlink，Client 24 测通过）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 5：`el` 骨架 SCL 2.0.12、离线 `--help`/`--version`（#56）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 6：`tag`/`untag`/`tags` 与 untag 确认（#57）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 7：`query`/`preview`/`suggest`（#58）→ [实现计划](./2026-10-06-cli-impl.md)
+- 2026-10-06 — #11 Task 8：`completion powershell` 与 [CLI 说明](../docs/cli.md)（#59；sln 228 测，待合入）→ [实现计划](./2026-10-06-cli-impl.md)
