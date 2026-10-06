@@ -2,6 +2,7 @@ export const copy = {
   invalidBaseUrl: "地址必须是 http://127.0.0.1，不能带路径或查询",
   invalidPreviewLimit: "预览条数必须是 1–16 的整数",
   pageCannotTag: "当前页不可打标",
+  followNoHttpPage: "没有可跟随的网页",
   serviceUnreachable: "服务未运行或地址错误",
   tokenInvalid: "token 无效",
   tokenMissing: "未配置 token",

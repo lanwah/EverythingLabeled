@@ -4,6 +4,7 @@ import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
 import { tagChipLabel } from "./labels";
 import type { ElResponse } from "./messages";
+import { pickFollowTab } from "./follow-tab";
 import { decideOpen, defaultSelectedIds } from "./open-rules";
 import { isHttpPage, isOpenableUrl } from "./uri";
 import { formatUiError } from "./ui-error";
@@ -382,10 +383,15 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   followBtn.addEventListener("click", () => {
     void (async () => {
-      const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-      const tab = tabs[0];
+      const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
+      const tab = pickFollowTab(tabs);
+      if (tab === undefined) {
+        setStatus(copy.followNoHttpPage, "err");
+        return;
+      }
+      setStatus("");
       await chrome.storage.session.set({
-        pageSnapshot: { tabId: tab?.id, url: tab?.url, title: tab?.title },
+        pageSnapshot: { tabId: tab.id, url: tab.url, title: tab.title },
       });
     })();
   });
