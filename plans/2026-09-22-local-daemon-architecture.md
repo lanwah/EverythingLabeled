@@ -60,13 +60,10 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 
 ### 5.2 抽象
 
-- `ITagQueryCache`（可基于 `IDistributedCache` 薄封装）：
-  - `Get` / `Set`
-  - `InvalidateAll` / `InvalidatePrefix`（写路径可选调用）
-- 配置：
-  - `Cache:Provider = Memory | Redis`
-  - `Cache:RedisConnection`（仅 Redis 需要）
-- **v1 默认 `Memory`**，不依赖外部进程；Redis 实现保留并可用配置启用，安装不强制依赖 Redis。
+- `ITagQueryCache`：`TryGet` / `Set(options)` / `InvalidatePrefix`。Memory / Redis / Null **并列实现**，无基类；**不**经 `IDistributedCache`。细则 → [查询缓存 #10](./2026-10-06-query-cache.md)。
+- 配置：`Cache:Provider = Memory | Redis | Null`（默认 Memory）；`Cache:RedisConnection` / `RedisConnectTimeout`（默认 5s）/ `KeyPrefix`（仅 Redis）；容量/TTL 见 CRUD §2.3 与 #10 规格。
+- **v1 默认 `Memory`**，不依赖外部进程；Redis 可用配置启用，安装不强制依赖 Redis。
+- 不暴露 `InvalidateAll`；写路径异步清旧 version 前缀。
 
 ### 5.3 读接口约定
 

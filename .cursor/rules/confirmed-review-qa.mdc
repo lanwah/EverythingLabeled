@@ -1,0 +1,24 @@
+---
+description: plans/confirmed 审核回写必须逐题记录问题、选项与确认答案
+globs: plans/confirmed/**
+alwaysApply: true
+---
+
+# 审核记录回写（问题 + 答案）
+
+回写 `plans/confirmed/*-review.md`（grill / 主线澄清 / 设计确认）时，**禁止**只留题号、一行摘要或「均选推荐 A」。
+
+## Do
+
+- **每一题**单独成节（或同等完整条目），至少包含：
+  1. **问题**（当时问了什么，可含背景）
+  2. **选项表**（A/B/C… 与含义；用户若改写选项一并记下）
+  3. **确认**（选了哪条；若先选推荐后又修订，两段都写清）
+- **主线澄清**（brainstorm Q1…）与 **grill 轮次**同等对待，都要问题 + 选项 + 答案。
+- 格式对齐已有样本：[CRUD 审核](../../plans/confirmed/2026-09-29-crud-and-query-review.md)、[查询缓存审核](../../plans/confirmed/2026-10-06-query-cache-review.md)。
+
+## Do not
+
+- 用总表把多题压成「Q1–Q11 均 A」。
+- 只写结论不写当时的选项原文。
+- 省略主线澄清、只记 grill。

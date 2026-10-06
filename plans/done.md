@@ -35,3 +35,5 @@
 - 2026-10-05 — #9 Task 5 查询解析/展开/冷路径与缓存接线过审（含 #36 重复词与 SQL 过滤）→ [实现计划](./2026-10-03-crud-and-query-impl.md)
 - 2026-10-06 — #9 Task 6 HTTP 集成抽样与 crud-and-query 说明过审（含 #38 资源列表无 tags 断言）→ [实现计划](./2026-10-03-crud-and-query-impl.md) · [说明](../docs/crud-and-query.md)
 - 2026-10-06 — #8/#9 本地合入 `master`（fast-forward `18be1bf`，117 测通过；删除分支 `feature/8-service-skeleton`）→ [实现计划](./2026-10-03-crud-and-query-impl.md) · [说明](../docs/crud-and-query.md)
+- 2026-10-06 — 确认 #10 查询缓存规格（Memory/Redis 并列实现 `ITagQueryCache`；Pipeline singleflight；Redis 用 StackExchange.Redis）→ [查询缓存](./2026-10-06-query-cache.md)
+- 2026-10-06 — grill #10 规格 Round 1–3（私有 MemoryCache、KeyPrefix、可配 RedisConnectTimeout 默认 5s、await 完 load 等）并回写 → [审核](./confirmed/2026-10-06-query-cache-review.md) · [查询缓存](./2026-10-06-query-cache.md)
