@@ -1,7 +1,7 @@
 # 浏览器扩展（#13）实现计划讨论确认记录
 
 日期：2026-10-06  
-方式：主线澄清（brainstorm，带推荐答案 → 用户确认）Round 1–2  
+方式：主线澄清（brainstorm，带推荐答案 → 用户确认）Round 1–2；实现计划审核 Round 3（Q21–Q28 均选推荐 A）  
 已落盘同步：
 
 - [浏览器扩展规格](../2026-09-27-browser-extension.md)（产品规格不改；[规格审核](./2026-09-27-browser-extension-review.md)）
@@ -256,5 +256,105 @@
 | **A** | 输入 trim 后长度 **≥ 1** 才请求；**250ms** 防抖；`limit=10`（不跟 `previewLimit`）。失败静默空联想。空输入不请求、清空联想 |
 | B | 500ms，≥ 2 字符 |
 | C | 不防抖，每个按键请求 |
+
+**确认**：选推荐 **A**。
+
+---
+
+## C. Round 3 — 实现计划审核（对照规格找分叉）
+
+### Q21 — Popup/app 的「连接状态」要不要开时自动探测
+
+**问题**：规格 §4.2 写「未配置 / 探测失败 → 置顶提示」；§3.4 的探测按钮在 Options。计划 Task 6 只检查空 token，不打 health/meta。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 打开 Popup/app **不**自动跑 Options 那套探测。无 token → 「未配置」链 Options。业务请求 `connection_failed` → 「服务未运行或地址错误」；HTTP 401 或信封鉴权失败 → 「token 无效」。Options 仍保留显式「探测连接」（表单未保存值） |
+| B | 每次打开 Popup/app 用**已保存** config 先 health、有 token 再 meta |
+| C | Popup 也放「探测连接」按钮 |
+
+**确认**：选推荐 **A**。
+
+### Q22 — 已存非法 `baseUrl` 的错误码
+
+**问题**：计划把 canonicalize 失败与空 token 都打成 `config_missing`。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 空 token → `config_missing`。已存/草稿 `baseUrl` 校验失败 → `bad_request` + 地址文案，**不**当成缺配置 |
+| B | 一律 `config_missing` |
+| C | 非法 baseUrl 时静默回退到缺省 `http://127.0.0.1:5123` 并发请求 |
+
+**确认**：选推荐 **A**。
+
+### Q23 — HTML 与 DOM 双源
+
+**问题**：Task 6 写「DOM 由 TS 创建或静态结构，二选一」。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 三个 html 只留 `#app` + 引入 `styles.css` / 入口脚本；节点全由 TS 创建 |
+| B | 控件写在 html 里，TS 只绑定 |
+| C | Popup 静态、app 动态 |
+
+**确认**：选推荐 **A**。
+
+### Q24 — 谁 `tabs.create`
+
+**问题**：规格 §4.4 写 `chrome.tabs.create`；Popup 在连开多个 tab 或 `confirm` 时可能被关掉，页面里的 create 会中断。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 页面 `decideOpen` 后发 `openTabs`；**仅 SW** `tabs.create`。SW 再校验：条数 1…`previewLimit`、每条 `isHttpPage`。`windowId`：有 `sender.tab` 用其 window，否则 `chrome.windows.getLastFocused`。`openTabs` **不**进纯函数 `handleRequest`（避免 `handleRequest` 依赖 `chrome.tabs`） |
+| B | 按原计划由 popup/app 直接 `tabs.create` |
+| C | 开 tab 也走 HTTP（不可行） |
+
+**确认**：选推荐 **A**。
+
+### Q25 — 已打开的 `app.html` 如何接到新快照
+
+**问题**：右键「聚焦并更新快照」时，已挂着的 app 若只在 load 时读 session，不会刷新。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `app.html` 订阅 `chrome.storage.session.onChanged`（键 `pageSnapshot`）并重跑当前页/标签。Popup **只在打开时**读一次 active tab，不跟随之后的标签切换（规格：「打开 Popup 时的 active tab」） |
+| B | 右键再 `tabs.reload` app |
+| C | 不刷新已打开 app，只聚焦 |
+
+**确认**：选推荐 **A**。
+
+### Q26 — 预览空 `q`
+
+**问题**：suggest 空串不请求；preview 未写。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | `q` trim 后为空 → **不** fetch，成功空列表（与「查询 0 条」同一空态） |
+| B | 空 q 仍请求 API |
+| C | 空 q 点预览则提示错误 |
+
+**确认**：选推荐 **A**。
+
+### Q27 — Service Worker 打包会不会拆 chunk
+
+**问题**：Vite 多入口常把共享模块打成 `chunks/*.js`；MV3 `type: module` 的 SW 引用 hashed chunk 易加载失败。
+
+| 选项 | 含义 |
+|---|---|
+| **A** | **两次** Vite：`vite.config.ts` 打三个 html；`vite.background.ts` 以 `background.ts` 为 library **单文件** `dist/background.js`（`inlineDynamicImports: true`）。`npm run build` 串行两者。禁止 SW 依赖带 hash 的 chunk |
+| B | 一次多入口，接受 `chunks/` |
+| C | background 内联进一条很大的 IIFE 但不分第二个 config（手写 plugin） |
+
+**确认**：选推荐 **A**。
+
+### Q28 — `getTags` 翻页失败与 storage 写入面
+
+**问题**：第一页 404 当空列表；中途 5xx 或其它 404 怎么办？`set` 整份对象会不会留下脏键？
+
+| 选项 | 含义 |
+|---|---|
+| **A** | 仅 `code === "resource_not_found"` 映射为空 + `resourceExists:false`；其它错误 **整次失败**（已拼页丢弃）。`saveStored` **只写**四键 `baseUrl`/`token`/`confirmUntag`/`previewLimit`。去掉计划里未使用的 `createElApi({ now? })` |
+| B | 任一页 404 都当无资源 |
+| C | 翻页中途失败则返回已拼前缀（部分列表） |
 
 **确认**：选推荐 **A**。

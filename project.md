@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#12 已合入 `master`（257 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md)
-- #13 实现计划已确认（Q1–Q20 均推荐 A）：`ext/` MV3、Vite、SW 统一 `fetch`、Vitest 门禁 → [规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
+- #13 实现计划已确认（Q1–Q28 均推荐 A）：`ext/` MV3、双 Vite、SW 统一 `fetch`+`openTabs`、Vitest 门禁 → [规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
 ## 关键决策

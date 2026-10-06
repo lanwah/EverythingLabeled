@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript；Vite（手写多入口，无 crx 插件）；Vitest；vanilla HTML/CSS；`@types/chrome`。npm，Node >=20。无 React/Vue。
 
-**Spec:** [plans/2026-09-27-browser-extension.md](./2026-09-27-browser-extension.md)。HTTP：[plans/2026-09-26-http-api.md](./2026-09-26-http-api.md)。审核：[confirmed/2026-10-06-browser-extension-impl-review.md](./confirmed/2026-10-06-browser-extension-impl-review.md)（Q1–Q20 均选推荐 A）。
+**Spec:** [plans/2026-09-27-browser-extension.md](./2026-09-27-browser-extension.md)。HTTP：[plans/2026-09-26-http-api.md](./2026-09-26-http-api.md)。审核：[confirmed/2026-10-06-browser-extension-impl-review.md](./confirmed/2026-10-06-browser-extension-impl-review.md)（Q1–Q28 均选推荐 A）。
 
 ## Global Constraints
 
@@ -20,12 +20,20 @@
 - storage 键：`baseUrl`、`token`、`confirmUntag`、`previewLimit`。`confirmUntag` 缺省键或省略 = **`true`**。`previewLimit` 缺省 **8**，合法 **1–16**（含）；读到非法数字 → 当 8。token 空则业务操作前引导 Options。
 - HTTP：仅 SW `fetch`；`Authorization: Bearer <token>`（health 除外）；`Accept: application/json`；整请求超时 **30s**。相对路径 `v1/...`（无前导 `/`），拼到规范化 `baseUrl + "/"`。
 - 信封与 C# `HttpElApi` 同构：`status` `ok`/`error`；错误 `data.code`；超时/连不上 → `connection_failed`（文案 `Unable to reach the service.`）。
-- 探测：先 `GET /v1/health`（可无 token）→ 失败提示服务未运行或地址错误；表单 token 非空再 `GET /v1/meta` → 失败提示 token 无效。探测用 **当前表单值**，不先保存。
+- 探测：仅 Options 按钮。先 `GET /v1/health`（可无 token）→ 失败提示服务未运行或地址错误；表单 token 非空再 `GET /v1/meta` → 失败提示 token 无效。探测用 **当前表单值**，不先保存。Popup/app **不**开时自动探测。
+- Popup/app 连接态：无 token → `config_missing` 文案链 Options；业务 `connection_failed` → 服务未运行或地址错误；HTTP **401** 或信封鉴权失败 → token 无效。
+- 业务：token 空 → `config_missing`（不 fetch）。已存 `baseUrl` canonicalize 失败 → `bad_request` + 地址文案（**不是** `config_missing`）。
 - 当前页仅 `http://` / `https://` 可打标。送给 API 的 uri：**只去掉 `#fragment`**，保留 query。打标 `kind: "url"`。
-- `GET /v1/resources/tags`：`limit=1024` 翻页直到 `offset >= total`。`404` + `resource_not_found` → 空列表且 `resourceExists: false`，不报错。其它 4xx/5xx 展示可读信息。
+- `GET /v1/resources/tags`：`limit=1024` 翻页直到 `offset >= total`。**仅** `code === "resource_not_found"` → 空列表且 `resourceExists: false`，不报错。其它错误 **整次失败**（已拼页丢弃）。
+- `saveStored` **只写**四键 `baseUrl`/`token`/`confirmUntag`/`previewLimit`。
+- `tabs.create` **只在 SW**（消息 `openTabs`）；页面 `decideOpen` 后发送。SW 再校验条数 1…`previewLimit`、每条 `isHttpPage`。`windowId`：`sender.tab` 有则用其 window，否则 `chrome.windows.getLastFocused`。`openTabs` 不进纯函数 `handleRequest`。
+- 三个 html 只留 `#app` + `styles.css` + 入口脚本；DOM 全由 TS 创建。
+- Popup **打开时**读一次 active tab，不跟随之后的标签切换。`app.html` 订阅 `chrome.storage.session.onChanged`（`pageSnapshot`）并刷新。
+- preview：`q` trim 空 → 不 fetch，成功空列表。
+- 构建：**两次** Vite（`vite.config.ts` 三个 html；`vite.background.ts` library 单文件 `dist/background.js`，`inlineDynamicImports: true`）。禁止 SW 依赖 hashed chunk。
 - 打标：每次一个别名；`createMissing` 来自勾选（不写 storage；每次打开 UI 默认不勾；本页会话保留）。仅 `resourceExists===false` 且 `title` trim 非空时 POST 带 `displayName`。去标永不 `createMissing: true`。芯片删除 `remove: [{ id }]`；输入去标 `remove: ["alias"]`。`confirmUntag != false` → `window.confirm`，取消不发请求。
 - suggest：`q` trim 长度 ≥1；**250ms** 防抖；`limit=10`；失败静默空列表。预览：`q` 原样；`limit=previewLimit`；不传 `expand`。
-- 打开：`kind === "url"` 且 uri 为 http(s) 才可打开。可打开项默认勾选；不可打开展示、勾选禁用。勾选中可打开数为 0 → 拒绝；可打开且已勾选 `> previewLimit` → **整次拒绝**。通过后只打开可打开项。一律 `tabs.create`，当前窗口依次创建。
+- 打开：`kind === "url"` 且 uri 为 http(s) 才可打开。可打开项默认勾选；不可打开展示、勾选禁用。勾选中可打开数为 0 → 拒绝；可打开且已勾选 `> previewLimit` → **整次拒绝**。通过后只打开可打开项。一律经 SW `openTabs` → `tabs.create`，当前窗口依次创建。
 - `app.html` 当前页 = `chrome.storage.session` 的 `pageSnapshot`（`tabId?`、`url`、`title`）。右键写入后聚焦已有 `app.html` tab 或新开。不把 token 写入 URL。
 - 不做：改 C# Client、Firefox、Native Messaging、上架、Playwright 门禁、React。
 - commit subject：仓库递增 `#序号`（`git log -1 --format=%s` +1），**不要** backlog `#13`；不用 conventional commits。PowerShell here-string 传 `-m`。
@@ -41,6 +49,7 @@ ext/
   tsconfig.json
   vitest.config.ts
   vite.config.ts
+  vite.background.ts
   manifest.json
   public/icons/icon16.png  icon32.png  icon48.png  icon128.png
   src/
@@ -147,7 +156,7 @@ export function validateDraft(draft: {
 }
 ```
 
-版本允许 npm 解析到同时期兼容 semver；不要上 React。本任务 **先不写** `vite.config.ts`（build 脚本可先占位；`npm test` 必须能跑）。`tsconfig`：`strict` true，`module`/`moduleResolution` 适合 Vite+Vitest。
+版本允许 npm 解析到同时期兼容 semver；不要上 React。本任务 **先不写** `vite.config.ts`（`build` 脚本在 Task 5 改成两次 Vite；此处 `npm test` 必须能跑）。`tsconfig`：`strict` true，`module`/`moduleResolution` 适合 Vite+Vitest。
 
 `.gitignore` 追加：
 
@@ -300,7 +309,6 @@ export function buildTagBody(input: {
 
 export function createElApi(deps: {
   fetch: typeof fetch;
-  now?: () => number;
 }): {
   health(baseUrl: string): Promise<ElResult<{ health: string; dataVersion: number }>>;
   meta(baseUrl: string, token: string): Promise<ElResult<{ dataVersion: number }>>;
@@ -324,7 +332,7 @@ export function createElApi(deps: {
 - 其它：`Authorization: Bearer ${token}`，`Accept: application/json`。
 - POST JSON `Content-Type: application/json`。
 - 解析信封：HTTP 2xx 且 `status==="ok"` → data；否则 `code` 从 `data.code`，message 从信封 `message`，带 `httpStatus`。
-- `getTags`：循环 `offset` + `limit=1024`，`uri` 用 `encodeURIComponent`。若任一页 `code==="resource_not_found"`（在 `ok:false`）→ **立刻** `{ ok:true, data:{ items:[], resourceExists:false }, message:null }`。成功则 `resourceExists: true`，items 拼接。
+- `getTags`：循环 `offset` + `limit=1024`，`uri` 用 `encodeURIComponent`。若某页 `ok:false` 且 `code==="resource_not_found"` → **立刻** `{ ok:true, data:{ items:[], resourceExists:false }, message:null }`（仅此码；其它错误整次失败，已拼页丢弃）。成功则 `resourceExists: true`，items 拼接。
 - `untag` body：`{ uri, remove, createMissing: false }`（无 kind）。
 - `suggest`：`v1/tags/suggest?q=&limit=10`，返回 `data.items`（缺省 `[]`）。
 - `preview`：`v1/query/preview?q=&limit=`，返回 `data.items`。
@@ -388,15 +396,16 @@ export async function handleRequest(
 
 - `probe`：`canonicalizeBaseUrl(req.baseUrl)` 失败 → `bad_request` + 校验文案，不 fetch。成功则 `health`；失败 → `ok:false`，message 用「服务未运行或地址错误」（可附带 API message）。health 成功且 token trim 非空 → `meta`；meta 失败 → token 无效文案。health 成功且无 token → `ok:true` data `{ health, tokenChecked:false }`。
 - `getConfig`：`normalizeStoredConfig`。
-- `saveConfig`：`validateDraft` 失败 → `bad_request`；成功 `saveStored`。
-- 业务（getTags/tag/untag/suggest/preview）：`normalizeStoredConfig` 后 `canonicalizeBaseUrl`；失败或 token 空 → `config_missing`，**不 fetch**。uri 先 `stripFragment`。
+- `saveConfig`：`validateDraft` 失败 → `bad_request`；成功 `saveStored`（只写四键）。
+- 业务（getTags/tag/untag/suggest/preview）：token 空 → `config_missing`，**不 fetch**。`canonicalizeBaseUrl` 失败 → `bad_request`，**不 fetch**。uri 先 `stripFragment`。
 - `suggest`：`q.trim()` 空 → `ok:true, data:[]` 不 fetch。API 失败 → 仍 `ok:true, data:[]`（静默）。
+- `preview`：`q.trim()` 空 → `ok:true, data:[]` 不 fetch（与 0 条同一空态）。API 失败按信封返回（不静默）。
 - `tag`：`alias.trim()` 空 → `bad_request`。`createMissing` 按请求布尔。`tag_not_found` 原样返回（UI 用 copy 强调未勾选创建）。
 - `untag*`：本层 **不**做 confirm（页面 `window.confirm` 之后才发消息）。
 
 - [ ] **Step 1: 写失败测试**
 
-probe 非法 localhost 不调用 fetch；无 token 只 health；有 token health+meta；业务无 token → config_missing；suggest 失败变空数组；getTags 走 stripFragment。
+probe 非法 localhost 不调用 fetch；无 token 只 health；有 token health+meta；业务无 token → config_missing；非法已存 baseUrl → bad_request 不 fetch；suggest 失败变空数组；preview 空 q 不 fetch；getTags 走 stripFragment。
 
 - [ ] **Step 2–4:** 红绿。
 
@@ -413,7 +422,7 @@ git commit -m "#N 扩展 SW 消息闸门"
 
 **Files:**
 
-- Create: `ext/vite.config.ts`、`ext/manifest.json`
+- Create: `ext/vite.config.ts`、`ext/vite.background.ts`、`ext/manifest.json`
 - Create: `ext/public/icons/icon16.png`（及 32/48/128，可同一文件复制）
 - Create: `ext/src/background.ts`
 - Create: `ext/src/popup.html`、`options.html`、`app.html`（可先空壳 + script）
@@ -455,16 +464,21 @@ git commit -m "#N 扩展 SW 消息闸门"
 }
 ```
 
-Vite：`root` = `ext`；`build.outDir` = `dist`；`emptyOutDir` true。`rollupOptions.input`：`popup` / `options` / `app` 三个 html + `background` = `src/background.ts`。`output.entryFileNames` 让 background 落到 `background.js`（不要 hash）。html 产物在 dist 根名为 `popup.html` 等（可用 `input` 路径 + plugin 把 `src/*.html` flatten）。拷贝 `public/icons` 与改写后的 manifest。
+两次构建（Q27）：
 
-**不要** `@crxjs/vite-plugin`。
+1. `vite.config.ts`：`root` = `ext`；`build.outDir` = `dist`；`emptyOutDir` **true**（先跑）。`rollupOptions.input` **仅**三个 html（`popup` / `options` / `app`）。html 产物 flatten 到 dist 根。拷贝 `public/icons` 与 `manifest.json`。
+2. `vite.background.ts`：library 入口 `src/background.ts`，`formats: ["es"]`，`fileName: () => "background.js"`，`inlineDynamicImports: true`，`emptyOutDir` **false**，写出 `dist/background.js`（单文件，无 hashed chunk）。
+
+`package.json`：`"build": "vite build && vite build --config vite.background.ts"`。
+
+**不要** `@crxjs/vite-plugin`。不要把 background 放进第一次多 html 入口。
 
 占位 PNG：单色（如 `#1e3a5f`）即可；可用 1×1 或 128×128 复制四档。允许无「EL」字（Q18 允许共用一张图缩放）。不要依赖系统 `System.Drawing`。
 
 `background.ts`：
 
 1. `createElApi({ fetch })` 一次。
-2. `chrome.runtime.onMessage` → `handleRequest`，`loadStored` = `chrome.storage.local.get(null)`，`saveStored` = `chrome.storage.local.set`。
+2. `chrome.runtime.onMessage`：若 `type==="openTabs"`，**不要**进 `handleRequest`。校验 `urls` 为数组、长度 1…当前 `previewLimit`（`normalizeStoredConfig`）、每条 `isHttpPage`；失败回 `bad_request`。`windowId`：`sender.tab?.windowId`，否则 `chrome.windows.getLastFocused` 的 id。对该 window **依次** `tabs.create({ url, windowId })`。其余 type → `handleRequest`。`loadStored` = `chrome.storage.local.get(["baseUrl","token","confirmUntag","previewLimit"])`。`saveStored` = `set` **仅**这四键。
 3. `onInstalled`/`onStartup`：`contextMenus.removeAll` 后 `create`：id `el-manage`，title `EverythingLabeled：管理本页标签`，contexts `["page"]`，`documentUrlPatterns: ["http://*/*", "https://*/*"]`。
 4. `onClicked`：读 `tab.url`/`tab.title`/`tab.id`；`chrome.storage.session.set({ pageSnapshot: { tabId, url, title } })`；`chrome.tabs.query({ url: chrome.runtime.getURL("app.html") })`（及 `app.html?*` 若 flatten 后无 query 则精确 url）；已有 → `tabs.update` focused + `windows.update` focused；否则 `tabs.create({ url: getURL("app.html") })`。
 5. 菜单点击时若 url 不可 http(s)，直接 return（patterns 已挡一层）。
@@ -509,12 +523,18 @@ git commit -m "#N 扩展 MV3 构建与 Service Worker 壳"
 3. `getTags`（strip 在 SW）。渲染芯片：`tagChipLabel`；按钮删除 → 若 `confirmUntag` 则 `confirm(copy.untagConfirm)`；通过后 `untagById`。
 4. 打标：单输入；回车/按钮；`debounce` 250ms `suggest`；点联想填入；勾选「创建缺失标签」默认 false，成功后不清勾选、清输入、再 `getTags`。输入去标：同一输入 +「去标」按钮 → confirm → `untagByAlias`。
 5. 查询：输入 q → 预览按钮（或回车）`preview`；0 条空列表；渲染 checkbox，不可打开禁用并标注「不可打开」；默认按 `defaultSelectedIds`。
-6. 「打开所选」：`decideOpen`；none/over_limit 用 copy 拒绝；否则对 `urls` 依次 `chrome.tabs.create({ url })`（popup/app 都可以 `tabs.create`，不必再经 SW）。
-7. app 另有按钮「跟随浏览器当前网页」：读 active tab，写 `pageSnapshot`，重跑 2–3。
+6. 「打开所选」：`decideOpen`；none/over_limit 用 copy 拒绝；否则 `sendMessage({ type:"openTabs", urls })`，页面不 `tabs.create`。
+7. app 另有按钮「跟随浏览器当前网页」：读 active tab，写 `pageSnapshot`（由 onChanged 刷新，不必在按钮里直接重跑，避免双刷）。
 
-`popup.ts` / `app.ts` 只调用 `mountPageUi(document.body, mode)`。HTML 提供空 `div#app` 即可，DOM 由 TS 创建（或静态结构，二选一，保持一份）。
+三个 html **只**含 `#app`、stylesheet、入口 script。`popup.ts` / `app.ts` 调用 `mountPageUi(document.getElementById("app")!, mode)`；**全部**控件由 TS 插入。
 
-错误：`config_missing` 引导 Options；`tag_not_found` 用 copy 明确「未勾选创建缺失标签」；其它 `error.message`。
+错误：`config_missing` 引导 Options；`bad_request`（非法 baseUrl）展示校验文案；`connection_failed` → 服务未运行或地址错误；401 / 鉴权失败 → token 无效；`tag_not_found` 用 copy 明确「未勾选创建缺失标签」；其它 `error.message`。
+
+「打开所选」：`decideOpen` 后 `sendMessage({ type:"openTabs", urls })`，页面 **不**调用 `tabs.create`。
+
+Popup：mount 时 `tabs.query({ active:true, lastFocusedWindow:true })` **一次**，之后不随用户切 tab 更新。
+
+app：读取 `pageSnapshot`；`chrome.storage.session.onChanged` 若 `pageSnapshot` 变化则重跑当前页 + `getTags`。「跟随浏览器当前网页」写 session（触发 onChanged）。
 
 - [ ] **Step 1: 实现 UI**
 
@@ -536,8 +556,8 @@ git commit -m "#N 扩展 Options 与 Popup/app 页面"
 **Files:**
 
 - Create: `docs/browser-extension.md`
-- Modify: `docs/README.md`（加一行 #13）
-- Modify: `plans/2026-09-27-browser-extension.md` §8：`Backlog **#11**` 改为 **`#13`**
+- Modify: `docs/README.md`（表格加一行 #13）
+- `plans/2026-09-27-browser-extension.md` §8 编号 **若仍为 #11 才改**；已是 #13 并已链实现计划则 **不要**再改规格
 
 `docs/browser-extension.md` 写清：
 
@@ -553,14 +573,14 @@ git commit -m "#N 扩展 Options 与 Popup/app 页面"
 - [ ] **Step 2: Commit**
 
 ```powershell
-git add docs plans/2026-09-27-browser-extension.md
-git commit -m "#N 扩展加载说明与 backlog 编号"
+git add docs
+git commit -m "#N 扩展加载说明"
 ```
 
 ---
 
 ## Self-review
 
-1. **Spec coverage:** §3 组件/权限/配置、§4 Popup/API/打开/右键/错误、§5 安全 → Tasks 1–6。§6–7 非目标未列入任务。
+1. **Spec coverage:** §3 组件/权限/配置、§4 Popup/API/打开/右键/错误、§5 安全 → Tasks 1–6。§6–7 非目标未列入任务。Q21–Q28：连接态映射、非法 baseUrl 码、DOM SSOT、SW 开 tab、app onChanged、空 preview、双 Vite、getTags 失败语义。
 2. **Placeholders:** 无 TBD。图标允许无字母的单色 PNG。
-3. **Types:** `ElRequest`/`ElExtensionConfig`/`PageTags` 在后续任务与 Task 1–4 一致。
+3. **Types:** `ElRequest`/`ElExtensionConfig`/`PageTags` 在后续任务与 Task 1–4 一致。`openTabs` 只在 `background.ts`，不进 `ElRequest`/`handleRequest`。

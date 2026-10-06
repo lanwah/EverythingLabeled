@@ -54,5 +54,6 @@
 - 2026-10-06 — grill #12 实现计划 Q1–Q15（均选推荐）并落盘 → [实现计划](./2026-10-06-mcp-impl.md) · [审核](./confirmed/2026-10-06-mcp-impl-review.md)
 - 2026-10-06 — #12 MCP stdio host 合入 `master`（fast-forward `e48af98`，257 测通过）→ [实现计划](./2026-10-06-mcp-impl.md) · [说明](../docs/mcp.md)
 - 2026-10-06 — grill #13 实现计划 Q1–Q20（均选推荐）并落盘 → [实现计划](./2026-10-06-browser-extension-impl.md) · [审核](./confirmed/2026-10-06-browser-extension-impl-review.md)
+- 2026-10-06 — grill #13 实现计划审核 Q21–Q28（均选推荐）并回写：连接态不自动探测、非法 baseUrl=`bad_request`、SW `openTabs`、双 Vite 单文件 SW → [实现计划](./2026-10-06-browser-extension-impl.md) · [审核 §C](./confirmed/2026-10-06-browser-extension-impl-review.md)
 - 2026-10-06 — 根目录增加 `build.ps1` / `build.bat`（`dotnet build EverythingLabeled.sln`，bat 已实测 Debug 成功）
 - 2026-10-06 — 编译脚本用法写入 [docs/README.md](../docs/README.md#编译)
