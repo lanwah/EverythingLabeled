@@ -42,3 +42,4 @@
 - 2026-10-06 — #10 查询缓存合入 `master`（fast-forward `54222ca`，Memory/Redis/Null，163 测通过）→ [实现计划](./2026-10-06-query-cache-impl.md) · [说明](../docs/query-cache.md)
 - 2026-10-06 — grill #11 实现计划 Q1–Q21（均选推荐）并落盘 → [实现计划](./2026-10-06-cli-impl.md) · [审核](./confirmed/2026-10-06-cli-impl-review.md)
 - 2026-10-06 — grill #11 实现计划 Q22–Q33（均选推荐）并回写：`--json` 字段保真、Task 3 钉死 `IElApi`、`ElJson`、baseUrl 尾 `/` → [实现计划](./2026-10-06-cli-impl.md) · [审核 §D–§E](./confirmed/2026-10-06-cli-impl-review.md)
+- 2026-10-06 — #11 Task 1：抽出 `EverythingLabeled.PathUri`，Service `UriNormalizer` 薄封装（8+165 测通过）→ [实现计划](./2026-10-06-cli-impl.md)

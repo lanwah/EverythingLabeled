@@ -22,6 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\EverythingLabeled.PathUri\EverythingLabeled.PathUri.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <InternalsVisibleTo Include="EverythingLabeled.Service.Tests" />
     </ItemGroup>
 
