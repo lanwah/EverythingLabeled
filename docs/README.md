@@ -26,6 +26,7 @@ v1 形态：**本机守护进程为唯一数据入口**，CLI / MCP / Explorer /
 | **CLI `el`** | `src/EverythingLabeled.Cli` | 命令行打标/查标；确认与闸门在进程内 |
 | **MCP** | `src/EverythingLabeled.Mcp` + `Mcp.Tools` | Agent 工具面（stdio）；工具实现调 Client，不引用 Service |
 | **Explorer** | `ExplorerCommand` + `ExplorerHost` + `ExplorerShared` | 右键菜单 DLL 只起 Host；业务与 HTTP 全在 WPF Host |
+| **Tray**（计划中） | `EverythingLabeled.Tray` | 托盘 + 全局热键打开 Find；与 Host 同目录；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) |
 | **浏览器扩展** | `ext/`（MV3） | 当前页 URL 打标；Options 手填 `baseUrl`+token，**不读** AppData |
 
 ### 工程依赖（编译期）
@@ -69,7 +70,10 @@ ext/  …… 独立 Node/Vite 工程，无 .NET ProjectReference
 4. **Explorer 右键链路**  
    `ExplorerCommand`（稀疏包 COM）把选中路径写入临时 **paths-file** → 即发即忘启动同目录 **ExplorerHost** → Host 读 Shared 约定的文件 → 用 Client 打标/去标/查标/按标签查找。菜单 DLL 不做 HTTP。
 
-5. **数据流**  
+5. **Tray 热键打开 Find**（计划中）  
+   常驻托盘注册全局热键 → 唤起/前置同目录 Host `--mode find`；不调业务 HTTP。详见 [Explorer](./explorer.md) / [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)。
+
+6. **数据流**  
    任意端的写操作都进 Service → SQLite；写成功后 bump `data_version`，查询缓存按版本自然失效。查询建议 / 预览 / 完整结果优先走 `ITagQueryCache`。
 
 未起 Service 时，各客户端只能连失败或（MCP）返回 `connection_failed` / `config_missing`；没有旁路本地库。
@@ -100,4 +104,4 @@ build.bat -Configuration Release
 | [CLI](./cli.md) | backlog **#11** | `el` 工程布局、运行、配置优先级、如何跑 PathUri/Client/Cli 测试 |
 | [MCP](./mcp.md) | backlog **#12** | stdio host、`--help`/`--version`、配置优先级、Cursor `mcp.json`、Tools 测试 |
 | [浏览器扩展](./browser-extension.md) | backlog **#13** | `ext/` 构建与加载、Options 手工配置、Service 依赖、手工联调清单 |
-| [Explorer 上下文菜单](./explorer.md) | backlog **#14** | 稀疏包注册/卸载、Host 四 mode 自测、AppData 依赖、手工验收清单 |
+| [Explorer 上下文菜单](./explorer.md) | backlog **#14** | 稀疏包注册/卸载、Host 四 mode 自测、AppData 依赖、手工验收清单；含 Tray Find 热键说明 |

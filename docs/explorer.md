@@ -9,6 +9,7 @@ Windows 稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.Explorer
 | `src/EverythingLabeled.ExplorerShared` | paths-file（tmp / Cleanup / Write / ReadAndDelete） |
 | `src/EverythingLabeled.ExplorerHost` | WPF Host：`--mode tag\|untag\|tags\|find`，可选 `--paths-file` |
 | `src/EverythingLabeled.ExplorerCommand` | COM 菜单 DLL（`EnableComHosting` → `*.comhost.dll`）+ `Package/AppxManifest.xml` |
+| `src/EverythingLabeled.Tray`（计划中） | WinForms 托盘：全局热键打开 Find；与 Host **同目录**部署 → [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) |
 
 Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
 
@@ -108,6 +109,13 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
   - `previewLimit` — find 预览条数，缺省 **16**（有效范围 1–50）
   - `maxConcurrency` — 批量打标/去标并发，缺省 **4**
   - `confirmUntag` — 去标前确认，缺省 **true**
+  - `findHotkey` / `runAtStartup` — Tray 用（Host 可不解析）；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)
+
+### Tray（Find 热键，计划中）
+
+- 默认热键 `Alt+L`；空串或 `none` 关闭热键；HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）。
+- 首次需手动（或脚本）启动一次 Tray；`runAtStartup` 为 true 时写入 Run。
+- Find **全入口单实例**（含右键）；Tray 与 Host 须同目录。
 
 ## 手工验收清单
 

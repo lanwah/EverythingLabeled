@@ -49,13 +49,16 @@
   "token": "<64-hex>",
   "confirmUntag": true,
   "previewLimit": 16,
-  "maxConcurrency": 4
+  "maxConcurrency": 4,
+  "findHotkey": "Alt+L",
+  "runAtStartup": true
 }
 ```
 
 - `baseUrl` / `token`：必填（安装器或首次引导生成）。
 - 可选键缺省与 [架构 §6](./2026-09-22-local-daemon-architecture.md)、[CLI §2](./2026-09-26-cli.md) 一致。
-- 未知键：客户端忽略（CLI 已确认）。
+- Tray 相关可选键（见 [Tray Find 热键](./2026-10-07-tray-find-hotkey.md)）：`findHotkey`（缺省 `Alt+L`；空串/`none` 表示不注册热键）、`runAtStartup`（缺省 `true`）。Service **不必**在引导时主动写出这两键；**任何重写 config 须保留**已有值及未知键。
+- 未知键：客户端忽略（CLI 已确认）；写回方须保留。
 - **原子写入**：写临时文件再 replace，避免半截 JSON。
 
 ### 2.2 `baseUrl` 校验（与[浏览器扩展](./2026-09-27-browser-extension.md)对齐）
@@ -90,7 +93,7 @@
 3. 若 config **已存在**：
    - **完整且合法** → **不修改** `baseUrl` / `token` / `data\`；
    - **缺失必填、JSON 损坏或 `baseUrl` 校验失败** → **安装/启动失败**，提示手修；**不**自动备份覆盖或补键（开发态「完全无文件」仍走 §4.3）。
-4. 注册 **HKCU\...\Run** 值名 **`EverythingLabeled`** → Service 绝对路径（升级幂等覆盖同名值）。
+4. 注册 **HKCU\...\Run** 值名 **`EverythingLabeled`** → Service 绝对路径（升级幂等覆盖同名值）。Tray 另用 Run 值名 **`EverythingLabeled.Tray`**（见 [Tray 规格](./2026-10-07-tray-find-hotkey.md)）；**本安装器切片不强制**安装/登记 Tray，但卸载清单须能清除该值（若存在）。
 5. 将安装目录追加到 **用户 PATH**（已存在则跳过）；广播环境变更（如 `WM_SETTINGCHANGE`）。已开终端不保证立刻可见，完成页可提一句。
 6. 注册 **HKCU Uninstall**（「应用和功能」）：DisplayName = **`EverythingLabeled`**；UninstallString 指向卸载入口。
 7. **立即启动** Service；轮询 `GET /v1/health`（短超时，实现建议 10–15s）。失败则安装结果为失败或明确警告（不可假装成功）。
@@ -101,7 +104,7 @@
 ### 3.2 卸载（交互）
 
 1. 优雅停 Service，超时强杀。
-2. 移除 Run 值 `EverythingLabeled`、用户 PATH 中的安装目录、ARP 项。
+2. 移除 Run 值 `EverythingLabeled`、以及若存在的 `EverythingLabeled.Tray`；移除用户 PATH 中的安装目录、ARP 项。
 3. 删除 `%LocalAppData%\EverythingLabeled\`。
 4. **询问**是否删除 `%AppData%\EverythingLabeled\`；**默认建议保留**。
 5. 若进程无法结束导致文件锁住 → **卸载失败**，保留 ARP，提示结束后重试（不做 RunOnce 延迟删）。
@@ -161,7 +164,7 @@
 
 ## 7. 自检清单（实现时）
 
-- [ ] x64 self-contained；无管理员可装；Run 值名 `EverythingLabeled`；ARP DisplayName 同名
+- [ ] x64 self-contained；无管理员可装；Run 值名 `EverythingLabeled`（Service）；若存在则清 `EverythingLabeled.Tray`；ARP DisplayName 同名
 - [ ] 用户 PATH + 环境广播；`el` 在新终端可用
 - [ ] 首装：5123–5132 + 64 hex token、原子写、用户 ACL；升级不改 token/端口/data；覆盖 appsettings
 - [ ] 无效 config → 失败不覆盖；无文件 → Service 可 Mutex 引导
