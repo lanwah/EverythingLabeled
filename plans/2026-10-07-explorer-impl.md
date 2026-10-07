@@ -331,8 +331,8 @@ public static class FindOpen
 }
 ```
 
-- [ ] **Step 1–4: TDD Decide** 四分支；GetTags `resource_not_found` 在 UI/薄包装测里断言空列表。
-- [ ] **Step 5: Commit**
+- [x] **Step 1–4: TDD Decide** 四分支；GetTags `resource_not_found` 在 UI/薄包装测里断言空列表。
+- [x] **Step 5: Commit**
 
 ---
 
