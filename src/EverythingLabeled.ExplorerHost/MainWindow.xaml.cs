@@ -1,11 +1,513 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Threading;
+using EverythingLabeled.Client;
 
 namespace EverythingLabeled.ExplorerHost;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private readonly HostUiContext _ctx;
+    private HostMode _mode;
+    private bool _businessEnabled;
+    private bool _createMissing;
+    private CancellationTokenSource? _batchCts;
+    private CancellationTokenSource? _suggestCts;
+    private readonly DispatcherTimer _suggestTimer;
+    private TextBox? _activeAliasBox;
+    private ListBox? _activeSuggestList;
+    private IReadOnlyList<PreviewRow> _previewRows = Array.Empty<PreviewRow>();
+
+    public MainWindow(HostUiContext ctx)
     {
+        _ctx = ctx;
+        _mode = ctx.Mode;
+        _businessEnabled = ctx.BusinessEnabled;
         InitializeComponent();
+
+        _suggestTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(SuggestQuery.DebounceMs) };
+        _suggestTimer.Tick += async (_, _) =>
+        {
+            _suggestTimer.Stop();
+            await RunSuggestAsync().ConfigureAwait(true);
+        };
+
+        ApplyBanner(ctx.Banner);
+        ShowMode(_mode);
+        if (_mode is HostMode.Tags or HostMode.Untag)
+            _ = LoadResourceTagsAsync();
     }
+
+    private void ApplyBanner(string? banner)
+    {
+        if (string.IsNullOrWhiteSpace(banner))
+        {
+            BannerText.Visibility = Visibility.Collapsed;
+            BannerText.Text = string.Empty;
+            return;
+        }
+
+        BannerText.Text = banner;
+        BannerText.Visibility = Visibility.Visible;
+    }
+
+    private void ShowMode(HostMode mode)
+    {
+        if (_mode == HostMode.Tag)
+            _createMissing = CreateMissingCheck.IsChecked == true;
+
+        _mode = mode;
+        Title = mode switch
+        {
+            HostMode.Tag => Copy.WindowTitleTag,
+            HostMode.Untag => Copy.WindowTitleUntag,
+            HostMode.Tags => Copy.WindowTitleTags,
+            HostMode.Find => Copy.WindowTitleFind,
+            _ => "EverythingLabeled",
+        };
+
+        TagPanel.Visibility = mode == HostMode.Tag ? Visibility.Visible : Visibility.Collapsed;
+        UntagPanel.Visibility = mode == HostMode.Untag ? Visibility.Visible : Visibility.Collapsed;
+        TagsPanel.Visibility = mode == HostMode.Tags ? Visibility.Visible : Visibility.Collapsed;
+        FindPanel.Visibility = mode == HostMode.Find ? Visibility.Visible : Visibility.Collapsed;
+
+        CreateMissingCheck.IsChecked = _createMissing;
+
+        FillPathLists();
+        ApplyBusinessEnabled();
+
+        _activeAliasBox = mode switch
+        {
+            HostMode.Tag => TagAliasBox,
+            HostMode.Untag => UntagAliasBox,
+            _ => null,
+        };
+        _activeSuggestList = mode switch
+        {
+            HostMode.Tag => TagSuggestList,
+            HostMode.Untag => UntagSuggestList,
+            _ => null,
+        };
+    }
+
+    private void FillPathLists()
+    {
+        var selection = _ctx.Selection;
+        var lines = selection is null
+            ? Array.Empty<string>()
+            : selection.Items
+                .Select(i => Copy.PathLine(i.RawPath, i.Included, i.ExcludeReason))
+                .ToArray();
+
+        TagPathList.ItemsSource = lines;
+        UntagPathList.ItemsSource = lines;
+        TagsPathList.ItemsSource = lines;
+    }
+
+    private void ApplyBusinessEnabled()
+    {
+        var on = _businessEnabled;
+        TagAliasBox.IsEnabled = on;
+        TagSuggestList.IsEnabled = on;
+        CreateMissingCheck.IsEnabled = on;
+        TagSubmitButton.IsEnabled = on;
+        UntagAliasBox.IsEnabled = on;
+        UntagSuggestList.IsEnabled = on;
+        UntagTagList.IsEnabled = on;
+        UntagSubmitButton.IsEnabled = on;
+        TagsTagList.IsEnabled = on;
+        SwitchToTagButton.IsEnabled = on;
+        SwitchToUntagButton.IsEnabled = on;
+        FindQueryBox.IsEnabled = on;
+        FindPreviewButton.IsEnabled = on;
+        FindResultList.IsEnabled = on;
+        FindOpenButton.IsEnabled = on;
+    }
+
+    private void SetBusy(bool busy)
+    {
+        var on = _businessEnabled && !busy;
+        TagAliasBox.IsEnabled = on;
+        TagSuggestList.IsEnabled = on;
+        CreateMissingCheck.IsEnabled = on;
+        TagSubmitButton.IsEnabled = on;
+        UntagAliasBox.IsEnabled = on;
+        UntagSuggestList.IsEnabled = on;
+        UntagTagList.IsEnabled = on;
+        UntagSubmitButton.IsEnabled = on;
+        SwitchToTagButton.IsEnabled = on;
+        SwitchToUntagButton.IsEnabled = on;
+        FindQueryBox.IsEnabled = on;
+        FindPreviewButton.IsEnabled = on;
+        FindResultList.IsEnabled = on;
+        FindOpenButton.IsEnabled = on;
+
+        TagCancelButton.IsEnabled = busy && _mode == HostMode.Tag;
+        UntagCancelButton.IsEnabled = busy && _mode == HostMode.Untag;
+    }
+
+    private IReadOnlyList<(string Uri, string Kind)> IncludedTagTargets()
+    {
+        var selection = _ctx.Selection;
+        if (selection is null || selection.RejectedOverLimit)
+            return Array.Empty<(string, string)>();
+
+        return selection.Items
+            .Where(i => i.Included && i.CanonicalUri is not null && i.Kind is not null)
+            .Select(i => (i.CanonicalUri!, i.Kind!))
+            .ToList();
+    }
+
+    private IReadOnlyList<string> IncludedUris()
+    {
+        var selection = _ctx.Selection;
+        if (selection is null || selection.RejectedOverLimit)
+            return Array.Empty<string>();
+
+        return selection.Items
+            .Where(i => i.Included && i.CanonicalUri is not null)
+            .Select(i => i.CanonicalUri!)
+            .ToList();
+    }
+
+    private async Task LoadResourceTagsAsync()
+    {
+        UntagTagList.ItemsSource = null;
+        TagsTagList.ItemsSource = null;
+
+        if (!_businessEnabled || _ctx.Api is null)
+            return;
+
+        var uris = IncludedUris();
+        if (uris.Count != 1)
+            return;
+
+        try
+        {
+            var result = await ResourceTags.GetTagsOrEmptyAsync(_ctx.Api, uris[0]).ConfigureAwait(true);
+            if (!result.IsSuccess)
+            {
+                StatusText.Text = result.Error?.Message ?? Copy.TagsLoadFailed;
+                return;
+            }
+
+            var rows = FlattenAliases(result.Data!.Items);
+            UntagTagList.ItemsSource = rows;
+            TagsTagList.ItemsSource = rows;
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = Copy.TagsLoadFailed + "：" + ex.Message;
+        }
+    }
+
+    private static List<AliasRow> FlattenAliases(IReadOnlyList<TagInfo> tags)
+    {
+        var rows = new List<AliasRow>();
+        foreach (var tag in tags)
+        {
+            if (tag.Aliases.Count == 0)
+            {
+                rows.Add(new AliasRow(tag.Name, FormatTagLabel(tag.Name, tag.Namespace, tag.Name)));
+                continue;
+            }
+
+            foreach (var alias in tag.Aliases)
+                rows.Add(new AliasRow(alias, FormatTagLabel(alias, tag.Namespace, tag.Name)));
+        }
+
+        return rows;
+    }
+
+    private static string FormatTagLabel(string alias, string? ns, string name)
+    {
+        var head = string.IsNullOrEmpty(ns) ? name : ns + "/" + name;
+        return alias == name ? head : $"{alias}  ({head})";
+    }
+
+    private void OnSuggestAliasChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox box || !_businessEnabled)
+            return;
+
+        _activeAliasBox = box;
+        _activeSuggestList = box == TagAliasBox ? TagSuggestList : UntagSuggestList;
+        _suggestTimer.Stop();
+        _suggestTimer.Start();
+    }
+
+    private async Task RunSuggestAsync()
+    {
+        if (_ctx.Api is null || _activeAliasBox is null || _activeSuggestList is null || !_businessEnabled)
+            return;
+
+        var q = SuggestQuery.Normalize(_activeAliasBox.Text);
+        if (q is null)
+        {
+            _activeSuggestList.ItemsSource = null;
+            return;
+        }
+
+        _suggestCts?.Cancel();
+        _suggestCts = new CancellationTokenSource();
+        var ct = _suggestCts.Token;
+
+        try
+        {
+            var result = await _ctx.Api.SuggestAsync(q, SuggestQuery.Limit, ct).ConfigureAwait(true);
+            if (ct.IsCancellationRequested)
+                return;
+
+            if (!result.IsSuccess)
+            {
+                _activeSuggestList.ItemsSource = null;
+                return;
+            }
+
+            _activeSuggestList.ItemsSource = result.Data!.Items
+                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
+                .ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
+        }
+        catch
+        {
+            _activeSuggestList.ItemsSource = null;
+        }
+    }
+
+    private void OnSuggestItemActivate(object sender, MouseButtonEventArgs e) => ApplySuggestSelection(sender as ListBox);
+
+    private void OnSuggestListKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ApplySuggestSelection(sender as ListBox);
+            e.Handled = true;
+        }
+    }
+
+    private void ApplySuggestSelection(ListBox? list)
+    {
+        if (list?.SelectedItem is not AliasRow row || _activeAliasBox is null)
+            return;
+
+        _activeAliasBox.Text = row.Alias;
+        list.ItemsSource = null;
+    }
+
+    private async void OnTagSubmit(object sender, RoutedEventArgs e)
+    {
+        _createMissing = CreateMissingCheck.IsChecked == true;
+        var alias = SuggestQuery.Normalize(TagAliasBox.Text);
+        if (alias is null)
+        {
+            StatusText.Text = Copy.EmptyAlias;
+            return;
+        }
+
+        var targets = IncludedTagTargets();
+        if (targets.Count == 0)
+        {
+            StatusText.Text = Copy.NoIncludedPaths;
+            return;
+        }
+
+        if (_ctx.Api is null || _ctx.Config is null)
+            return;
+
+        await RunBatchAsync(
+            ct => BatchTagOps.TagAsync(
+                _ctx.Api,
+                targets,
+                alias,
+                _createMissing,
+                _ctx.Config.MaxConcurrency,
+                ct)).ConfigureAwait(true);
+    }
+
+    private async void OnUntagSubmit(object sender, RoutedEventArgs e)
+    {
+        var alias = SuggestQuery.Normalize(UntagAliasBox.Text);
+        if (alias is null)
+        {
+            StatusText.Text = Copy.EmptyAlias;
+            return;
+        }
+
+        var uris = IncludedUris();
+        if (uris.Count == 0)
+        {
+            StatusText.Text = Copy.NoIncludedPaths;
+            return;
+        }
+
+        if (_ctx.Api is null || _ctx.Config is null)
+            return;
+
+        if (_ctx.Config.ConfirmUntag)
+        {
+            var confirm = MessageBox.Show(
+                Copy.ConfirmUntag(uris.Count),
+                Copy.WindowTitleUntag,
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.OK)
+                return;
+        }
+
+        await RunBatchAsync(
+            ct => BatchTagOps.UntagAsync(
+                _ctx.Api,
+                uris,
+                alias,
+                _ctx.Config.MaxConcurrency,
+                ct)).ConfigureAwait(true);
+    }
+
+    private async Task RunBatchAsync(Func<CancellationToken, Task<BatchSummary>> run)
+    {
+        _batchCts?.Cancel();
+        _batchCts = new CancellationTokenSource();
+        SetBusy(true);
+        StatusText.Text = Copy.BatchRunning;
+
+        try
+        {
+            var summary = await run(_batchCts.Token).ConfigureAwait(true);
+            StatusText.Text = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = Copy.BatchSummary(0, 0, IncludedUris().Count);
+        }
+        finally
+        {
+            SetBusy(false);
+            _batchCts = null;
+        }
+    }
+
+    private void OnBatchCancel(object sender, RoutedEventArgs e) => _batchCts?.Cancel();
+
+    private void OnUntagTagSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (UntagTagList.SelectedItem is AliasRow row)
+            UntagAliasBox.Text = row.Alias;
+    }
+
+    private void OnUntagTagActivate(object sender, MouseButtonEventArgs e)
+    {
+        if (UntagTagList.SelectedItem is AliasRow row)
+            UntagAliasBox.Text = row.Alias;
+    }
+
+    private void OnSwitchToTag(object sender, RoutedEventArgs e)
+    {
+        ShowMode(HostMode.Tag);
+    }
+
+    private void OnSwitchToUntag(object sender, RoutedEventArgs e)
+    {
+        ShowMode(HostMode.Untag);
+        _ = LoadResourceTagsAsync();
+    }
+
+    private async void OnFindPreview(object sender, RoutedEventArgs e)
+    {
+        if (_ctx.Api is null || _ctx.Config is null || !_businessEnabled)
+            return;
+
+        var q = FindQueryBox.Text.Trim();
+        if (q.Length == 0)
+        {
+            StatusText.Text = Copy.EmptyQuery;
+            _previewRows = Array.Empty<PreviewRow>();
+            FindResultList.ItemsSource = null;
+            return;
+        }
+
+        SetBusy(true);
+        try
+        {
+            var result = await _ctx.Api.PreviewAsync(
+                q,
+                expand: null,
+                maxDepth: null,
+                expandedTagLimit: null,
+                _ctx.Config.PreviewLimit).ConfigureAwait(true);
+
+            if (!result.IsSuccess)
+            {
+                StatusText.Text = result.Error?.Message ?? Copy.PreviewFailed;
+                _previewRows = Array.Empty<PreviewRow>();
+                FindResultList.ItemsSource = null;
+                return;
+            }
+
+            var items = result.Data!.Items;
+            _previewRows = items
+                .Select(h =>
+                {
+                    var action = FindOpen.Decide(h.Uri, h.Kind);
+                    var canOpen = action.Kind != OpenKind.Unsupported;
+                    return new PreviewRow(
+                        h.Uri,
+                        h.Kind,
+                        Copy.PreviewLine(h.Uri, h.Kind, h.DisplayName, canOpen),
+                        action);
+                })
+                .ToList();
+
+            FindResultList.ItemsSource = _previewRows.Select(r => r.Display).ToList();
+            StatusText.Text = _previewRows.Count == 0
+                ? Copy.PreviewEmpty
+                : Copy.PreviewCount(_previewRows.Count);
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = Copy.PreviewFailed + "：" + ex.Message;
+            _previewRows = Array.Empty<PreviewRow>();
+            FindResultList.ItemsSource = null;
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private void OnFindQueryKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            OnFindPreview(sender, e);
+            e.Handled = true;
+        }
+    }
+
+    private void OnFindOpen(object sender, RoutedEventArgs e)
+    {
+        var index = FindResultList.SelectedIndex;
+        if (index < 0 || index >= _previewRows.Count)
+            return;
+
+        var row = _previewRows[index];
+        if (row.Action.Kind == OpenKind.Unsupported)
+        {
+            StatusText.Text = Copy.CannotOpen;
+            return;
+        }
+
+        FindOpen.Execute(row.Action);
+    }
+
+    private sealed record AliasRow(string Alias, string Display)
+    {
+        public override string ToString() => Display;
+    }
+
+    private sealed record PreviewRow(string Uri, string Kind, string Display, OpenAction Action);
 }

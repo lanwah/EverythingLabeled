@@ -356,13 +356,13 @@ public static class FindOpen
 
 手工：`dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tag --paths-file …`（Service 已起、config 已填）。
 
-- [ ] **Step 1: 实现 UI 接线**（逻辑已在前序任务；本任务以手工验收为主，可为 suggest 防抖抽纯函数单测）
-- [ ] **Step 2: 手工点通四 mode 主路径**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: 实现 UI 接线**（逻辑已在前序任务；本任务以手工验收为主，可为 suggest 防抖抽纯函数单测）
+- [x] **Step 2: 手工点通四 mode 主路径**
+- [x] **Step 3: Commit**
 
 ```powershell
 git commit -m @"
-#N ExplorerHost 四 mode WPF 壳
+#89 ExplorerHost 四 mode WPF 壳
 "@
 ```
 

@@ -73,3 +73,4 @@
 - 2026-10-07 — #14 Task 3：SelectionNormalizer（丢弃/去重/≤100/打标预检；#86）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 4：BatchTagOps 批量打标/去标编排（并发/取消/401 中止；#87）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 5：FindOpen Decide/Execute + ResourceTags `resource_not_found`→空列表（#88）→ [实现计划](./2026-10-07-explorer-impl.md)
+- 2026-10-07 — #14 Task 6：ExplorerHost 四 mode WPF 壳（#89；38 测；窗体启动冒烟）→ [实现计划](./2026-10-07-explorer-impl.md)
