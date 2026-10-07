@@ -4,7 +4,7 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8–#14 已合入 `master`（ExplorerHost 42 测；#14 稀疏包 Register 待本机手工）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
+- v1 设计基线已齐；#8–#14 已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - #14 Explorer：`feature/explorer-impl` 已 fast-forward 合入（#84–#93）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md) · [审核](plans/confirmed/2026-10-07-explorer-impl-review.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
@@ -32,4 +32,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [docs/explorer.md](docs/explorer.md) 完成本机稀疏包 Register，并右键验收四菜单项（Host 弹出且不卡 Explorer）
+与用户确认 v1 之后优先事项（打磨 / 延后项 #15–#17 / 其它）→ [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)

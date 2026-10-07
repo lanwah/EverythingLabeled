@@ -77,3 +77,5 @@
 - 2026-10-07 — #14 Task 7：ExplorerCommand 稀疏包 + HostLauncher（#91；`dotnet build` 过；本机 Register 需开发者模式/受信证书）→ [docs/explorer.md](../docs/explorer.md) · [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 8：Explorer 加载与注册说明（#92）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-07 — #14 本地合入 `master`（fast-forward `6878983`，ExplorerHost 42 + Client 43 测通过；删除分支 `feature/explorer-impl`）→ [实现计划](./2026-10-07-explorer-impl.md) · [说明](../docs/explorer.md)
+- 2026-10-07 — 本机稀疏包 Register 成功：`EverythingLabeled.ExplorerDev_0.1.0.0_x64__2tvmsqdk4aexr`（开发者模式 + 自签根证书入 LocalMachine）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-07 — #14 右键四菜单手工验收通过（Host 弹出且不卡 Explorer）→ [docs/explorer.md](../docs/explorer.md)
