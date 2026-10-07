@@ -66,3 +66,4 @@
 - 2026-10-07 — #13 Task 7：扩展加载说明与 docs 索引（#77/#78；无 Content Script 修正）→ [说明](../docs/browser-extension.md) · [实现计划](./2026-10-06-browser-extension-impl.md)
 - 2026-10-07 — #13 终审：修复跟随按钮快照扩展页 + 联调菜单文案（#79，71 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
 - 2026-10-07 — #13 Windows 联调通过（Chrome/Edge 加载 `ext/dist` + 七项手工验收）→ [说明](../docs/browser-extension.md)
+- 2026-10-07 — 起草 #14 Explorer 实现计划（先 Host 后菜单；稀疏包开发注册）→ [实现计划](./2026-10-07-explorer-impl.md)

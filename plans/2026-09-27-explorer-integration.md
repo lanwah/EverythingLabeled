@@ -226,3 +226,8 @@ v1 单次打开一项（不对 preview「全部打开」）；无全量 `query` 
 - [ ] find：仅 preview；打开后窗口保持；无 expand
 - [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）
 - [ ] Command DLL 不承载业务 HTTP；Host 崩溃不拖死 Explorer（预期）
+
+## 11. 实现跟踪
+
+- Backlog **#14** Explorer 上下文菜单包 → [实现计划](./2026-10-07-explorer-impl.md)
+- 依赖：Service HTTP（#8–#10）与共享 Client/PathUri（#11）；开发期稀疏包注册即可联调，不阻塞于 #6 安装程序

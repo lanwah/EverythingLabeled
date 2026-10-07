@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#13 已合入 `master`（sln 测 + `ext/` 71 测；#13 Windows 联调已过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md)
-- #14 Explorer 规格已确认，实现计划未开 → [Explorer 规格](plans/2026-09-27-explorer-integration.md)
+- #14 Explorer 实现计划已落盘（待 grill 确认）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
 ## 关键决策
@@ -19,6 +19,7 @@
 - #9：原子 bump + 写后异步 InvalidatePrefix；查询三分流水线；可插拔缓存（默认 Memory）；Set 前复核；写回执扁平 dataVersion；suggest 无 offset；Cache:* 键名已钉；kind 与 URI 须兼容 → [CRUD §11](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md)
 - #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）+ `el`（SCL 2.0.12）；`--json` 对齐 API 字段；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
 - #13：Chrome/Edge 一份 MV3；`ext/`；仅 SW `fetch`；配置手填；客户端只去 `#fragment` → [扩展规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
+- #14：稀疏包 `IExplorerCommand` + WPF Host；先 Host 后菜单；同目录启 Host；开发期稀疏包注册；不做安装器 → [Explorer 规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
 
 ## 待办
 - [ ] #14 Explorer 上下文菜单包
@@ -32,4 +33,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [Explorer 集成规格](plans/2026-09-27-explorer-integration.md) 起草并确认 #14 实现计划（稀疏包 `IExplorerCommand` + WPF `ExplorerHost`）
+grill 确认 [Explorer 实现计划](plans/2026-10-07-explorer-impl.md)，回写审核记录后开工 Task 1
