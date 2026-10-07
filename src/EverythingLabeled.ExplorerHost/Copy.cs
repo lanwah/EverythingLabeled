@@ -16,7 +16,6 @@ public static class Copy
     public const string SubmitTag = "打标";
     public const string SubmitUntag = "去标";
     public const string Cancel = "取消";
-    public const string Preview = "预览";
     public const string Open = "打开";
     public const string SwitchToTag = "切换到打标";
     public const string SwitchToUntag = "切换到去标";

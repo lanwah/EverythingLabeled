@@ -80,3 +80,4 @@
 - 2026-10-07 — 本机稀疏包 Register 成功：`EverythingLabeled.ExplorerDev_0.1.0.0_x64__2tvmsqdk4aexr`（开发者模式 + 自签根证书入 LocalMachine）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-07 — #14 右键四菜单手工验收通过（Host 弹出且不卡 Explorer）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-07 — Service `GET /` 返回 HTML 状态页（避免浏览器打开 baseUrl 时 Chrome 空 404）
+- 2026-10-07 — Find UX：末词简拼 suggest + 防抖 preview、Enter 填入/打开、去「预览」按钮、Host 居中（Host only，不改查询引擎）→ [审核](./confirmed/2026-10-07-find-ux-review.md) · [规格 §5.3](./2026-09-27-explorer-integration.md)

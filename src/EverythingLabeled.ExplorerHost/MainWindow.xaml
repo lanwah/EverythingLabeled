@@ -6,7 +6,8 @@
         Height="520"
         Width="640"
         MinHeight="360"
-        MinWidth="480">
+        MinWidth="480"
+        WindowStartupLocation="CenterScreen">
     <DockPanel Margin="10">
         <TextBlock x:Name="BannerText"
                    DockPanel.Dock="Top"
@@ -152,6 +153,7 @@
         <Grid x:Name="FindPanel" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -159,7 +161,6 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
                            VerticalAlignment="Center"
@@ -169,20 +170,22 @@
                          Grid.Column="1"
                          Height="24"
                          VerticalContentAlignment="Center"
-                         KeyDown="OnFindQueryKeyDown" />
-                <Button x:Name="FindPreviewButton"
-                        Grid.Column="2"
-                        MinWidth="72"
-                        Margin="8,0,0,0"
-                        Content="{x:Static local:Copy.Preview}"
-                        Click="OnFindPreview" />
+                         TextChanged="OnFindQueryChanged"
+                         PreviewKeyDown="OnFindQueryKeyDown" />
             </Grid>
-            <ListBox x:Name="FindResultList"
+            <ListBox x:Name="FindSuggestList"
                      Grid.Row="1"
+                     MaxHeight="120"
+                     Margin="0,4,0,0"
+                     MouseDoubleClick="OnSuggestItemActivate"
+                     KeyDown="OnSuggestListKeyDown" />
+            <ListBox x:Name="FindResultList"
+                     Grid.Row="2"
                      Margin="0,8,0,0"
-                     MouseDoubleClick="OnFindOpen" />
+                     MouseDoubleClick="OnFindOpen"
+                     KeyDown="OnFindResultKeyDown" />
             <Button x:Name="FindOpenButton"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     HorizontalAlignment="Right"
                     MinWidth="72"
                     Margin="0,8,0,0"

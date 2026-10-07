@@ -14,10 +14,12 @@ public partial class MainWindow : Window
     private bool _createMissing;
     private CancellationTokenSource? _batchCts;
     private CancellationTokenSource? _suggestCts;
+    private CancellationTokenSource? _previewCts;
     private readonly DispatcherTimer _suggestTimer;
     private TextBox? _activeAliasBox;
     private ListBox? _activeSuggestList;
     private IReadOnlyList<PreviewRow> _previewRows = Array.Empty<PreviewRow>();
+    private bool _suppressFindTextChanged;
 
     public MainWindow(HostUiContext ctx)
     {
@@ -30,7 +32,10 @@ public partial class MainWindow : Window
         _suggestTimer.Tick += async (_, _) =>
         {
             _suggestTimer.Stop();
-            await RunSuggestAsync().ConfigureAwait(true);
+            if (_mode == HostMode.Find)
+                await RunFindDebouncedAsync().ConfigureAwait(true);
+            else
+                await RunSuggestAsync().ConfigureAwait(true);
         };
 
         ApplyBanner(ctx.Banner);
@@ -82,12 +87,14 @@ public partial class MainWindow : Window
         {
             HostMode.Tag => TagAliasBox,
             HostMode.Untag => UntagAliasBox,
+            HostMode.Find => FindQueryBox,
             _ => null,
         };
         _activeSuggestList = mode switch
         {
             HostMode.Tag => TagSuggestList,
             HostMode.Untag => UntagSuggestList,
+            HostMode.Find => FindSuggestList,
             _ => null,
         };
     }
@@ -132,7 +139,7 @@ public partial class MainWindow : Window
         SwitchToTagButton.IsEnabled = on;
         SwitchToUntagButton.IsEnabled = on;
         FindQueryBox.IsEnabled = on;
-        FindPreviewButton.IsEnabled = on;
+        FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
         FindOpenButton.IsEnabled = on;
     }
@@ -151,7 +158,7 @@ public partial class MainWindow : Window
         SwitchToTagButton.IsEnabled = on;
         SwitchToUntagButton.IsEnabled = on;
         FindQueryBox.IsEnabled = on;
-        FindPreviewButton.IsEnabled = on;
+        FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
         FindOpenButton.IsEnabled = on;
 
@@ -309,8 +316,32 @@ public partial class MainWindow : Window
         if (list?.SelectedItem is not AliasRow row || _activeAliasBox is null)
             return;
 
+        if (list == FindSuggestList)
+        {
+            ApplyFindSuggest(row.Alias);
+            return;
+        }
+
         _activeAliasBox.Text = row.Alias;
         list.ItemsSource = null;
+    }
+
+    private void ApplyFindSuggest(string alias)
+    {
+        _suppressFindTextChanged = true;
+        try
+        {
+            FindQueryBox.Text = FindQueryEdit.ReplaceLastToken(FindQueryBox.Text, alias);
+            FindQueryBox.CaretIndex = FindQueryBox.Text.Length;
+        }
+        finally
+        {
+            _suppressFindTextChanged = false;
+        }
+
+        FindSuggestList.ItemsSource = null;
+        FindQueryBox.Focus();
+        _ = RunFindPreviewAsync();
     }
 
     private async void OnTagSubmit(object sender, RoutedEventArgs e)
@@ -440,7 +471,69 @@ public partial class MainWindow : Window
         _ = LoadResourceTagsAsync();
     }
 
-    private async void OnFindPreview(object sender, RoutedEventArgs e)
+    private void OnFindQueryChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressFindTextChanged || !_businessEnabled || _mode != HostMode.Find)
+            return;
+
+        _activeAliasBox = FindQueryBox;
+        _activeSuggestList = FindSuggestList;
+        _suggestTimer.Stop();
+        _suggestTimer.Start();
+    }
+
+    private async Task RunFindDebouncedAsync()
+    {
+        await RunFindSuggestAsync().ConfigureAwait(true);
+        await RunFindPreviewAsync().ConfigureAwait(true);
+    }
+
+    private async Task RunFindSuggestAsync()
+    {
+        if (_ctx.Api is null || !_businessEnabled)
+            return;
+
+        var token = FindQueryEdit.LastTokenForSuggest(FindQueryBox.Text);
+        if (token is null)
+        {
+            FindSuggestList.ItemsSource = null;
+            return;
+        }
+
+        _suggestCts?.Cancel();
+        _suggestCts = new CancellationTokenSource();
+        var ct = _suggestCts.Token;
+
+        try
+        {
+            var result = await _ctx.Api.SuggestAsync(token, SuggestQuery.Limit, ct).ConfigureAwait(true);
+            if (ct.IsCancellationRequested)
+                return;
+
+            if (!result.IsSuccess)
+            {
+                FindSuggestList.ItemsSource = null;
+                return;
+            }
+
+            var rows = result.Data!.Items
+                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
+                .ToList();
+            FindSuggestList.ItemsSource = rows;
+            if (rows.Count > 0)
+                FindSuggestList.SelectedIndex = 0;
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
+        }
+        catch
+        {
+            FindSuggestList.ItemsSource = null;
+        }
+    }
+
+    private async Task RunFindPreviewAsync()
     {
         if (_ctx.Api is null || _ctx.Config is null || !_businessEnabled)
             return;
@@ -448,13 +541,16 @@ public partial class MainWindow : Window
         var q = FindQueryBox.Text.Trim();
         if (q.Length == 0)
         {
-            StatusText.Text = Copy.EmptyQuery;
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
+            StatusText.Text = string.Empty;
             return;
         }
 
-        SetBusy(true);
+        _previewCts?.Cancel();
+        _previewCts = new CancellationTokenSource();
+        var ct = _previewCts.Token;
+
         try
         {
             var result = await _ctx.Api.PreviewAsync(
@@ -462,7 +558,11 @@ public partial class MainWindow : Window
                 expand: null,
                 maxDepth: null,
                 expandedTagLimit: null,
-                _ctx.Config.PreviewLimit).ConfigureAwait(true);
+                _ctx.Config.PreviewLimit,
+                ct).ConfigureAwait(true);
+
+            if (ct.IsCancellationRequested)
+                return;
 
             if (!result.IsSuccess)
             {
@@ -487,9 +587,16 @@ public partial class MainWindow : Window
                 .ToList();
 
             FindResultList.ItemsSource = _previewRows.Select(r => r.Display).ToList();
+            if (_previewRows.Count > 0)
+                FindResultList.SelectedIndex = 0;
+
             StatusText.Text = _previewRows.Count == 0
                 ? Copy.PreviewEmpty
                 : Copy.PreviewCount(_previewRows.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
         }
         catch (Exception ex)
         {
@@ -497,19 +604,78 @@ public partial class MainWindow : Window
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
         }
-        finally
-        {
-            SetBusy(false);
-        }
     }
 
     private void OnFindQueryKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        if (e.Key == Key.Down)
         {
-            OnFindPreview(sender, e);
-            e.Handled = true;
+            if (FindSuggestList.Items.Count > 0)
+            {
+                FindSuggestList.Focus();
+                if (FindSuggestList.SelectedIndex < 0)
+                    FindSuggestList.SelectedIndex = 0;
+                e.Handled = true;
+                return;
+            }
+
+            if (_previewRows.Count > 0)
+            {
+                FindResultList.Focus();
+                if (FindResultList.SelectedIndex < 0)
+                    FindResultList.SelectedIndex = 0;
+                e.Handled = true;
+            }
+
+            return;
         }
+
+        if (e.Key != Key.Enter)
+            return;
+
+        if (TryApplyFindSuggestFromEnter())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (TryOpenSelectedFindResult())
+            e.Handled = true;
+    }
+
+    private void OnFindResultKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && TryOpenSelectedFindResult())
+            e.Handled = true;
+    }
+
+    private bool TryApplyFindSuggestFromEnter()
+    {
+        if (FindSuggestList.Items.Count == 0)
+            return false;
+        if (FindQueryEdit.LastTokenForSuggest(FindQueryBox.Text) is null)
+            return false;
+
+        if (FindSuggestList.SelectedItem is not AliasRow row)
+        {
+            FindSuggestList.SelectedIndex = 0;
+            row = (AliasRow)FindSuggestList.SelectedItem!;
+        }
+
+        ApplyFindSuggest(row.Alias);
+        return true;
+    }
+
+    private bool TryOpenSelectedFindResult()
+    {
+        if (_previewRows.Count == 0)
+            return false;
+
+        if (FindResultList.SelectedIndex < 0)
+            FindResultList.SelectedIndex = 0;
+
+        OnFindOpen(this, new RoutedEventArgs());
+        return true;
     }
 
     private void OnFindOpen(object sender, RoutedEventArgs e)

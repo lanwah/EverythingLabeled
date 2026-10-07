@@ -6,8 +6,8 @@
 ## 当前状态
 - v1 设计基线已齐；#8–#14 已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - #14 Explorer：`feature/explorer-impl` 已 fast-forward 合入（#84–#93）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md) · [审核](plans/confirmed/2026-10-07-explorer-impl-review.md)
-- Service `GET /` 现返回 HTML 状态页（打开 baseUrl 不再是浏览器空 404）；探活仍为 `/v1/health`
-- 仓库根 `build.ps1` / `build.bat` 编译 sln；组件关系与依赖见 [docs/README.md](docs/README.md#组件关系与如何工作)，编译见同页 [编译](docs/README.md#编译)
+- Find UX：末词 suggest（含简拼）+ 防抖实时 preview；Enter 填联想或打开；无「预览」按钮；Host 屏幕居中 → [审核](plans/confirmed/2026-10-07-find-ux-review.md)
+- Service `GET /` 现返回 HTML 状态页；仓库根 `build.ps1` / `build.bat` 编译 sln → [docs/README.md](docs/README.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -21,6 +21,7 @@
 - #11：`PathUri` + `Client`（`IElApi`/`HttpElApi`/`ElJson`）+ `el`（SCL 2.0.12）；`--json` 对齐 API 字段；确认/闸门在 CLI；URI 规则与 Service 共用 PathUri → [CLI 实现计划](plans/2026-10-06-cli-impl.md)
 - #13：Chrome/Edge 一份 MV3；`ext/`；仅 SW `fetch`；配置手填；客户端只去 `#fragment` → [扩展规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
 - #14：稀疏包 `IExplorerCommand` + WPF Host；先 Host 后菜单；同目录启 Host；开发期稀疏包注册；不做安装器 → [Explorer 规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
+- Find 简拼只走 Host 末词 suggest，query 引擎仍不认 `NameInitials`；实时 preview、无「预览」按钮、窗口居中 → [Find UX 审核](plans/confirmed/2026-10-07-find-ux-review.md)
 
 ## 待办
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
@@ -33,4 +34,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-与用户确认 v1 之后优先事项（打磨 / 延后项 #15–#17 / 其它）→ [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
+手工验收 Find：简拼末词联想、多标签实时 preview、Enter 填入/打开、窗口居中 → [docs/explorer.md](docs/explorer.md) · [审核](plans/confirmed/2026-10-07-find-ux-review.md)

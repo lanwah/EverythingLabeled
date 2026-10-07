@@ -135,7 +135,7 @@
 | `tag` | 列出待提交路径（含预检排除项说明）；**每次提交一个别名** + suggest 防抖；勾选「创建缺失标签」（默认关，不写 config，本会话保留）；进度 + 可取消 + 成功/失败/已取消未发送汇总；成功后**保持窗口** |
 | `untag` | **每次一个别名**。单选：可从 `GET tags` 列表点选删除（点一次 = 一个别名）或手输。多选：一个别名作用于全部路径（无「共有标签」合并 UI）。`confirmUntag != false` → 确认框（文案含路径数量）；取消则不发请求。成功后保持窗口 |
 | `tags` | 单路径列表；`404 resource_not_found` → 空列表。可同窗口切到打标/去标（路径保留） |
-| `find` | 输入 `q` **原样**上传；**仅** `GET /v1/query/preview`（无 expand、无「加载更多」）；双击或「打开」按 §5.5；打开后**保持窗口** |
+| `find` | 输入防抖：末词 `GET /v1/tags/suggest`（简拼/别名前缀联想）+ 整框 `q` **原样** `GET /v1/query/preview`（无 expand、无「加载更多」、无「预览」按钮）；选中联想填入末词并补空格；↑↓ 导航；Enter：有末词联想则填入，否则打开选中资源；双击或「打开」按 §5.5；打开后**保持窗口**。Host 窗口默认屏幕居中。查询引擎仍**不**按简拼解析 token（简拼只走 suggest）→ [Find UX 审核](./confirmed/2026-10-07-find-ux-review.md) |
 
 - `createMissing = true` 当且仅当打标勾选；去标永不 `createMissing: true`。
 - 每次提交别名恰好 **1** 个（与扩展 GUI 一致；批量维度是多路径）。空别名 → 本地提示、不发请求。
@@ -148,8 +148,8 @@
 | 看标签 | `GET /v1/resources/tags?uri=` |
 | 打标（每资源一次） | `POST /v1/resources/tags`：`uri` + `kind` + `add: [一个别名]` + `createMissing`←勾选；不传 `displayName` |
 | 去标（每资源一次） | 同上，`remove: [一个别名]`；`createMissing: false` |
-| 联想 | `GET /v1/tags/suggest?q=&limit=`（默认 limit 10；失败静默） |
-| 查找预览 | `GET /v1/query/preview?q=&limit=`（`limit`←`previewLimit`；不传 expand） |
+| 联想 | `GET /v1/tags/suggest?q=&limit=`（默认 limit 10；失败静默）。打标/去标：整框前缀；find：仅**末词** |
+| 查找预览 | 输入防抖后 `GET /v1/query/preview?q=&limit=`（`limit`←`previewLimit`；不传 expand）；无手动「预览」按钮 |
 
 **批量执行**
 
@@ -223,7 +223,7 @@ v1 单次打开一项（不对 preview「全部打开」）；无全量 `query` 
 - [ ] PathUri 与 CLI **同一库**；含 UNC / symlink / junction；打标预检排除无效项
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
 - [ ] 打标/去标每次一别名；批量并发=`maxConcurrency`（缺省 4）；可取消；401 中止、其它按项继续
-- [ ] find：仅 preview；打开后窗口保持；无 expand
+- [ ] find：防抖 suggest（末词）+ preview；无「预览」按钮；Enter 填联想或打开；窗口居中；打开后保持；无 expand
 - [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）
 - [ ] Command DLL 不承载业务 HTTP；Host 崩溃不拖死 Explorer（预期）
 
