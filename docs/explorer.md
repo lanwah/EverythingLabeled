@@ -1,8 +1,8 @@
 # Explorer 上下文菜单（#14）
 
-稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.ExplorerHost`。菜单 DLL 只写 paths-file 并即发即忘启动 Host；业务与 HTTP 全在 Host。
+Windows 稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.ExplorerHost`。菜单 DLL 只写 `--paths-file` 并即发即忘启动 Host；业务与 HTTP 全在 Host。规格以 [Explorer 集成](../plans/2026-09-27-explorer-integration.md) 与 [实现计划](../plans/2026-10-07-explorer-impl.md) 为准。
 
-## 工程
+## 工程布局
 
 | 项目 | 说明 |
 |---|---|
@@ -10,22 +10,36 @@
 | `src/EverythingLabeled.ExplorerHost` | WPF Host：`--mode tag\|untag\|tags\|find`，可选 `--paths-file` |
 | `src/EverythingLabeled.ExplorerCommand` | COM 菜单 DLL（`EnableComHosting` → `*.comhost.dll`）+ `Package/AppxManifest.xml` |
 
-构建（须 Windows x64）：
+Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
+
+## 构建与测试
 
 ```powershell
 dotnet build src/EverythingLabeled.ExplorerCommand/EverythingLabeled.ExplorerCommand.csproj
+dotnet test tests/EverythingLabeled.ExplorerHost.Tests
 ```
 
-Command 的 csproj 会先编 Host，并把 Host **整输出目录**拷到 Command 输出旁（含 `EverythingLabeled.ExplorerHost.exe`）。
+Command 的 csproj 会先编 Host，并把 Host **整输出目录**拷到 Command 输出旁（含 `EverythingLabeled.ExplorerHost.exe` 与依赖）。
 
-Host 命令行自测（Service 已起、`%AppData%\EverythingLabeled\config.json` 已填）：
+## 命令行启动 Host（四 mode）
+
+Service 已起、`%AppData%\EverythingLabeled\config.json` 已填时，可在不注册稀疏包的情况下自测 Host：
 
 ```powershell
+# 按标签查找（无选中）
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode find
+
+# 看标签（单选；paths-file 一行一个绝对路径）
+dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tags --paths-file <paths.txt>
+
+# 打标
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tag --paths-file <paths.txt>
+
+# 去标
+dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode untag --paths-file <paths.txt>
 ```
 
-Host 测试：`dotnet test tests/EverythingLabeled.ExplorerHost.Tests`
+`find` 可省略 `--paths-file`；若传入，Host **忽略**其内容。
 
 ## 开发 Identity（钉死）
 
@@ -89,5 +103,21 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
 
 ## 依赖
 
-- 本机 Service（`127.0.0.1` + Bearer）
-- `%AppData%\EverythingLabeled\config.json`（Host 只读；含可选 `previewLimit` / `maxConcurrency`）
+- **Service**：本机已监听 `127.0.0.1`，Host 经 Bearer 调 `/v1`（health 失败则 UI 提示，业务不可用）。
+- **`%AppData%\EverythingLabeled\config.json`**：Host **只读**、**不写回**；忽略 `EL_*` 环境变量。与 CLI 共用同一文件，至少需 `baseUrl` 与 `token`。Explorer 相关可选字段：
+  - `previewLimit` — find 预览条数，缺省 **16**（有效范围 1–50）
+  - `maxConcurrency` — 批量打标/去标并发，缺省 **4**
+  - `confirmUntag` — 去标前确认，缺省 **true**
+
+## 手工验收清单
+
+稀疏包注册完成、Service 与 config 就绪后，建议对齐 [规格 §10](../plans/2026-09-27-explorer-integration.md#10-验收清单规格层) 逐项确认：
+
+- [ ] 稀疏包：子菜单四项（中文项名）；空白处仅「按标签查找」；看标签仅单选；Invoke 即发即忘
+- [ ] Host 硬规则：非法丢弃并提示 N；URI 去重；>100 拒绝不截断；DLL 不因数量灰打标/去标
+- [ ] PathUri 与 CLI **同一库**；含 UNC / symlink / junction；打标预检排除无效项
+- [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
+- [ ] 打标/去标每次一别名；批量并发=`maxConcurrency`（缺省 4）；可取消；401 中止、其它按项继续
+- [ ] find：仅 preview；打开后窗口保持；无 expand
+- [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）
+- [ ] Command DLL 不承载业务 HTTP；Host 崩溃不拖死 Explorer（预期）
