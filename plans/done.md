@@ -68,3 +68,5 @@
 - 2026-10-07 — #13 Windows 联调通过（Chrome/Edge 加载 `ext/dist` + 七项手工验收）→ [说明](../docs/browser-extension.md)
 - 2026-10-07 — 起草 #14 Explorer 实现计划（先 Host 后菜单；稀疏包开发注册）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — grill #14 实现计划（brainstorm + Q1–Q16 均选推荐）并回写 → [实现计划](./2026-10-07-explorer-impl.md) · [审核](./confirmed/2026-10-07-explorer-impl-review.md)
+- 2026-10-07 — #14 Task 1：ExplorerShared + Host 骨架与参数（#84）→ [实现计划](./2026-10-07-explorer-impl.md)
+- 2026-10-07 — #14 Task 2：Client PreviewLimit/MaxConcurrency/MetaAsync + Host Probe/ExplorerConfig（#85）→ [实现计划](./2026-10-07-explorer-impl.md)

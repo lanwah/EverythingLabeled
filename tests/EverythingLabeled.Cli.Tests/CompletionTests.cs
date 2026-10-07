@@ -40,7 +40,7 @@ public sealed class CompletionTests
     public async Task Completion_bash_is_bad_request()
     {
         var (code, stdout, stderr) = await Run(["completion", "bash"], _ => ElResult<ElConfig>.Ok(
-            new ElConfig("http://127.0.0.1:5123/", "t", true)));
+            new ElConfig("http://127.0.0.1:5123/", "t", true, 16, 4)));
 
         Assert.Equal(ExitCodes.Usage, code);
         Assert.Equal("", stdout);

@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EverythingLabeled.Client\EverythingLabeled.Client.csproj" />
     <ProjectReference Include="..\EverythingLabeled.ExplorerShared\EverythingLabeled.ExplorerShared.csproj" />
   </ItemGroup>
 

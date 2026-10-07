@@ -268,7 +268,7 @@ public sealed class TagCommandsTests
             IsTty = isTty,
             Api = api,
             LoadConfig = _ => ElResult<ElConfig>.Ok(
-                new ElConfig("http://127.0.0.1:5123/", "token", confirmUntag)),
+                new ElConfig("http://127.0.0.1:5123/", "token", confirmUntag, 16, 4)),
         });
         return (code, stdout.ToString(), stderr.ToString());
     }
@@ -340,6 +340,9 @@ public sealed class TagCommandsTests
             throw new NotImplementedException();
 
         public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
     }
 }

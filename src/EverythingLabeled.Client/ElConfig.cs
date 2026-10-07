@@ -2,7 +2,12 @@ using System.Text.Json;
 
 namespace EverythingLabeled.Client;
 
-public sealed record ElConfig(string BaseUrl, string Token, bool ConfirmUntag);
+public sealed record ElConfig(
+    string BaseUrl,
+    string Token,
+    bool ConfirmUntag,
+    int PreviewLimit,
+    int MaxConcurrency);
 
 public sealed record ElBaseUrlConfig(string BaseUrl, bool ConfirmUntag);
 
@@ -13,6 +18,13 @@ public sealed record ElConfigOverrides(
 
 public static class ElConfigLoader
 {
+    public const int DefaultPreviewLimit = 16;
+    public const int DefaultMaxConcurrency = 4;
+    public const int MinPreviewLimit = 1;
+    public const int MaxPreviewLimit = 50;
+    public const int MinMaxConcurrency = 1;
+    public const int MaxMaxConcurrency = 16;
+
     public static ElResult<ElConfig> Load(
         ElConfigOverrides overrides,
         IReadOnlyDictionary<string, string?> env,
@@ -24,7 +36,12 @@ public static class ElConfigLoader
         if (!TryNormalizeBaseUrl(merged.BaseUrlRaw, out var baseUrl) || string.IsNullOrWhiteSpace(merged.TokenRaw))
             return ElResult<ElConfig>.Fail(MissingError());
 
-        return ElResult<ElConfig>.Ok(new ElConfig(baseUrl, merged.TokenRaw.Trim(), merged.ConfirmUntag));
+        return ElResult<ElConfig>.Ok(new ElConfig(
+            baseUrl,
+            merged.TokenRaw.Trim(),
+            merged.ConfirmUntag,
+            merged.PreviewLimit,
+            merged.MaxConcurrency));
     }
 
     public static ElResult<ElBaseUrlConfig> LoadBaseUrl(
@@ -77,9 +94,17 @@ public static class ElConfigLoader
         merged = new MergedFields(
             FirstNonEmpty(overrides.BaseUrlFlag, Env(env, "EL_BASE_URL"), file?.BaseUrl),
             FirstNonEmpty(overrides.TokenFlag, Env(env, "EL_TOKEN"), file?.Token),
-            file?.ConfirmUntag ?? true);
+            file?.ConfirmUntag ?? true,
+            ClampPreviewLimit(file?.PreviewLimit),
+            ClampMaxConcurrency(file?.MaxConcurrency));
         return true;
     }
+
+    private static int ClampPreviewLimit(int? raw) =>
+        raw is >= MinPreviewLimit and <= MaxPreviewLimit ? raw.Value : DefaultPreviewLimit;
+
+    private static int ClampMaxConcurrency(int? raw) =>
+        raw is >= MinMaxConcurrency and <= MaxMaxConcurrency ? raw.Value : DefaultMaxConcurrency;
 
     private static string? Env(IReadOnlyDictionary<string, string?> env, string key) =>
         env.TryGetValue(key, out var value) ? value : null;
@@ -128,6 +153,8 @@ public static class ElConfigLoader
         string? baseUrl = null;
         string? token = null;
         bool? confirmUntag = null;
+        int? previewLimit = null;
+        int? maxConcurrency = null;
 
         if (root.TryGetProperty("baseUrl", out var baseUrlEl) && baseUrlEl.ValueKind == JsonValueKind.String)
             baseUrl = baseUrlEl.GetString();
@@ -136,11 +163,29 @@ public static class ElConfigLoader
         if (root.TryGetProperty("confirmUntag", out var confirmEl) &&
             (confirmEl.ValueKind is JsonValueKind.True or JsonValueKind.False))
             confirmUntag = confirmEl.GetBoolean();
+        if (root.TryGetProperty("previewLimit", out var previewEl) &&
+            previewEl.ValueKind == JsonValueKind.Number &&
+            previewEl.TryGetInt32(out var preview))
+            previewLimit = preview;
+        if (root.TryGetProperty("maxConcurrency", out var concurrencyEl) &&
+            concurrencyEl.ValueKind == JsonValueKind.Number &&
+            concurrencyEl.TryGetInt32(out var concurrency))
+            maxConcurrency = concurrency;
 
-        return new FileFields(baseUrl, token, confirmUntag);
+        return new FileFields(baseUrl, token, confirmUntag, previewLimit, maxConcurrency);
     }
 
-    private sealed record FileFields(string? BaseUrl, string? Token, bool? ConfirmUntag);
+    private sealed record FileFields(
+        string? BaseUrl,
+        string? Token,
+        bool? ConfirmUntag,
+        int? PreviewLimit,
+        int? MaxConcurrency);
 
-    private readonly record struct MergedFields(string? BaseUrlRaw, string? TokenRaw, bool ConfirmUntag);
+    private readonly record struct MergedFields(
+        string? BaseUrlRaw,
+        string? TokenRaw,
+        bool ConfirmUntag,
+        int PreviewLimit,
+        int MaxConcurrency);
 }

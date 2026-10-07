@@ -321,5 +321,8 @@ public sealed class ElToolsTests
             HealthCalls++;
             return Task.FromResult(HealthResult ?? ElResult<HealthData>.Ok(new HealthData("ok", 1)));
         }
+
+        public Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default) =>
+            Task.FromResult(ElResult<MetaData>.Ok(new MetaData(1)));
     }
 }

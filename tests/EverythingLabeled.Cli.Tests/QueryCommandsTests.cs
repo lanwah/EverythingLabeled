@@ -152,7 +152,7 @@ public sealed class QueryCommandsTests
             Stderr = stderr,
             Api = api,
             LoadConfig = _ => ElResult<ElConfig>.Ok(
-                new ElConfig("http://127.0.0.1:5123/", "token", true)),
+                new ElConfig("http://127.0.0.1:5123/", "token", true, 16, 4)),
         });
         return (code, stdout.ToString(), stderr.ToString());
     }
@@ -207,6 +207,9 @@ public sealed class QueryCommandsTests
         }
 
         public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
     }
 }

@@ -18,6 +18,64 @@ public sealed class ElConfigTests
         Assert.Equal("http://127.0.0.1:5123/", r.Data!.BaseUrl);
         Assert.Equal("secret", r.Data.Token);
         Assert.True(r.Data.ConfirmUntag);
+        Assert.Equal(16, r.Data.PreviewLimit);
+        Assert.Equal(4, r.Data.MaxConcurrency);
+    }
+
+    [Fact]
+    public void Preview_limit_eight_is_kept()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","previewLimit":8}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(8, r.Data!.PreviewLimit);
+    }
+
+    [Fact]
+    public void Illegal_preview_limit_string_falls_back_to_sixteen()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","previewLimit":"x"}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(16, r.Data!.PreviewLimit);
+    }
+
+    [Fact]
+    public void Max_concurrency_ninety_nine_falls_back_to_four()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","maxConcurrency":99}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(4, r.Data!.MaxConcurrency);
+    }
+
+    [Fact]
+    public void Max_concurrency_zero_falls_back_to_four()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","maxConcurrency":0}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(4, r.Data!.MaxConcurrency);
     }
 
     [Fact]

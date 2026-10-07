@@ -36,4 +36,6 @@ public interface IElApi
     Task<ElResult<SuggestPage>> SuggestAsync(string prefix, int limit, CancellationToken ct = default);
 
     Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default);
+
+    Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default);
 }

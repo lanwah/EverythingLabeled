@@ -113,6 +113,9 @@ public sealed class HttpElApi : IElApi
     public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
         SendAsync<HealthData>(HttpMethod.Get, "v1/health", body: null, authorize: false, ct);
 
+    public Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default) =>
+        SendAsync<MetaData>(HttpMethod.Get, "v1/meta", body: null, authorize: true, ct);
+
     private static string BuildQuery(
         string q,
         string? expand,

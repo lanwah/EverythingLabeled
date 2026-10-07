@@ -68,6 +68,23 @@ public sealed class HttpElApiTests
     }
 
     [Fact]
+    public async Task Meta_is_get_v1_meta_with_bearer()
+    {
+        var api = CreateApi((req, _, _) =>
+        {
+            Assert.Equal(HttpMethod.Get, req.Method);
+            Assert.Equal("http://127.0.0.1:5123/v1/meta", req.RequestUri!.ToString());
+            Assert.Equal("Bearer", req.Headers.Authorization!.Scheme);
+            Assert.Equal("tok", req.Headers.Authorization.Parameter);
+            return Ok("""{"dataVersion":9}""");
+        });
+
+        var r = await api.MetaAsync();
+        Assert.True(r.IsSuccess);
+        Assert.Equal(9, r.Data!.DataVersion);
+    }
+
+    [Fact]
     public async Task Unauthorized_maps_code_and_http_status_401()
     {
         var api = CreateApi((_, _, _) => Error(

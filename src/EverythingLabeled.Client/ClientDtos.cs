@@ -41,3 +41,5 @@ public sealed record SuggestItem(Guid TagId, string Alias, string Name, string? 
 public sealed record SuggestPage(IReadOnlyList<SuggestItem> Items, int Offset, int Limit, int Total);
 
 public sealed record HealthData(string Health, int DataVersion);
+
+public sealed record MetaData(int DataVersion);
