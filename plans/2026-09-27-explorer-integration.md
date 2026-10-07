@@ -19,7 +19,7 @@
 - 路径 → `file://`、存在性、`kind`（含 symlink / junction）与 [CLI §3–4](./2026-09-26-cli.md) **同规则**，且必须与 CLI **共用同一 PathUri 实现库**；不传 `displayName`；默认不 `createMissing`、不 `expand`。
 - 读 `%AppData%/EverythingLabeled/config.json`（**不写回**）；`confirmUntag` 缺省 true；`previewLimit` 缺省 16；`maxConcurrency` 缺省 4。
 - 菜单项与 Host UI 文案以**简体中文**为主；子菜单标题可用产品名 `EverythingLabeled`。
-- **不做**：关系/标签 CRUD UI、`.lnk` 解析到目标、虚拟命名空间、文件跟标、托盘、强制单实例 Host、多资源单请求批量 API、find「加载更多」。
+- **不做**：关系/标签 CRUD UI、`.lnk` 解析到目标、虚拟命名空间、文件跟标、完整托盘壳（跟标/索引等；**Find 热键 Tray 切片**见 [Tray 规格](./2026-10-07-tray-find-hotkey.md)）、全局强制单实例 Host（**Find 模式单实例除外**）、多资源单请求批量 API、find「加载更多」。
 
 ## 2. 组件与职责
 
