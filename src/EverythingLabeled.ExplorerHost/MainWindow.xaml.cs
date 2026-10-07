@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using EverythingLabeled.Client;
 
@@ -42,6 +44,53 @@ public partial class MainWindow : Window
         ShowMode(_mode);
         if (_mode is HostMode.Tags or HostMode.Untag)
             _ = LoadResourceTagsAsync();
+    }
+
+    public void ActivateFromIpc()
+    {
+        void ActivateCore()
+        {
+            if (WindowState == WindowState.Minimized)
+                WindowState = WindowState.Normal;
+
+            Show();
+            Activate();
+
+            // Brief Topmost flip helps some foreground races; ignore failures.
+            var wasTopmost = Topmost;
+            try
+            {
+                Topmost = true;
+                Topmost = wasTopmost;
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var helper = new WindowInteropHelper(this);
+                if (helper.Handle != IntPtr.Zero)
+                    _ = NativeMethods.SetForegroundWindow(helper.Handle);
+            }
+            catch
+            {
+                // Best-effort; taskbar flash is acceptable.
+            }
+        }
+
+        if (Dispatcher.CheckAccess())
+            ActivateCore();
+        else
+            Dispatcher.Invoke(ActivateCore);
+    }
+
+    private static class NativeMethods
+    {
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 
     private void ApplyBanner(string? banner)

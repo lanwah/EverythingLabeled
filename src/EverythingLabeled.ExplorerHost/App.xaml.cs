@@ -9,6 +9,8 @@ namespace EverythingLabeled.ExplorerHost;
 public partial class App : Application
 {
     private HttpClient? _http;
+    private FindSingleInstance? _findInstance;
+    private MainWindow? _mainWindow;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -19,6 +21,24 @@ public partial class App : Application
             MessageBox.Show(error, "EverythingLabeled", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
+        }
+
+        if (launchArgs.Mode == HostMode.Find)
+        {
+            var mutexName = FindHostIpc.ResolveMutexName();
+            var pipeName = FindHostIpc.ResolvePipeName();
+            if (!FindSingleInstance.TryAcquire(
+                    mutexName,
+                    pipeName,
+                    () => _mainWindow?.ActivateFromIpc(),
+                    out var findInstance))
+            {
+                FindHostIpc.TrySendActivate(pipeName, TimeSpan.FromSeconds(1));
+                Shutdown(0);
+                return;
+            }
+
+            _findInstance = findInstance;
         }
 
         string? banner = null;
@@ -72,12 +92,23 @@ public partial class App : Application
             Http = _http,
         };
 
-        var window = new MainWindow(ctx);
-        window.Show();
+        _mainWindow = new MainWindow(ctx);
+        if (_findInstance is not null)
+        {
+            _mainWindow.Closed += (_, _) =>
+            {
+                _findInstance?.Dispose();
+                _findInstance = null;
+            };
+        }
+
+        _mainWindow.Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _findInstance?.Dispose();
+        _findInstance = null;
         _http?.Dispose();
         base.OnExit(e);
     }
