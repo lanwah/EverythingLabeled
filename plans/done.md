@@ -83,3 +83,5 @@
 - 2026-10-07 — Find UX：末词简拼 suggest + 防抖 preview、Enter 填入/打开、去「预览」按钮、Host 居中（Host only，不改查询引擎）→ [审核](./confirmed/2026-10-07-find-ux-review.md) · [规格 §5.3](./2026-09-27-explorer-integration.md)
 - 2026-10-07 — Tray Find 热键设计确认（独立 Tray、`Alt+L`、Find 单实例 IPC、config 字段）→ [规格](./2026-10-07-tray-find-hotkey.md) · [审核](./confirmed/2026-10-07-tray-find-hotkey-review.md)
 - 2026-10-07 — Tray Find 热键 grill 收口（Q1–Q20）并回写规格 / config-and-install / explorer docs → [审核 §D–G](./confirmed/2026-10-07-tray-find-hotkey-review.md)
+- 2026-10-07 — 编写 Tray Find 热键实现计划（Find IPC / Tray / Service 保留键 / 文档）→ [实现计划](./2026-10-07-tray-find-hotkey-impl.md)
+- 2026-10-07 — Tray Find：#101 Find 单实例 Mutex+管道；#102 热键解析与配置；#103 Tray 托盘热键唤起；#104 Service 写配置保留未知键 + 文档 → [实现计划](./2026-10-07-tray-find-hotkey-impl.md)

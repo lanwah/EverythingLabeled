@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace EverythingLabeled.Service.Hosting;
@@ -107,16 +108,31 @@ public static class ConfigBootstrap
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
 
-        var dto = new AppConfigDto
+        JsonObject root;
+        if (File.Exists(configPath))
         {
-            BaseUrl = config.BaseUrl,
-            Token = config.Token,
-            ConfirmUntag = config.ConfirmUntag,
-            PreviewLimit = config.PreviewLimit,
-            MaxConcurrency = config.MaxConcurrency,
-        };
+            try
+            {
+                var existing = JsonNode.Parse(File.ReadAllText(configPath, Encoding.UTF8));
+                root = existing as JsonObject ?? new JsonObject();
+            }
+            catch (JsonException)
+            {
+                root = new JsonObject();
+            }
+        }
+        else
+        {
+            root = new JsonObject();
+        }
 
-        var json = JsonSerializer.Serialize(dto, WriteOptions);
+        root["baseUrl"] = config.BaseUrl;
+        root["token"] = config.Token;
+        root["confirmUntag"] = config.ConfirmUntag;
+        root["previewLimit"] = config.PreviewLimit;
+        root["maxConcurrency"] = config.MaxConcurrency;
+
+        var json = root.ToJsonString(WriteOptions);
         var tempPath = configPath + ".tmp";
         File.WriteAllText(tempPath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         File.Move(tempPath, configPath, overwrite: true);

@@ -9,7 +9,7 @@ Windows 稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.Explorer
 | `src/EverythingLabeled.ExplorerShared` | paths-file（tmp / Cleanup / Write / ReadAndDelete） |
 | `src/EverythingLabeled.ExplorerHost` | WPF Host：`--mode tag\|untag\|tags\|find`，可选 `--paths-file` |
 | `src/EverythingLabeled.ExplorerCommand` | COM 菜单 DLL（`EnableComHosting` → `*.comhost.dll`）+ `Package/AppxManifest.xml` |
-| `src/EverythingLabeled.Tray`（计划中） | WinForms 托盘：全局热键打开 Find；与 Host **同目录**部署 → [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) |
+| `src/EverythingLabeled.Tray` | WinForms 托盘：全局热键打开 Find；构建时拷 Host 整目录到 Tray 旁 → [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) · [实现计划](../plans/2026-10-07-tray-find-hotkey-impl.md) |
 
 Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
 
@@ -17,10 +17,12 @@ Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
 
 ```powershell
 dotnet build src/EverythingLabeled.ExplorerCommand/EverythingLabeled.ExplorerCommand.csproj
+dotnet build src/EverythingLabeled.Tray/EverythingLabeled.Tray.csproj
 dotnet test tests/EverythingLabeled.ExplorerHost.Tests
+dotnet test tests/EverythingLabeled.Tray.Tests
 ```
 
-Command 的 csproj 会先编 Host，并把 Host **整输出目录**拷到 Command 输出旁（含 `EverythingLabeled.ExplorerHost.exe` 与依赖）。
+Command / Tray 的 csproj 会先编 Host，并把 Host **整输出目录**拷到各自输出旁（含 `EverythingLabeled.ExplorerHost.exe` 与依赖）。
 
 ## 命令行启动 Host（四 mode）
 
@@ -111,11 +113,18 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
   - `confirmUntag` — 去标前确认，缺省 **true**
   - `findHotkey` / `runAtStartup` — Tray 用（Host 可不解析）；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)
 
-### Tray（Find 热键，计划中）
+### Tray（Find 热键）
 
-- 默认热键 `Alt+L`；空串或 `none` 关闭热键；HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）。
-- 首次需手动（或脚本）启动一次 Tray；`runAtStartup` 为 true 时写入 Run。
-- Find **全入口单实例**（含右键）；Tray 与 Host 须同目录。
+- 工程：`src/EverythingLabeled.Tray`。输出目录须有同目录 `EverythingLabeled.ExplorerHost.exe`（构建已自动拷贝）。
+- 默认热键 `Alt+L`（config `findHotkey`；空串/`none` 关热键；改 JSON 后重启 Tray）；菜单仍可「打开查找」。
+- HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）；`runAtStartup` 默认 true，托盘可勾选切换。
+- 首次需手动启动一次 Tray（本切片无安装器自动拉起）。
+- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`；关窗后下次热键新开 Host；退出 Tray **不**杀已开 Host。
+
+```powershell
+dotnet run --project src/EverythingLabeled.Tray
+# 或直接运行 Tray 输出目录下的 EverythingLabeled.Tray.exe
+```
 
 ## 手工验收清单
 

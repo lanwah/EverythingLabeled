@@ -1,7 +1,7 @@
 # Tray：全局热键打开 Find
 
 日期：2026-10-07  
-状态：设计已确认（含 grill；待写实现计划）  
+状态：已实现（`feature/tray-find-hotkey`，#101–#104）→ [实现计划](./2026-10-07-tray-find-hotkey-impl.md)  
 审核记录：[Tray Find 热键审核](./confirmed/2026-10-07-tray-find-hotkey-review.md)  
 关联：
 

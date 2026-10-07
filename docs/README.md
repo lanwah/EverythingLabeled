@@ -26,7 +26,7 @@ v1 形态：**本机守护进程为唯一数据入口**，CLI / MCP / Explorer /
 | **CLI `el`** | `src/EverythingLabeled.Cli` | 命令行打标/查标；确认与闸门在进程内 |
 | **MCP** | `src/EverythingLabeled.Mcp` + `Mcp.Tools` | Agent 工具面（stdio）；工具实现调 Client，不引用 Service |
 | **Explorer** | `ExplorerCommand` + `ExplorerHost` + `ExplorerShared` | 右键菜单 DLL 只起 Host；业务与 HTTP 全在 WPF Host |
-| **Tray**（计划中） | `EverythingLabeled.Tray` | 托盘 + 全局热键打开 Find；与 Host 同目录；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) |
+| **Tray** | `EverythingLabeled.Tray` | 托盘 + 全局热键打开 Find；构建拷 Host 同目录；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) · [实现计划](../plans/2026-10-07-tray-find-hotkey-impl.md) |
 | **浏览器扩展** | `ext/`（MV3） | 当前页 URL 打标；Options 手填 `baseUrl`+token，**不读** AppData |
 
 ### 工程依赖（编译期）
@@ -42,18 +42,20 @@ EverythingLabeled.PathUri
                     └── EverythingLabeled.ExplorerHost
                               ▲
 EverythingLabeled.ExplorerShared ──┤
-                              └── EverythingLabeled.ExplorerCommand
-                                  （编 Host 后把 Host 整目录拷到 Command 输出旁）
+                              ├── EverythingLabeled.ExplorerCommand
+                              │     （编 Host 后把 Host 整目录拷到 Command 输出旁）
+                              └── EverythingLabeled.Tray
+                                    （编 Host 后把 Host 整目录拷到 Tray 输出旁）
 
 ext/  …… 独立 Node/Vite 工程，无 .NET ProjectReference
 ```
 
 要点：
 
-- **Service 只依赖 PathUri**，不依赖 Client / CLI / MCP / Explorer。
+- **Service 只依赖 PathUri**，不依赖 Client / CLI / MCP / Explorer / Tray。
 - **Client 依赖 PathUri**；CLI、MCP.Tools、ExplorerHost 依赖 Client，避免各端各自拼 HTTP。
 - **MCP host 依赖 Client + Mcp.Tools**；禁止引用 `EverythingLabeled.Service` 或 AspNetCore MCP 包。
-- **ExplorerCommand** 依赖 Shared，并引用 Host 以便同目录启动 `EverythingLabeled.ExplorerHost.exe`。
+- **ExplorerCommand / Tray** 依赖 Shared，并引用 Host 以便同目录启动 `EverythingLabeled.ExplorerHost.exe`；Tray **不**调业务 HTTP。
 - **浏览器扩展**与 .NET 无编译依赖，运行时只认手工配置的 Service `baseUrl`。
 
 ### 运行时如何协作
@@ -70,8 +72,8 @@ ext/  …… 独立 Node/Vite 工程，无 .NET ProjectReference
 4. **Explorer 右键链路**  
    `ExplorerCommand`（稀疏包 COM）把选中路径写入临时 **paths-file** → 即发即忘启动同目录 **ExplorerHost** → Host 读 Shared 约定的文件 → 用 Client 打标/去标/查标/按标签查找。菜单 DLL 不做 HTTP。
 
-5. **Tray 热键打开 Find**（计划中）  
-   常驻托盘注册全局热键 → 唤起/前置同目录 Host `--mode find`；不调业务 HTTP。详见 [Explorer](./explorer.md) / [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)。
+5. **Tray 热键打开 Find**  
+   常驻托盘注册全局热键 → 唤起/前置同目录 Host `--mode find`（Find 单实例 IPC）；不调业务 HTTP。详见 [Explorer](./explorer.md) / [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)。
 
 6. **数据流**  
    任意端的写操作都进 Service → SQLite；写成功后 bump `data_version`，查询缓存按版本自然失效。查询建议 / 预览 / 完整结果优先走 `ITagQueryCache`。

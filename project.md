@@ -5,9 +5,8 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#14 已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
-- #14 Explorer：`feature/explorer-impl` 已 fast-forward 合入（#84–#93）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md) · [审核](plans/confirmed/2026-10-07-explorer-impl-review.md)
 - Find UX：末词 suggest（含简拼）+ 防抖实时 preview；Enter 填联想或打开；无「预览」按钮；Host 屏幕居中 → [审核](plans/confirmed/2026-10-07-find-ux-review.md)
-- Tray Find 热键：设计 + grill 已确认（WinForms Tray、同目录 Host、Find 全入口单实例、`EverythingLabeled.Tray` Run）→ [规格](plans/2026-10-07-tray-find-hotkey.md) · [审核](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
+- Tray Find 热键：已在 `feature/tray-find-hotkey` 实现（#101–#104：Find 单实例 IPC、Tray 热键/托盘/自启、Service 写配置保留未知键）→ [规格](plans/2026-10-07-tray-find-hotkey.md) · [实现计划](plans/2026-10-07-tray-find-hotkey-impl.md) · [审核](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
 - Service `GET /` 现返回 HTML 状态页；仓库根 `build.ps1` / `build.bat` 编译 sln → [docs/README.md](docs/README.md)
 
 ## 关键决策
@@ -27,6 +26,7 @@
 
 ## 待办
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
+- Tray Find 热键：本机手工验收后合入 `master`（分支 `feature/tray-find-hotkey`）
 
 已完成记录 → [plans/done.md](plans/done.md)
 
@@ -36,4 +36,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-确认按 Tray Find 热键规格编写实现计划 → [plans/2026-10-07-tray-find-hotkey.md](plans/2026-10-07-tray-find-hotkey.md) · [审核](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
+本机手工验收 Tray Find 热键（Alt+L / 托盘菜单 / 单实例 / 自启）后合入 master → [docs/explorer.md](docs/explorer.md) · [实现计划](plans/2026-10-07-tray-find-hotkey-impl.md)
