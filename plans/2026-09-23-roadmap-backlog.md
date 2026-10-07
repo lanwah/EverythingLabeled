@@ -40,7 +40,8 @@
 | 11 | **CLI `el`** — 含共享 `EverythingLabeled.Client`（供 MCP / Explorer 复用） | [已确认规格](./2026-09-26-cli.md)（[规格审核](./confirmed/2026-09-26-cli-review.md)）；[实现计划](./2026-10-06-cli-impl.md)（[实现审核](./confirmed/2026-10-06-cli-impl-review.md)）；[已实现](../docs/cli.md) |
 | 12 | **MCP stdio host** — `Mcp.Tools` + stdio；依赖 Client / Service | [已确认规格](./2026-09-27-mcp.md)（[规格审核](./confirmed/2026-09-27-mcp-review.md)）；[实现计划](./2026-10-06-mcp-impl.md)（[实现审核](./confirmed/2026-10-06-mcp-impl-review.md)）；[已实现](../docs/mcp.md) |
 | 13 | **浏览器扩展（Windows 联调）** | [已确认规格](./2026-09-27-browser-extension.md)（[规格审核](./confirmed/2026-09-27-browser-extension-review.md)）；[实现计划](./2026-10-06-browser-extension-impl.md)（[实现审核](./confirmed/2026-10-06-browser-extension-impl-review.md)）；[已实现](../docs/browser-extension.md)（Windows 联调已过） |
-| 14 | **Explorer 上下文菜单包** | [已确认规格](./2026-09-27-explorer-integration.md)（[审核](./confirmed/2026-09-27-explorer-integration-review.md)）；[实现计划](./2026-10-07-explorer-impl.md)（待 grill） |
+| 14 | **Explorer 上下文菜单包** | [已确认规格](./2026-09-27-explorer-integration.md)（[规格审核](./confirmed/2026-09-27-explorer-integration-review.md)）；[实现计划](./2026-10-07-explorer-impl.md)（[实现审核](./confirmed/2026-10-07-explorer-impl-review.md)） |
+
 
 
 ## C. 明确延后（不进 v1 优先队列）

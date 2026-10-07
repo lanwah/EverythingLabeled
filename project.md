@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#13 已合入 `master`（sln 测 + `ext/` 71 测；#13 Windows 联调已过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md)
-- #14 Explorer 实现计划已落盘（待 grill 确认）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
+- #14 Explorer 实现计划已 grill 确认（Q1–Q16 均 A）→ [规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md) · [审核](plans/confirmed/2026-10-07-explorer-impl-review.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
 ## 关键决策
@@ -33,4 +33,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-grill 确认 [Explorer 实现计划](plans/2026-10-07-explorer-impl.md)，回写审核记录后开工 Task 1
+按 [Explorer 实现计划](plans/2026-10-07-explorer-impl.md) 开工 #14 Task 1（`ExplorerShared` + Host 骨架与参数）
