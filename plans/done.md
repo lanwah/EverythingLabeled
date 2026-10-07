@@ -75,3 +75,5 @@
 - 2026-10-07 — #14 Task 5：FindOpen Decide/Execute + ResourceTags `resource_not_found`→空列表（#88）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 6：ExplorerHost 四 mode WPF 壳（#89；38 测；窗体启动冒烟）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 7：ExplorerCommand 稀疏包 + HostLauncher（#91；`dotnet build` 过；本机 Register 需开发者模式/受信证书）→ [docs/explorer.md](../docs/explorer.md) · [实现计划](./2026-10-07-explorer-impl.md)
+- 2026-10-07 — #14 Task 8：Explorer 加载与注册说明（#92）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-07 — #14 本地合入 `master`（fast-forward `6878983`，ExplorerHost 42 + Client 43 测通过；删除分支 `feature/explorer-impl`）→ [实现计划](./2026-10-07-explorer-impl.md) · [说明](../docs/explorer.md)
