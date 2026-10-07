@@ -71,3 +71,4 @@
 - 2026-10-07 — #14 Task 1：ExplorerShared + Host 骨架与参数（#84）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 2：Client PreviewLimit/MaxConcurrency/MetaAsync + Host Probe/ExplorerConfig（#85）→ [实现计划](./2026-10-07-explorer-impl.md)
 - 2026-10-07 — #14 Task 3：SelectionNormalizer（丢弃/去重/≤100/打标预检；#86）→ [实现计划](./2026-10-07-explorer-impl.md)
+- 2026-10-07 — #14 Task 4：BatchTagOps 批量打标/去标编排（并发/取消/401 中止；#87）→ [实现计划](./2026-10-07-explorer-impl.md)

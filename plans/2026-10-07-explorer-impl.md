@@ -298,8 +298,8 @@ public static class BatchTagOps
 
 规则：空 alias（trim 后）→ 调用方不进此方法。每资源一次 `TagAsync`/`UntagAsync`，aliases 单元素列表。并发用 `SemaphoreSlim(maxConcurrency)`。`ct` 取消 → 未启动的标 `CancelledBeforeSend`；已发出的等完成计入成败。任一结果 **`ElError.HttpStatus == 401`**（为主；若另有明确鉴权 code 也可）→ **取消剩余未发出**。其它错误按项继续。
 
-- [ ] **Step 1–4: TDD** — 假 `IElApi` 延迟+计数并发 ≤ maxConcurrency；取消中途；401 后不再发后续；3 成功 1 业务失败汇总。
-- [ ] **Step 5: Commit**
+- [x] **Step 1–4: TDD** — 假 `IElApi` 延迟+计数并发 ≤ maxConcurrency；取消中途；401 后不再发后续；3 成功 1 业务失败汇总。
+- [x] **Step 5: Commit**
 
 ---
 
