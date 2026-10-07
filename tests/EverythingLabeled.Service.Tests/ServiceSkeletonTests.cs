@@ -39,6 +39,21 @@ public sealed class ServiceSkeletonTests
     }
 
     [Fact]
+    public async Task Root_IsAnonymous_AndReturnsHtmlStatusPage()
+    {
+        await using var fx = ServiceProcessFixture.CreateIsolated();
+        fx.WriteConfigForFreePort();
+        await fx.StartAsync();
+
+        using var response = await fx.GetAsync("/");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("EverythingLabeled", body);
+        Assert.Contains("/v1/health", body);
+    }
+
+    [Fact]
     public async Task Health_IsAnonymous_AndReturnsNumberDataVersion()
     {
         await using var fx = ServiceProcessFixture.CreateIsolated();
