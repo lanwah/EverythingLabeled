@@ -79,12 +79,11 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <ListBox x:Name="UntagPathList" Grid.Row="0" />
-            <DockPanel Grid.Row="1" Margin="0,8,0,0">
+            <DockPanel x:Name="UntagTagListPanel" Grid.Row="1" Margin="0,8,0,0">
                 <TextBlock DockPanel.Dock="Top"
                            Margin="0,0,0,4"
                            Text="{x:Static local:Copy.UntagTagListHint}" />
                 <ListBox x:Name="UntagTagList"
-                         MouseDoubleClick="OnUntagTagActivate"
                          SelectionChanged="OnUntagTagSelected" />
             </DockPanel>
             <Grid Grid.Row="2" Margin="0,8,0,0">
