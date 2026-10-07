@@ -65,3 +65,4 @@
 - 2026-10-06 — #13 Task 6：Options + Popup/app 共用 UI（#75/#76；含过期 getTags 修复；67 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
 - 2026-10-07 — #13 Task 7：扩展加载说明与 docs 索引（#77/#78；无 Content Script 修正）→ [说明](../docs/browser-extension.md) · [实现计划](./2026-10-06-browser-extension-impl.md)
 - 2026-10-07 — #13 终审：修复跟随按钮快照扩展页 + 联调菜单文案（#79，71 测）→ [实现计划](./2026-10-06-browser-extension-impl.md)
+- 2026-10-07 — #13 Windows 联调通过（Chrome/Edge 加载 `ext/dist` + 七项手工验收）→ [说明](../docs/browser-extension.md)

@@ -4,8 +4,8 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8–#12 已合入 `master`（257 测）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md)
-- #13 实现计划 Task 1–7 + 终审修复已合入 `#70`–`#79`：`ext/` MV3（71 测）+ [加载说明](docs/browser-extension.md) → [实现计划](plans/2026-10-06-browser-extension-impl.md)
+- v1 设计基线已齐；#8–#13 已合入 `master`（sln 测 + `ext/` 71 测；#13 Windows 联调已过）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [查询缓存](plans/2026-10-06-query-cache.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md)
+- #14 Explorer 规格已确认，实现计划未开 → [Explorer 规格](plans/2026-09-27-explorer-integration.md)
 - 仓库根 `build.ps1` / `build.bat` 编译 sln；用法见 [docs/README.md](docs/README.md#编译)
 
 ## 关键决策
@@ -21,7 +21,6 @@
 - #13：Chrome/Edge 一份 MV3；`ext/`；仅 SW `fetch`；配置手填；客户端只去 `#fragment` → [扩展规格](plans/2026-09-27-browser-extension.md) · [实现计划](plans/2026-10-06-browser-extension-impl.md)
 
 ## 待办
-- [ ] #13 浏览器扩展（Windows 联调）
 - [ ] #14 Explorer 上下文菜单包
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
 
@@ -33,4 +32,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-按 [浏览器扩展加载说明](docs/browser-extension.md) 完成 #13 Windows 联调清单（Chrome/Edge 加载 `ext/dist`、Options 填配置、七项手工验收）
+按 [Explorer 集成规格](plans/2026-09-27-explorer-integration.md) 起草并确认 #14 实现计划（稀疏包 `IExplorerCommand` + WPF `ExplorerHost`）
