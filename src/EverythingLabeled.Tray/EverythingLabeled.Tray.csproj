@@ -12,4 +12,26 @@
     <AssemblyName>EverythingLabeled.Tray</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EverythingLabeled.ExplorerShared\EverythingLabeled.ExplorerShared.csproj" />
+    <ProjectReference Include="..\EverythingLabeled.ExplorerHost\EverythingLabeled.ExplorerHost.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\tray.ico" CopyToOutputDirectory="PreserveNewest" Link="Assets\tray.ico" />
+  </ItemGroup>
+
+  <Target Name="CopyExplorerHostOutput" AfterTargets="Build">
+    <PropertyGroup>
+      <_HostOutDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\EverythingLabeled.ExplorerHost\bin\$(Configuration)\net8.0-windows\'))</_HostOutDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_HostFiles Include="$(_HostOutDir)**\*" />
+    </ItemGroup>
+    <Error Condition="'@(_HostFiles)' == ''" Text="ExplorerHost output not found under $(_HostOutDir). Build Host first." />
+    <Copy SourceFiles="@(_HostFiles)" DestinationFolder="$(TargetDir)%(_HostFiles.RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
