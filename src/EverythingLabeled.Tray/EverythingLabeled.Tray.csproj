@@ -10,6 +10,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>EverythingLabeled.Tray</RootNamespace>
     <AssemblyName>EverythingLabeled.Tray</AssemblyName>
+    <ApplicationIcon>..\EverythingLabeled.ExplorerShared\Assets\el.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Assets\tray.ico" CopyToOutputDirectory="PreserveNewest" Link="Assets\tray.ico" />
+    <None Include="..\EverythingLabeled.ExplorerShared\Assets\el.ico"
+          Link="Assets\tray.ico"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="CopyExplorerHostOutput" AfterTargets="Build">

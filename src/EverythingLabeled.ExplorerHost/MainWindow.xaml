@@ -9,22 +9,10 @@
         MinWidth="480"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <SolidColorBrush x:Key="FindBgBrush" Color="#1B1F2A" />
-        <SolidColorBrush x:Key="FindFgBrush" Color="#F2F4F8" />
-        <SolidColorBrush x:Key="FindMutedBrush" Color="#9AA3B2" />
-        <SolidColorBrush x:Key="FindInputBgBrush" Color="#12151C" />
-        <SolidColorBrush x:Key="FindRowHoverBrush" Color="#252A38" />
-        <SolidColorBrush x:Key="FindRowSelectedBrush" Color="#2C3345" />
-        <SolidColorBrush x:Key="FindAccentBrush" Color="#4EA1FF" />
-        <SolidColorBrush x:Key="FindTealBrush" Color="#2EC4B6" />
-        <SolidColorBrush x:Key="FindTealDarkBrush" Color="#249E93" />
-        <SolidColorBrush x:Key="FindChipBrush" Color="#1FA396" />
-        <SolidColorBrush x:Key="FindBorderBrush" Color="#2E3545" />
-
         <Style x:Key="FindQueryBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
-            <Setter Property="CaretBrush" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource HostFgBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontSize" Value="16" />
             <Setter Property="Padding" Value="0,2" />
@@ -43,7 +31,7 @@
         <Style x:Key="FindListBoxStyle" TargetType="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="Padding" Value="0" />
         </Style>
@@ -51,7 +39,7 @@
         <Style x:Key="FindSuggestItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="Margin" Value="0,1" />
-            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
@@ -65,10 +53,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -79,7 +67,7 @@
         <Style x:Key="FindResultItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
@@ -93,7 +81,7 @@
                                 <Border x:Name="Accent"
                                         Width="3"
                                         HorizontalAlignment="Left"
-                                        Background="{StaticResource FindAccentBrush}"
+                                        Background="{StaticResource HostAccentBrush}"
                                         CornerRadius="2"
                                         Margin="0,8"
                                         Visibility="Collapsed" />
@@ -102,10 +90,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
                                 <Setter TargetName="Accent" Property="Visibility" Value="Visible" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -116,7 +104,7 @@
 
         <Style x:Key="FindChromeButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource FindMutedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Width" Value="46" />
             <Setter Property="Height" Value="32" />
@@ -130,8 +118,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -142,15 +130,15 @@
         <Style x:Key="FindCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource FindChromeButtonStyle}">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E81123" />
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Background" Value="{StaticResource HostDangerBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="FindModeRadioStyle" TargetType="RadioButton">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource FindMutedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="12,8" />
@@ -171,14 +159,14 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FindAccentBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource HostAccentBrush}" />
                                 <Setter TargetName="Bd" Property="BorderThickness" Value="1" />
-                                <Setter Property="Foreground" Value="{StaticResource FindAccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource HostAccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -191,8 +179,8 @@
 
         <Style x:Key="FindClearButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource FindBorderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HostBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="14,6" />
             <Setter Property="FontSize" Value="13" />
@@ -210,7 +198,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -222,8 +210,8 @@
         </Style>
 
         <Style x:Key="FindOpenButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource FindTealBrush}" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource HostTealBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="18,6" />
             <Setter Property="FontSize" Value="13" />
@@ -240,7 +228,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindTealDarkBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostTealDarkBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -253,7 +241,7 @@
 
         <Style x:Key="FindChipRemoveStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="4,0,0,0" />
             <Setter Property="FontSize" Value="12" />
@@ -266,12 +254,165 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="HostSectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+
+        <Style x:Key="HostInputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource HostInputBgBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HostBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Focusable="False"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource HostAccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HostSurfaceListStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="{StaticResource HostInputBgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HostBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer Padding="0" Focusable="False">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HostPathItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource HostBorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HostTagRowItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource HostBorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HostChipItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Background="{StaticResource HostChipBrush}"
+                                CornerRadius="4"
+                                Padding="8,3">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HostCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="HostSuggestPopupListStyle" TargetType="ListBox" BasedOn="{StaticResource FindListBoxStyle}">
+            <Setter Property="Background" Value="{StaticResource HostInputBgBrush}" />
+            <Setter Property="MaxHeight" Value="140" />
+            <Setter Property="Padding" Value="0,4" />
+        </Style>
     </Window.Resources>
 
     <DockPanel x:Name="RootDock" Margin="10">
         <Border x:Name="FindCaptionBar"
                 DockPanel.Dock="Top"
-                Background="{StaticResource FindBgBrush}"
+                Background="{StaticResource HostBgBrush}"
                 Height="36"
                 Visibility="Collapsed"
                 MouseLeftButtonDown="OnFindCaptionMouseDown">
@@ -280,15 +421,16 @@
                             VerticalAlignment="Center"
                             Margin="12,0,0,0"
                             IsHitTestVisible="False">
-                    <TextBlock Text="&#xE8B7;"
+                    <TextBlock x:Name="HostCaptionIcon"
+                               Text="&#xE8B7;"
                                FontFamily="Segoe MDL2 Assets"
                                FontSize="14"
-                               Foreground="{StaticResource FindMutedBrush}"
+                               Foreground="{StaticResource HostMutedBrush}"
                                VerticalAlignment="Center"
                                Margin="0,0,8,0" />
                     <TextBlock x:Name="FindCaptionTitle"
                                Text="{x:Static local:Copy.WindowTitleFind}"
-                               Foreground="{StaticResource FindFgBrush}"
+                               Foreground="{StaticResource HostFgBrush}"
                                FontSize="13"
                                VerticalAlignment="Center" />
                 </StackPanel>
@@ -337,131 +479,251 @@
                     Click="OnFindClearTags" />
             <TextBlock x:Name="StatusText"
                        TextWrapping="Wrap"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource HostMutedBrush}"
+                       FontSize="13" />
         </DockPanel>
 
+        <!-- Last DockPanel child fills; keep all modes in one host so none dock Left at half width. -->
+        <Grid x:Name="ModeHost">
         <!-- tag -->
-        <Grid x:Name="TagPanel" Visibility="Collapsed">
+        <Grid x:Name="TagPanel" Visibility="Collapsed" Margin="16,12,16,0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ListBox x:Name="TagPathList" Grid.Row="0" />
-            <Grid Grid.Row="1" Margin="0,8,0,0">
+            <TextBlock Grid.Row="0"
+                       Style="{StaticResource HostSectionLabelStyle}"
+                       Text="{x:Static local:Copy.PathsSectionLabel}" />
+            <ListBox x:Name="TagPathList"
+                     Grid.Row="1"
+                     Style="{StaticResource HostSurfaceListStyle}"
+                     ItemContainerStyle="{StaticResource HostPathItemStyle}" />
+            <Grid Grid.Row="2" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
                            VerticalAlignment="Center"
-                           Margin="0,0,8,0"
+                           Margin="0,0,10,0"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           FontSize="13"
                            Text="{x:Static local:Copy.AliasLabel}" />
-                <TextBox x:Name="TagAliasBox"
-                         Grid.Column="1"
-                         Height="24"
-                         VerticalContentAlignment="Center"
-                         TextChanged="OnSuggestAliasChanged" />
+                <Grid Grid.Column="1" x:Name="TagAliasField">
+                    <TextBox x:Name="TagAliasBox"
+                             Style="{StaticResource HostInputStyle}"
+                             Tag="{x:Static local:Copy.AliasPlaceholder}"
+                             TextChanged="OnSuggestAliasChanged" />
+                    <Popup x:Name="TagSuggestPopup"
+                           PlacementTarget="{Binding ElementName=TagAliasBox}"
+                           Placement="Bottom"
+                           StaysOpen="True"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade">
+                        <Border Background="{StaticResource HostInputBgBrush}"
+                                BorderBrush="{StaticResource HostBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                MinWidth="{Binding ActualWidth, ElementName=TagAliasBox}"
+                                Margin="0,4,0,0">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="24"
+                                                  ShadowDepth="8"
+                                                  Opacity="0.45"
+                                                  Direction="270"
+                                                  Color="Black" />
+                            </Border.Effect>
+                            <ListBox x:Name="TagSuggestList"
+                                     Style="{StaticResource HostSuggestPopupListStyle}"
+                                     ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
+                                     DisplayMemberPath="Display"
+                                     MouseDoubleClick="OnSuggestItemActivate"
+                                     KeyDown="OnSuggestListKeyDown" />
+                        </Border>
+                    </Popup>
+                </Grid>
             </Grid>
-            <ListBox x:Name="TagSuggestList"
-                     Grid.Row="2"
-                     MaxHeight="120"
-                     Margin="0,4,0,0"
-                     MouseDoubleClick="OnSuggestItemActivate"
-                     KeyDown="OnSuggestListKeyDown" />
-            <DockPanel Grid.Row="3" Margin="0,8,0,0" LastChildFill="False">
-                <CheckBox x:Name="CreateMissingCheck"
-                          Content="{x:Static local:Copy.CreateMissingLabel}"
-                          VerticalAlignment="Center" />
+            <CheckBox x:Name="CreateMissingCheck"
+                      Grid.Row="3"
+                      Margin="0,10,0,0"
+                      Style="{StaticResource HostCheckBoxStyle}"
+                      Content="{x:Static local:Copy.CreateMissingLabel}" />
+            <DockPanel Grid.Row="4" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
+                <Button x:Name="TagCancelButton"
+                        Style="{StaticResource FindClearButtonStyle}"
+                        MinWidth="72"
+                        Content="{x:Static local:Copy.Cancel}"
+                        IsEnabled="False"
+                        Click="OnBatchCancel" />
                 <Button x:Name="TagSubmitButton"
-                        DockPanel.Dock="Right"
+                        Style="{StaticResource FindOpenButtonStyle}"
                         MinWidth="88"
                         Margin="8,0,0,0"
                         Content="{x:Static local:Copy.SubmitTag}"
                         Click="OnTagSubmit" />
-                <Button x:Name="TagCancelButton"
-                        DockPanel.Dock="Right"
-                        MinWidth="72"
-                        Content="{x:Static local:Copy.Cancel}"
-                        IsEnabled="False"
-                        Click="OnBatchCancel" />
             </DockPanel>
         </Grid>
 
         <!-- untag -->
-        <Grid x:Name="UntagPanel" Visibility="Collapsed">
+        <Grid x:Name="UntagPanel" Visibility="Collapsed" Margin="16,12,16,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="2*" />
-                <RowDefinition Height="2*" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ListBox x:Name="UntagPathList" Grid.Row="0" />
-            <DockPanel x:Name="UntagTagListPanel" Grid.Row="1" Margin="0,8,0,0">
-                <TextBlock DockPanel.Dock="Top"
-                           Margin="0,0,0,4"
-                           Text="{x:Static local:Copy.UntagTagListHint}" />
-                <ListBox x:Name="UntagTagList"
-                         SelectionChanged="OnUntagTagSelected" />
-            </DockPanel>
-            <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0"
+                           Style="{StaticResource HostSectionLabelStyle}"
+                           Text="{x:Static local:Copy.PathsSectionLabel}" />
+                <ListBox x:Name="UntagPathList"
+                         Grid.Row="1"
+                         MinHeight="72"
+                         Style="{StaticResource HostSurfaceListStyle}"
+                         ItemContainerStyle="{StaticResource HostPathItemStyle}" />
+                <DockPanel x:Name="UntagTagListPanel"
+                           Grid.Row="2"
+                           Height="160"
+                           Margin="0,10,0,0">
+                    <TextBlock DockPanel.Dock="Top"
+                               Style="{StaticResource HostSectionLabelStyle}"
+                               Text="{x:Static local:Copy.UntagTagListHint}" />
+                    <ListBox x:Name="UntagTagList"
+                             Style="{StaticResource HostSurfaceListStyle}"
+                             ItemContainerStyle="{StaticResource HostTagRowItemStyle}"
+                             DisplayMemberPath="Display"
+                             SelectionChanged="OnUntagTagSelected" />
+                </DockPanel>
+            </Grid>
+            <Grid Grid.Row="1" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
                            VerticalAlignment="Center"
-                           Margin="0,0,8,0"
+                           Margin="0,0,10,0"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           FontSize="13"
                            Text="{x:Static local:Copy.AliasLabel}" />
-                <TextBox x:Name="UntagAliasBox"
-                         Grid.Column="1"
-                         Height="24"
-                         VerticalContentAlignment="Center"
-                         TextChanged="OnSuggestAliasChanged" />
+                <Grid Grid.Column="1">
+                    <TextBox x:Name="UntagAliasBox"
+                             Style="{StaticResource HostInputStyle}"
+                             Tag="{x:Static local:Copy.UntagAliasPlaceholder}"
+                             TextChanged="OnSuggestAliasChanged" />
+                    <Popup x:Name="UntagSuggestPopup"
+                           PlacementTarget="{Binding ElementName=UntagAliasBox}"
+                           Placement="Bottom"
+                           StaysOpen="True"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade">
+                        <Border Background="{StaticResource HostInputBgBrush}"
+                                BorderBrush="{StaticResource HostBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                MinWidth="{Binding ActualWidth, ElementName=UntagAliasBox}"
+                                Margin="0,4,0,0">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="24"
+                                                  ShadowDepth="8"
+                                                  Opacity="0.45"
+                                                  Direction="270"
+                                                  Color="Black" />
+                            </Border.Effect>
+                            <ListBox x:Name="UntagSuggestList"
+                                     Style="{StaticResource HostSuggestPopupListStyle}"
+                                     ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
+                                     DisplayMemberPath="Display"
+                                     MouseDoubleClick="OnSuggestItemActivate"
+                                     KeyDown="OnSuggestListKeyDown" />
+                        </Border>
+                    </Popup>
+                </Grid>
             </Grid>
-            <ListBox x:Name="UntagSuggestList"
-                     Grid.Row="3"
-                     MaxHeight="100"
-                     Margin="0,4,0,0"
-                     MouseDoubleClick="OnSuggestItemActivate"
-                     KeyDown="OnSuggestListKeyDown" />
-            <DockPanel Grid.Row="4" Margin="0,8,0,0" LastChildFill="False">
-                <Button x:Name="UntagSubmitButton"
-                        DockPanel.Dock="Right"
-                        MinWidth="88"
-                        Margin="8,0,0,0"
-                        Content="{x:Static local:Copy.SubmitUntag}"
-                        Click="OnUntagSubmit" />
+            <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
                 <Button x:Name="UntagCancelButton"
-                        DockPanel.Dock="Right"
+                        Style="{StaticResource FindClearButtonStyle}"
                         MinWidth="72"
                         Content="{x:Static local:Copy.Cancel}"
                         IsEnabled="False"
                         Click="OnBatchCancel" />
+                <Button x:Name="UntagSubmitButton"
+                        Style="{StaticResource FindOpenButtonStyle}"
+                        MinWidth="88"
+                        Margin="8,0,0,0"
+                        Content="{x:Static local:Copy.SubmitUntag}"
+                        Click="OnUntagSubmit" />
             </DockPanel>
         </Grid>
 
         <!-- tags -->
-        <Grid x:Name="TagsPanel" Visibility="Collapsed">
+        <Grid x:Name="TagsPanel" Visibility="Collapsed" Margin="16,12,16,0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ListBox x:Name="TagsPathList" Grid.Row="0" MaxHeight="80" />
-            <ListBox x:Name="TagsTagList" Grid.Row="1" Margin="0,8,0,0" />
-            <StackPanel Grid.Row="2"
+            <TextBlock Grid.Row="0"
+                       Style="{StaticResource HostSectionLabelStyle}"
+                       Text="{x:Static local:Copy.PathSectionLabel}" />
+            <ListBox x:Name="TagsPathList"
+                     Grid.Row="1"
+                     MaxHeight="72"
+                     Style="{StaticResource HostSurfaceListStyle}"
+                     ItemContainerStyle="{StaticResource HostPathItemStyle}" />
+            <TextBlock Grid.Row="2"
+                       Margin="0,10,0,0"
+                       Style="{StaticResource HostSectionLabelStyle}"
+                       Text="{x:Static local:Copy.TagsSectionLabel}" />
+            <Border Grid.Row="3"
+                    Background="{StaticResource HostInputBgBrush}"
+                    BorderBrush="{StaticResource HostBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+                <ListBox x:Name="TagsTagList"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource HostChipItemStyle}" />
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Alias}"
+                                       Foreground="{StaticResource HostOnAccentBrush}"
+                                       FontSize="13" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+            <StackPanel Grid.Row="4"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        Margin="0,8,0,0">
+                        Margin="0,10,0,0">
                 <Button x:Name="SwitchToTagButton"
+                        Style="{StaticResource FindClearButtonStyle}"
                         MinWidth="100"
                         Margin="0,0,8,0"
                         Content="{x:Static local:Copy.SwitchToTag}"
                         Click="OnSwitchToTag" />
                 <Button x:Name="SwitchToUntagButton"
+                        Style="{StaticResource FindOpenButtonStyle}"
                         MinWidth="100"
                         Content="{x:Static local:Copy.SwitchToUntag}"
                         Click="OnSwitchToUntag" />
@@ -482,8 +744,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0"
-                        Background="{StaticResource FindInputBgBrush}"
-                        BorderBrush="{StaticResource FindBorderBrush}"
+                        Background="{StaticResource HostInputBgBrush}"
+                        BorderBrush="{StaticResource HostBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="10"
                         Padding="12,10"
@@ -497,7 +759,7 @@
                                    Text="&#xE721;"
                                    FontFamily="Segoe MDL2 Assets"
                                    FontSize="15"
-                                   Foreground="{StaticResource FindMutedBrush}"
+                                   Foreground="{StaticResource HostMutedBrush}"
                                    VerticalAlignment="Center"
                                    Margin="0,0,10,0" />
                         <Grid Grid.Column="1">
@@ -510,13 +772,13 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{StaticResource FindChipBrush}"
+                                            <Border Background="{StaticResource HostChipBrush}"
                                                     CornerRadius="4"
                                                     Padding="8,3"
                                                     Margin="0,0,6,4">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding}"
-                                                               Foreground="White"
+                                                               Foreground="{StaticResource HostOnAccentBrush}"
                                                                FontSize="13"
                                                                VerticalAlignment="Center" />
                                                     <Button Style="{StaticResource FindChipRemoveStyle}"
@@ -532,7 +794,7 @@
                                 <Grid MinWidth="120" Margin="0,0,0,4">
                                     <TextBlock x:Name="FindQueryPlaceholder"
                                                Text="{x:Static local:Copy.FindQueryPlaceholder}"
-                                               Foreground="{StaticResource FindMutedBrush}"
+                                               Foreground="{StaticResource HostMutedBrush}"
                                                FontSize="14"
                                                VerticalAlignment="Center"
                                                IsHitTestVisible="False" />
@@ -548,8 +810,8 @@
                     </Grid>
                 </Border>
                 <Border Grid.Column="1"
-                        Background="{StaticResource FindInputBgBrush}"
-                        BorderBrush="{StaticResource FindBorderBrush}"
+                        Background="{StaticResource HostInputBgBrush}"
+                        BorderBrush="{StaticResource HostBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Margin="10,0,0,0"
@@ -598,7 +860,7 @@
                                        Text="{Binding Glyph}"
                                        FontFamily="Segoe MDL2 Assets"
                                        FontSize="18"
-                                       Foreground="{StaticResource FindMutedBrush}"
+                                       Foreground="{StaticResource HostMutedBrush}"
                                        VerticalAlignment="Center"
                                        Margin="4,0,14,0"
                                        Width="22"
@@ -607,11 +869,11 @@
                                 <TextBlock Text="{Binding Title}"
                                            FontSize="14"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource FindFgBrush}"
+                                           Foreground="{StaticResource HostFgBrush}"
                                            TextTrimming="CharacterEllipsis" />
                                 <TextBlock Text="{Binding Subtitle}"
                                            FontSize="12"
-                                           Foreground="{StaticResource FindMutedBrush}"
+                                           Foreground="{StaticResource HostMutedBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            Margin="0,2,0,0" />
                             </StackPanel>
@@ -619,6 +881,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+        </Grid>
         </Grid>
     </DockPanel>
 </Window>

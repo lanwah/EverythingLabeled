@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>打标 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>打标</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">填充态</button>
+      </div>
+    </div>
+
+    <div class="preview-stage">
+      <div class="window" role="dialog" aria-label="打标">
+        <div class="caption">
+          <div class="caption-left">
+            <span class="caption-icon" aria-hidden="true">&#xE8EC;</span>
+            <span>打标 — EverythingLabeled</span>
+          </div>
+          <div class="caption-controls">
+            <button type="button" aria-label="最小化">─</button>
+            <button type="button" aria-label="最大化">□</button>
+            <button type="button" class="close" aria-label="关闭">✕</button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="panel is-active" data-state="filled">
+            <p class="section-label">目标路径</p>
+            <ul class="path-list surface">
+              <li class="only-empty" style="color: var(--muted)">未选择路径</li>
+              <li class="only-filled">D:\Work\Git\NIS_SE\NIS_Gch_SE\React\nursing-nis-app</li>
+              <li class="only-filled">D:\Work\Git\NIS_SE\NIS_Gch_SE\React\nursing-nis-app\src</li>
+              <li class="only-filled">D:\Projects\Other\EverythingLabeled\docs\explorer.md</li>
+            </ul>
+
+            <div class="alias-row">
+              <label for="alias">别名</label>
+              <div class="alias-field">
+                <input id="alias" type="text" value="" placeholder="输入别名…" class="only-empty" readonly />
+                <input id="alias-f" type="text" value="工作" class="only-filled" readonly />
+                <ul class="suggest-list only-filled" aria-label="联想">
+                  <li class="selected">工作</li>
+                  <li>工作区</li>
+                  <li>工作笔记</li>
+                </ul>
+              </div>
+            </div>
+
+            <label class="check-row">
+              <input type="checkbox" checked class="only-filled" disabled />
+              <input type="checkbox" class="only-empty" disabled />
+              <span>创建缺失标签</span>
+            </label>
+
+            <div class="footer">
+              <span class="status only-empty">准备就绪</span>
+              <span class="status only-filled">将为 3 项打上「工作」</span>
+              <div class="actions-right">
+                <button type="button" class="btn" disabled>取消</button>
+                <button type="button" class="btn btn-primary">打标</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>

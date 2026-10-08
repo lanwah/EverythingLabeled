@@ -92,3 +92,7 @@
 - 2026-10-08 — Find UI（#105）本地合入 `master`（fast-forward `dcd99db`；删除分支 `feature/find-ui-polish`）→ [芯片审核](./confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](./confirmed/2026-10-07-find-ui-polish-review.md)
 - 2026-10-08 — `docs/explorer.md` 补充 Explorer 四项目关系与依赖；`.gitignore` 忽略 `.cr/`；回写合入后看板
 - 2026-10-08 — Find：输入框 ↓ 一次选中下一项；失焦关闭（`FindListNavigation` + `Deactivated`）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-08 — Explorer 四页 HTML 视觉稿（入口 + 空/填充态）→ [design/explorer-ui/](../design/explorer-ui/index.html)
+- 2026-10-08 — Explorer Host 四页视觉稿定稿（打标联想改为浮动下拉）→ [design/explorer-ui/](../design/explorer-ui/index.html)
+- 2026-10-08 — Explorer Host 打标/去标/看标签深色皮肤落到 WPF（`HostDark` 主题字典；浮动联想；缺失别名自动勾选创建缺失）→ [design/explorer-ui/](../design/explorer-ui/index.html)
+- 2026-10-08 — Tray/Host 共用青绿标签图标（`ExplorerShared/Assets/el.ico`；托盘 + exe ApplicationIcon）

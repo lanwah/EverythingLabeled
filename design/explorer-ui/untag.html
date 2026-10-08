@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>去标 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>去标</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">填充态</button>
+      </div>
+    </div>
+
+    <div class="preview-stage">
+      <div class="window" role="dialog" aria-label="去标">
+        <div class="caption">
+          <div class="caption-left">
+            <span class="caption-icon" aria-hidden="true">&#xE74D;</span>
+            <span>去标 — EverythingLabeled</span>
+          </div>
+          <div class="caption-controls">
+            <button type="button" aria-label="最小化">─</button>
+            <button type="button" aria-label="最大化">□</button>
+            <button type="button" class="close" aria-label="关闭">✕</button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="panel is-active split-body" data-state="filled">
+            <div>
+              <p class="section-label">目标路径</p>
+              <ul class="path-list surface" style="max-height:120px">
+                <li class="only-empty" style="color: var(--muted)">未选择路径</li>
+                <li class="only-filled">D:\Work\Git\NIS_SE\NIS_Gch_SE\React\nursing-nis-app</li>
+              </ul>
+            </div>
+
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+              <p class="section-label">当前标签（单击即去标该别名）</p>
+              <div class="surface tag-list" style="flex:1">
+                <p class="empty-hint only-empty" style="min-height:120px">暂无标签</p>
+                <ul class="tag-list only-filled">
+                  <li>
+                    <span>工作</span>
+                    <span class="meta">单击移除</span>
+                  </li>
+                  <li>
+                    <span>React</span>
+                    <span class="meta">单击移除</span>
+                  </li>
+                  <li>
+                    <span>nis-app <span class="meta">(项目/nursing)</span></span>
+                    <span class="meta">单击移除</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="alias-row">
+              <label for="alias">别名</label>
+              <input id="alias" type="text" placeholder="或手动输入要去除的别名…" readonly />
+            </div>
+
+            <div class="footer">
+              <span class="status only-empty">准备就绪</span>
+              <span class="status only-filled">单选路径 · 可点列表去标</span>
+              <div class="actions-right">
+                <button type="button" class="btn" disabled>取消</button>
+                <button type="button" class="btn btn-primary">去标</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>

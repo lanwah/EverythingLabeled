@@ -36,8 +36,9 @@ public partial class MainWindow : Window
 
         FindChipList.ItemsSource = _findTags;
 
+        EnableHostWindowChrome();
         if (ctx.Mode == HostMode.Find)
-            EnableFindWindowChrome();
+            Deactivated += OnFindDeactivated;
 
         _suggestTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(SuggestQuery.DebounceMs) };
         _suggestTimer.Tick += async (_, _) =>
@@ -53,6 +54,10 @@ public partial class MainWindow : Window
         {
             if (_mode == HostMode.Find)
                 FocusFindQuery();
+            else if (_mode == HostMode.Tag)
+                TagAliasBox.Focus();
+            else if (_mode == HostMode.Untag)
+                UntagAliasBox.Focus();
         };
 
         ApplyBanner(ctx.Banner);
@@ -61,7 +66,7 @@ public partial class MainWindow : Window
             _ = LoadResourceTagsAsync();
     }
 
-    private void EnableFindWindowChrome()
+    private void EnableHostWindowChrome()
     {
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.CanResize;
@@ -75,7 +80,6 @@ public partial class MainWindow : Window
                 CornerRadius = new CornerRadius(8),
                 UseAeroCaptionButtons = false,
             });
-        Deactivated += OnFindDeactivated;
     }
 
     private void OnFindDeactivated(object? sender, EventArgs e)
@@ -157,32 +161,35 @@ public partial class MainWindow : Window
             : Visibility.Collapsed;
     }
 
-    private void ApplyFindChrome(bool findMode)
+    private void ApplyHostChrome(HostMode mode)
     {
+        var findMode = mode == HostMode.Find;
         FindOpenButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
         FindClearButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
-        FindCaptionBar.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
+        FindCaptionBar.Visibility = Visibility.Visible;
+        FindCaptionTitle.Text = Title;
+        HostCaptionIcon.Text = mode switch
+        {
+            HostMode.Tag => "\uE8EC",
+            HostMode.Untag => "\uE74D",
+            HostMode.Tags => "\uE8FD",
+            _ => "\uE8B7",
+        };
+
+        var bg = (System.Windows.Media.Brush)FindResource("HostBgBrush");
+        var muted = (System.Windows.Media.Brush)FindResource("HostMutedBrush");
+        Background = bg;
+        RootDock.Background = bg;
+        RootDock.Margin = new Thickness(0);
+        FooterDock.Margin = new Thickness(16, 0, 16, 12);
+        StatusText.Foreground = muted;
 
         if (findMode)
         {
-            var bg = (System.Windows.Media.Brush)FindResource("FindBgBrush");
-            var muted = (System.Windows.Media.Brush)FindResource("FindMutedBrush");
-            Background = bg;
-            RootDock.Background = bg;
-            RootDock.Margin = new Thickness(0);
-            FooterDock.Margin = new Thickness(16, 0, 16, 12);
-            StatusText.Foreground = muted;
             FindAndRadio.IsChecked = !_findUseOr;
             FindOrRadio.IsChecked = _findUseOr;
             StatusText.Text = Copy.PreviewCount(0);
-            return;
         }
-
-        ClearValue(BackgroundProperty);
-        RootDock.ClearValue(Panel.BackgroundProperty);
-        RootDock.Margin = new Thickness(10);
-        FooterDock.Margin = new Thickness(0, 8, 0, 0);
-        StatusText.ClearValue(TextBlock.ForegroundProperty);
     }
 
     private void OnFindCaptionMouseDown(object sender, MouseButtonEventArgs e)
@@ -250,7 +257,8 @@ public partial class MainWindow : Window
         FillPathLists();
         ApplyBusinessEnabled();
         UpdateUntagTagListVisibility();
-        ApplyFindChrome(mode == HostMode.Find);
+        ApplyHostChrome(mode);
+        CloseAliasSuggestPopups();
 
         _activeAliasBox = mode switch
         {
@@ -445,6 +453,9 @@ public partial class MainWindow : Window
         if (q is null)
         {
             _activeSuggestList.ItemsSource = null;
+            SyncAliasSuggestPopup(_activeSuggestList);
+            if (_mode == HostMode.Tag)
+                CreateMissingCheck.IsChecked = false;
             return;
         }
 
@@ -461,12 +472,18 @@ public partial class MainWindow : Window
             if (!result.IsSuccess)
             {
                 _activeSuggestList.ItemsSource = null;
+                SyncAliasSuggestPopup(_activeSuggestList);
                 return;
             }
 
-            _activeSuggestList.ItemsSource = result.Data!.Items
+            var items = result.Data!.Items;
+            _activeSuggestList.ItemsSource = items
                 .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
                 .ToList();
+            SyncAliasSuggestPopup(_activeSuggestList);
+
+            if (_mode == HostMode.Tag)
+                CreateMissingCheck.IsChecked = CreateMissingSuggest.ShouldCheck(q, items.Select(i => i.Alias));
         }
         catch (OperationCanceledException)
         {
@@ -475,7 +492,25 @@ public partial class MainWindow : Window
         catch
         {
             _activeSuggestList.ItemsSource = null;
+            SyncAliasSuggestPopup(_activeSuggestList);
         }
+    }
+
+    private void SyncAliasSuggestPopup(ListBox? list)
+    {
+        var open = list is { Items.Count: > 0 };
+        if (list == TagSuggestList)
+            TagSuggestPopup.IsOpen = open;
+        else if (list == UntagSuggestList)
+            UntagSuggestPopup.IsOpen = open;
+    }
+
+    private void CloseAliasSuggestPopups()
+    {
+        TagSuggestPopup.IsOpen = false;
+        UntagSuggestPopup.IsOpen = false;
+        TagSuggestList.ItemsSource = null;
+        UntagSuggestList.ItemsSource = null;
     }
 
     private void OnSuggestItemActivate(object sender, MouseButtonEventArgs e) => ApplySuggestSelection(sender as ListBox);
@@ -502,6 +537,9 @@ public partial class MainWindow : Window
 
         _activeAliasBox.Text = row.Alias;
         list.ItemsSource = null;
+        SyncAliasSuggestPopup(list);
+        if (_mode == HostMode.Tag)
+            CreateMissingCheck.IsChecked = false;
     }
 
     private void ApplyFindSuggest(string alias) => CommitFindTag(alias);

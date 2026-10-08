@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Explorer UI 设计稿 — EverythingLabeled</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="gallery">
+    <header class="gallery-hero">
+      <h1>Explorer 右键界面 · 视觉稿</h1>
+      <p>
+        对齐「按标签查找」深色风格，重做打标 / 去标 / 看标签，并保留查找页。
+        每张卡片可进空状态或填充态，方便对照间距与层次。
+      </p>
+    </header>
+
+    <div class="card-grid">
+      <article class="card">
+        <h2>按标签查找</h2>
+        <p>芯片标签、AND/OR、预览列表、清空与打开。已有 Host 深色参考的基线稿。</p>
+        <div class="card-actions">
+          <a class="primary" href="find.html?state=filled">填充态</a>
+          <a href="find.html?state=empty">空状态</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>打标</h2>
+        <p>路径列表、别名输入、联想、创建缺失标签、取消 / 打标。</p>
+        <div class="card-actions">
+          <a class="primary" href="tag.html?state=filled">填充态</a>
+          <a href="tag.html?state=empty">空状态</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>去标</h2>
+        <p>路径、当前标签（单击去标）、别名输入、取消 / 去标。</p>
+        <div class="card-actions">
+          <a class="primary" href="untag.html?state=filled">填充态</a>
+          <a href="untag.html?state=empty">空状态</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>看标签</h2>
+        <p>单路径展示、标签列表、切换到打标 / 去标。</p>
+        <div class="card-actions">
+          <a class="primary" href="tags.html?state=filled">填充态</a>
+          <a href="tags.html?state=empty">空状态</a>
+        </div>
+      </article>
+    </div>
+
+    <p class="gallery-note">
+      静态 HTML，仅供视觉调整。源截图在
+      <a href="../explorer/">design/explorer/</a>。
+      确认风格后可再落到 WPF Host。
+    </p>
+  </main>
+</body>
+</html>

@@ -12,6 +12,11 @@ public static class Copy
     public const string TagsNeedSinglePath = "看标签需要恰好选中 1 个路径";
     public const string CreateMissingLabel = "创建缺失标签";
     public const string AliasLabel = "别名";
+    public const string AliasPlaceholder = "输入别名…";
+    public const string UntagAliasPlaceholder = "或手动输入要去除的别名…";
+    public const string PathsSectionLabel = "目标路径";
+    public const string PathSectionLabel = "路径";
+    public const string TagsSectionLabel = "标签";
     public const string QueryLabel = "查询";
     public const string FindQueryPlaceholder = "输入标签后按回车键…";
     public const string ClearTags = "清空标签";

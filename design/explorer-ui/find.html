@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>按标签查找 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>按标签查找</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">填充态</button>
+      </div>
+    </div>
+
+    <div class="preview-stage">
+      <div class="window" role="dialog" aria-label="按标签查找">
+        <div class="caption">
+          <div class="caption-left">
+            <span class="caption-icon" aria-hidden="true">&#xE8B7;</span>
+            <span>按标签查找 — EverythingLabeled</span>
+          </div>
+          <div class="caption-controls">
+            <button type="button" aria-label="最小化">─</button>
+            <button type="button" aria-label="最大化">□</button>
+            <button type="button" class="close" aria-label="关闭">✕</button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="panel is-active" data-state="filled">
+            <div class="find-toolbar">
+              <div class="chip-field">
+                <span class="search-icon" aria-hidden="true">&#xE721;</span>
+                <div class="chip-wrap">
+                  <span class="chip only-filled">工作 <button type="button" aria-label="移除">×</button></span>
+                  <span class="chip only-filled">React <button type="button" aria-label="移除">×</button></span>
+                  <div class="chip-input">
+                    <span class="placeholder only-empty">输入标签后按回车键...</span>
+                    <span class="placeholder only-filled">继续输入…</span>
+                    <input type="text" aria-label="标签查询" readonly />
+                  </div>
+                </div>
+              </div>
+              <div class="mode-toggle" role="group" aria-label="匹配模式">
+                <button type="button" aria-pressed="true">AND</button>
+                <button type="button" aria-pressed="false">OR</button>
+              </div>
+            </div>
+
+            <p class="empty-hint only-empty">添加标签后，这里会显示匹配预览</p>
+
+            <ul class="result-list only-filled">
+              <li class="selected">
+                <span class="result-glyph" aria-hidden="true">&#xE8B7;</span>
+                <div class="result-text">
+                  <div class="title">nursing-nis-app</div>
+                  <div class="sub">D:\Work\Git\NIS_SE\NIS_Gch_SE\React\nursing-nis-app</div>
+                </div>
+              </li>
+              <li>
+                <span class="result-glyph" aria-hidden="true">&#xE8A5;</span>
+                <div class="result-text">
+                  <div class="title">package.json</div>
+                  <div class="sub">D:\Work\Git\NIS_SE\NIS_Gch_SE\React\nursing-nis-app\package.json</div>
+                </div>
+              </li>
+              <li>
+                <span class="result-glyph" aria-hidden="true">&#xE8B7;</span>
+                <div class="result-text">
+                  <div class="title">design</div>
+                  <div class="sub">D:\Projects\Other\EverythingLabeled\design</div>
+                </div>
+              </li>
+              <li>
+                <span class="result-glyph" aria-hidden="true">&#xE8A5;</span>
+                <div class="result-text">
+                  <div class="title">README.md</div>
+                  <div class="sub">D:\Projects\Other\EverythingLabeled\README.md</div>
+                </div>
+              </li>
+            </ul>
+
+            <div class="footer">
+              <span class="status only-empty">预览 0 条</span>
+              <span class="status only-filled">预览 4 条</span>
+              <button type="button" class="btn btn-ghost">清空标签</button>
+              <button type="button" class="btn btn-primary">打开</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>

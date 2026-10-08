@@ -7,8 +7,9 @@
 - v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
 - Find UX：末词 suggest + 实时 preview；Enter 填联想或打开；Host 居中；↓ 一次进下一项；失焦关闭 → [审核](plans/confirmed/2026-10-07-find-ux-review.md) · [docs/explorer.md](docs/explorer.md)
 - Find UI：#105 深色无边框标题栏 + 芯片 + AND/OR（默认 AND）+ 自动聚焦，已 FF 合入 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
+- Explorer Host 四页深色皮肤已落到 WPF（`Themes/HostDark.xaml`；打标/去标/看标签对齐 Find；别名联想浮动 Popup；缺失别名自动勾选「创建缺失标签」）→ [design/explorer-ui/](design/explorer-ui/index.html)
 - Tray Find 热键：#101–#104 已合入 `master` → [规格](plans/2026-10-07-tray-find-hotkey.md) · [docs/explorer.md](docs/explorer.md)
-- Service `GET /` HTML 状态页；`build.ps1` / `build.bat` 编 sln → [docs/README.md](docs/README.md)
+- Tray/Host 图标：青绿标签形 `el.ico`（16–256）作托盘与 exe 图标 → [ExplorerShared/Assets/el.ico](src/EverythingLabeled.ExplorerShared/Assets/el.ico)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -24,6 +25,7 @@
 - #14：稀疏包 `IExplorerCommand` + WPF Host；先 Host 后菜单；同目录启 Host；开发期稀疏包注册；不做安装器 → [Explorer 规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
 - Find 简拼只走 Host 末词 suggest，query 引擎仍不认 `NameInitials`；实时 preview、无「预览」按钮、窗口居中 → [Find UX 审核](plans/confirmed/2026-10-07-find-ux-review.md)
 - Find UI：芯片 + 全局 AND/OR（默认 AND）；Find 无边框深色标题栏；Enter 落芯片；不做负词芯片/行内操作图标 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
+- Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 
 ## 待办
@@ -38,4 +40,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机重编 Host 后打开 Find 验收：↓ 一次到第二条；点窗外关闭 → [docs/explorer.md](docs/explorer.md)
+本机手工验收 Explorer Host 打标 / 去标 / 看标签深色皮肤（对齐 [design/explorer-ui/](design/explorer-ui/index.html)；联想浮动；缺失别名自动勾选创建缺失）
