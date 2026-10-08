@@ -89,3 +89,5 @@
 - 2026-10-07 — `docs/README.md` 补充「支持的操作系统与环境要求」（Windows 优先、.NET 8、Node≥20、Explorer/Tray 专用）
 - 2026-10-07 — Find UI：深色启动器风 + 自动聚焦输入框（`feature/find-ui-polish`；`FindResultPresentation` 单测）→ [审核](./confirmed/2026-10-07-find-ui-polish-review.md)
 - 2026-10-07 — Find：芯片标签 + AND/OR（默认 AND）+ 清空 + 无边框深色标题栏（`FindQueryCompose` 单测）→ [审核](./confirmed/2026-10-07-find-chip-and-or-review.md)
+- 2026-10-08 — Find UI（#105）本地合入 `master`（fast-forward `dcd99db`；删除分支 `feature/find-ui-polish`）→ [芯片审核](./confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](./confirmed/2026-10-07-find-ui-polish-review.md)
+- 2026-10-08 — `docs/explorer.md` 补充 Explorer 四项目关系与依赖；`.gitignore` 忽略 `.cr/`；回写合入后看板

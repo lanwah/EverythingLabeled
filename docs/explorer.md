@@ -13,6 +13,40 @@ Windows 稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.Explorer
 
 Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
 
+### 四者关系与依赖
+
+```text
+                    ┌──────────────────────────┐
+                    │   ExplorerShared         │  paths-file + Find 单实例 IPC
+                    │   （无对外 ProjectRef）   │
+                    └────────────▲─────────────┘
+           ProjectReference      │      ProjectReference
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+┌───────┴────────┐      ┌────────┴────────┐      ┌────────┴────────┐
+│ ExplorerHost   │      │ ExplorerCommand │      │ Tray            │
+│ WPF 业务 UI    │◄─拷──│ 稀疏包 COM 菜单 │      │ 托盘 + 热键     │
+│ + Client HTTP  │      │ 即发即忘起 Host │      │ 唤起/前置 Find  │
+└───────▲────────┘      └─────────────────┘      └────────┬────────┘
+        │ 编后整目录拷贝到输出旁（含 .exe 与依赖）          │
+        └──────────────────────────────────────────────────┘
+```
+
+| 方向 | 含义 |
+|---|---|
+| **Shared ← Host / Command / Tray** | 三者都 `ProjectReference` Shared。Shared **不**引用另外三者；只提供 paths-file 约定与 `FindHostIpc`（Mutex + 命名管道 `Activate\n`）。 |
+| **Host ← Command / Tray（构建）** | Command、Tray 的 csproj **引用 Host**，以便先编 Host，再把 Host **整输出目录**拷到各自 `bin\...\`（同目录须有 `EverythingLabeled.ExplorerHost.exe`）。这是部署耦合，不是业务库引用。 |
+| **Host → Client / Shared** | Host 唯一承载业务与 HTTP：依赖 `EverythingLabeled.Client`（Bearer → Service）与 Shared；**不**依赖 Command / Tray。 |
+| **Command → Shared**（运行时） | 菜单 DLL 写 `--paths-file` 后即发即忘启动**同目录** Host；不做 HTTP、不读 token、不等待 Host 退出。 |
+| **Tray → Shared**（运行时） | 热键/菜单经 `FindHostIpc` 激活已有 Find，失败则启动同目录 Host `--mode find`；**不**调业务 HTTP。退出 Tray **不**杀已开 Host。 |
+| **Command ⟂ Tray** | 无编译依赖。Find 单实例靠 Shared 的 IPC 约定对齐（右键 find / 热键 / 托盘 / CLI 同源）。 |
+
+要点：
+
+- **业务中心是 Host**：打标 / 去标 / 看标签 / Find UI 与 Service 通信都在 Host；Command 与 Tray 只是入口。
+- **Shared 是胶水**：路径文件协议 + Find 单实例 IPC；改约定须三端一起跟。
+- **两套输出旁各有一份 Host**：稀疏包 `ExternalLocation` 指向 Command 输出；Tray 日常自启用 Tray 输出。两边都靠构建拷贝，缺 exe 则菜单/热键起不来。
+
 ## 构建与测试
 
 ```powershell
