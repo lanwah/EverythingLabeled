@@ -5,8 +5,8 @@
 
 ## 当前状态
 - v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
-- Find UX：末词 suggest + 实时 preview；Enter 填联想或打开；Host 居中 → [审核](plans/confirmed/2026-10-07-find-ux-review.md)
-- Find UI：#105 深色无边框标题栏 + 芯片标签 + AND/OR（默认 AND）+ 自动聚焦，已 FF 合入 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
+- Find UX：末词 suggest + 实时 preview；Enter 填联想或打开；Host 居中；↓ 一次进下一项；失焦关闭 → [审核](plans/confirmed/2026-10-07-find-ux-review.md) · [docs/explorer.md](docs/explorer.md)
+- Find UI：#105 深色无边框标题栏 + 芯片 + AND/OR（默认 AND）+ 自动聚焦，已 FF 合入 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
 - Tray Find 热键：#101–#104 已合入 `master` → [规格](plans/2026-10-07-tray-find-hotkey.md) · [docs/explorer.md](docs/explorer.md)
 - Service `GET /` HTML 状态页；`build.ps1` / `build.bat` 编 sln → [docs/README.md](docs/README.md)
 
@@ -38,4 +38,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机打开 Find 验收：无白标题栏、芯片 Enter、AND/OR、清空、自动聚焦 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [docs/explorer.md](docs/explorer.md)
+本机重编 Host 后打开 Find 验收：↓ 一次到第二条；点窗外关闭 → [docs/explorer.md](docs/explorer.md)

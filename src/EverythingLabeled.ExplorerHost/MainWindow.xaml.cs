@@ -75,6 +75,21 @@ public partial class MainWindow : Window
                 CornerRadius = new CornerRadius(8),
                 UseAeroCaptionButtons = false,
             });
+        Deactivated += OnFindDeactivated;
+    }
+
+    private void OnFindDeactivated(object? sender, EventArgs e)
+    {
+        if (_mode != HostMode.Find)
+            return;
+
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                if (_mode == HostMode.Find && !IsActive)
+                    Close();
+            },
+            DispatcherPriority.Background);
     }
 
     public void ActivateFromIpc()
@@ -837,18 +852,14 @@ public partial class MainWindow : Window
         {
             if (FindSuggestList.Items.Count > 0)
             {
-                FindSuggestList.Focus();
-                if (FindSuggestList.SelectedIndex < 0)
-                    FindSuggestList.SelectedIndex = 0;
+                ApplyFindListDown(FindSuggestList);
                 e.Handled = true;
                 return;
             }
 
             if (_previewRows.Count > 0)
             {
-                FindResultList.Focus();
-                if (FindResultList.SelectedIndex < 0)
-                    FindResultList.SelectedIndex = 0;
+                ApplyFindListDown(FindResultList);
                 e.Handled = true;
             }
 
@@ -872,6 +883,18 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Enter && TryOpenSelectedFindResult())
             e.Handled = true;
+    }
+
+    private static void ApplyFindListDown(ListBox list)
+    {
+        var next = FindListNavigation.NextDownIndex(list.SelectedIndex, list.Items.Count);
+        if (next < 0)
+            return;
+
+        list.Focus();
+        list.SelectedIndex = next;
+        if (list.SelectedItem is not null)
+            list.ScrollIntoView(list.SelectedItem);
     }
 
     private bool TryCommitFindTagFromEnter()
