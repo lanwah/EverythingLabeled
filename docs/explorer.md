@@ -136,5 +136,6 @@ dotnet run --project src/EverythingLabeled.Tray
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
 - [ ] 打标/去标每次一别名；批量并发=`maxConcurrency`（缺省 4）；可取消；401 中止、其它按项继续
 - [ ] find：防抖末词 suggest（含简拼）+ 实时 preview；Enter 填联想或打开选中项；无「预览」按钮；Host 屏幕居中；打开后窗口保持；无 expand
+- [ ] find UI：深色无边框标题栏；芯片标签 + AND/OR（默认 AND）+ 清空；结果行图标/标题/副标题；打开/再激活自动聚焦
 - [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）
 - [ ] Command DLL 不承载业务 HTTP；Host 崩溃不拖死 Explorer（预期）

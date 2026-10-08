@@ -1,8 +1,10 @@
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Shell;
 using System.Windows.Threading;
 using EverythingLabeled.Client;
 
@@ -22,6 +24,8 @@ public partial class MainWindow : Window
     private ListBox? _activeSuggestList;
     private IReadOnlyList<PreviewRow> _previewRows = Array.Empty<PreviewRow>();
     private bool _suppressFindTextChanged;
+    private readonly ObservableCollection<string> _findTags = new();
+    private bool _findUseOr;
 
     public MainWindow(HostUiContext ctx)
     {
@@ -29,6 +33,11 @@ public partial class MainWindow : Window
         _mode = ctx.Mode;
         _businessEnabled = ctx.BusinessEnabled;
         InitializeComponent();
+
+        FindChipList.ItemsSource = _findTags;
+
+        if (ctx.Mode == HostMode.Find)
+            EnableFindWindowChrome();
 
         _suggestTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(SuggestQuery.DebounceMs) };
         _suggestTimer.Tick += async (_, _) =>
@@ -40,10 +49,32 @@ public partial class MainWindow : Window
                 await RunSuggestAsync().ConfigureAwait(true);
         };
 
+        Loaded += (_, _) =>
+        {
+            if (_mode == HostMode.Find)
+                FocusFindQuery();
+        };
+
         ApplyBanner(ctx.Banner);
         ShowMode(_mode);
         if (_mode is HostMode.Tags or HostMode.Untag)
             _ = LoadResourceTagsAsync();
+    }
+
+    private void EnableFindWindowChrome()
+    {
+        WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.CanResize;
+        WindowChrome.SetWindowChrome(
+            this,
+            new WindowChrome
+            {
+                CaptionHeight = 0,
+                ResizeBorderThickness = new Thickness(6),
+                GlassFrameThickness = new Thickness(0),
+                CornerRadius = new CornerRadius(8),
+                UseAeroCaptionButtons = false,
+            });
     }
 
     public void ActivateFromIpc()
@@ -78,6 +109,8 @@ public partial class MainWindow : Window
             {
                 // Best-effort; taskbar flash is acceptable.
             }
+
+            FocusFindQuery();
         }
 
         if (Dispatcher.CheckAccess())
@@ -85,6 +118,77 @@ public partial class MainWindow : Window
         else
             Dispatcher.Invoke(ActivateCore);
     }
+
+    private void FocusFindQuery()
+    {
+        if (_mode != HostMode.Find)
+            return;
+
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                FindQueryBox.Focus();
+                Keyboard.Focus(FindQueryBox);
+                FindQueryBox.CaretIndex = FindQueryBox.Text.Length;
+                UpdateFindPlaceholder();
+            },
+            DispatcherPriority.Input);
+    }
+
+    private void UpdateFindPlaceholder()
+    {
+        FindQueryPlaceholder.Visibility = string.IsNullOrEmpty(FindQueryBox.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void ApplyFindChrome(bool findMode)
+    {
+        FindOpenButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
+        FindClearButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
+        FindCaptionBar.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
+
+        if (findMode)
+        {
+            var bg = (System.Windows.Media.Brush)FindResource("FindBgBrush");
+            var muted = (System.Windows.Media.Brush)FindResource("FindMutedBrush");
+            Background = bg;
+            RootDock.Background = bg;
+            RootDock.Margin = new Thickness(0);
+            FooterDock.Margin = new Thickness(16, 0, 16, 12);
+            StatusText.Foreground = muted;
+            FindAndRadio.IsChecked = !_findUseOr;
+            FindOrRadio.IsChecked = _findUseOr;
+            StatusText.Text = Copy.PreviewCount(0);
+            return;
+        }
+
+        ClearValue(BackgroundProperty);
+        RootDock.ClearValue(Panel.BackgroundProperty);
+        RootDock.Margin = new Thickness(10);
+        FooterDock.Margin = new Thickness(0, 8, 0, 0);
+        StatusText.ClearValue(TextBlock.ForegroundProperty);
+    }
+
+    private void OnFindCaptionMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            OnFindMaximize(sender, e);
+            return;
+        }
+
+        if (e.ChangedButton == MouseButton.Left)
+            DragMove();
+    }
+
+    private void OnFindMinimize(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState.Minimized;
+
+    private void OnFindMaximize(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnFindClose(object sender, RoutedEventArgs e) => Close();
 
     private static class NativeMethods
     {
@@ -131,6 +235,7 @@ public partial class MainWindow : Window
         FillPathLists();
         ApplyBusinessEnabled();
         UpdateUntagTagListVisibility();
+        ApplyFindChrome(mode == HostMode.Find);
 
         _activeAliasBox = mode switch
         {
@@ -146,6 +251,9 @@ public partial class MainWindow : Window
             HostMode.Find => FindSuggestList,
             _ => null,
         };
+
+        if (mode == HostMode.Find && IsLoaded)
+            FocusFindQuery();
     }
 
     private void UpdateUntagTagListVisibility()
@@ -191,6 +299,9 @@ public partial class MainWindow : Window
         FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
         FindOpenButton.IsEnabled = on;
+        FindClearButton.IsEnabled = on;
+        FindAndRadio.IsEnabled = on;
+        FindOrRadio.IsEnabled = on;
     }
 
     private void SetBusy(bool busy)
@@ -210,6 +321,9 @@ public partial class MainWindow : Window
         FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
         FindOpenButton.IsEnabled = on;
+        FindClearButton.IsEnabled = on;
+        FindAndRadio.IsEnabled = on;
+        FindOrRadio.IsEnabled = on;
 
         TagCancelButton.IsEnabled = busy && _mode == HostMode.Tag;
         UntagCancelButton.IsEnabled = busy && _mode == HostMode.Untag;
@@ -375,13 +489,17 @@ public partial class MainWindow : Window
         list.ItemsSource = null;
     }
 
-    private void ApplyFindSuggest(string alias)
+    private void ApplyFindSuggest(string alias) => CommitFindTag(alias);
+
+    private void CommitFindTag(string? raw)
     {
+        if (!FindQueryCompose.TryAdd(_findTags, raw))
+            return;
+
         _suppressFindTextChanged = true;
         try
         {
-            FindQueryBox.Text = FindQueryEdit.ReplaceLastToken(FindQueryBox.Text, alias);
-            FindQueryBox.CaretIndex = FindQueryBox.Text.Length;
+            FindQueryBox.Text = string.Empty;
         }
         finally
         {
@@ -389,7 +507,50 @@ public partial class MainWindow : Window
         }
 
         FindSuggestList.ItemsSource = null;
-        FindQueryBox.Focus();
+        UpdateFindPlaceholder();
+        FocusFindQuery();
+        _ = RunFindPreviewAsync();
+    }
+
+    private void OnFindChipRemove(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string alias })
+            return;
+
+        _findTags.Remove(alias);
+        _ = RunFindPreviewAsync();
+        FocusFindQuery();
+    }
+
+    private void OnFindClearTags(object sender, RoutedEventArgs e)
+    {
+        _findTags.Clear();
+        _suppressFindTextChanged = true;
+        try
+        {
+            FindQueryBox.Text = string.Empty;
+        }
+        finally
+        {
+            _suppressFindTextChanged = false;
+        }
+
+        FindSuggestList.ItemsSource = null;
+        UpdateFindPlaceholder();
+        _ = RunFindPreviewAsync();
+        FocusFindQuery();
+    }
+
+    private void OnFindModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded || _mode != HostMode.Find)
+            return;
+
+        var useOr = FindOrRadio.IsChecked == true;
+        if (useOr == _findUseOr)
+            return;
+
+        _findUseOr = useOr;
         _ = RunFindPreviewAsync();
     }
 
@@ -522,6 +683,8 @@ public partial class MainWindow : Window
 
     private void OnFindQueryChanged(object sender, TextChangedEventArgs e)
     {
+        UpdateFindPlaceholder();
+
         if (_suppressFindTextChanged || !_businessEnabled || _mode != HostMode.Find)
             return;
 
@@ -542,7 +705,7 @@ public partial class MainWindow : Window
         if (_ctx.Api is null || !_businessEnabled)
             return;
 
-        var token = FindQueryEdit.LastTokenForSuggest(FindQueryBox.Text);
+        var token = SuggestQuery.Normalize(FindQueryBox.Text);
         if (token is null)
         {
             FindSuggestList.ItemsSource = null;
@@ -587,12 +750,12 @@ public partial class MainWindow : Window
         if (_ctx.Api is null || _ctx.Config is null || !_businessEnabled)
             return;
 
-        var q = FindQueryBox.Text.Trim();
-        if (q.Length == 0)
+        var q = FindQueryCompose.Compose(_findTags, _findUseOr);
+        if (q is null)
         {
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
-            StatusText.Text = string.Empty;
+            StatusText.Text = Copy.PreviewCount(0);
             return;
         }
 
@@ -630,12 +793,14 @@ public partial class MainWindow : Window
                     return new PreviewRow(
                         h.Uri,
                         h.Kind,
-                        Copy.PreviewLine(h.Uri, h.Kind, h.DisplayName, canOpen),
+                        FindResultPresentation.Title(h.Uri, h.DisplayName),
+                        FindResultPresentation.Subtitle(h.Uri, h.Kind, canOpen),
+                        FindResultPresentation.Glyph(h.Kind),
                         action);
                 })
                 .ToList();
 
-            FindResultList.ItemsSource = _previewRows.Select(r => r.Display).ToList();
+            FindResultList.ItemsSource = _previewRows;
             if (_previewRows.Count > 0)
                 FindResultList.SelectedIndex = 0;
 
@@ -657,6 +822,17 @@ public partial class MainWindow : Window
 
     private void OnFindQueryKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Back
+            && FindQueryBox.CaretIndex == 0
+            && string.IsNullOrEmpty(FindQueryBox.Text)
+            && _findTags.Count > 0)
+        {
+            _findTags.RemoveAt(_findTags.Count - 1);
+            _ = RunFindPreviewAsync();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Down)
         {
             if (FindSuggestList.Items.Count > 0)
@@ -682,13 +858,13 @@ public partial class MainWindow : Window
         if (e.Key != Key.Enter)
             return;
 
-        if (TryApplyFindSuggestFromEnter())
+        if (TryCommitFindTagFromEnter())
         {
             e.Handled = true;
             return;
         }
 
-        if (TryOpenSelectedFindResult())
+        if (string.IsNullOrWhiteSpace(FindQueryBox.Text) && TryOpenSelectedFindResult())
             e.Handled = true;
     }
 
@@ -698,20 +874,25 @@ public partial class MainWindow : Window
             e.Handled = true;
     }
 
-    private bool TryApplyFindSuggestFromEnter()
+    private bool TryCommitFindTagFromEnter()
     {
-        if (FindSuggestList.Items.Count == 0)
-            return false;
-        if (FindQueryEdit.LastTokenForSuggest(FindQueryBox.Text) is null)
-            return false;
-
-        if (FindSuggestList.SelectedItem is not AliasRow row)
+        if (FindSuggestList.Items.Count > 0 && SuggestQuery.Normalize(FindQueryBox.Text) is not null)
         {
-            FindSuggestList.SelectedIndex = 0;
-            row = (AliasRow)FindSuggestList.SelectedItem!;
+            if (FindSuggestList.SelectedItem is not AliasRow row)
+            {
+                FindSuggestList.SelectedIndex = 0;
+                row = (AliasRow)FindSuggestList.SelectedItem!;
+            }
+
+            CommitFindTag(row.Alias);
+            return true;
         }
 
-        ApplyFindSuggest(row.Alias);
+        var draft = SuggestQuery.Normalize(FindQueryBox.Text);
+        if (draft is null)
+            return false;
+
+        CommitFindTag(draft);
         return true;
     }
 
@@ -748,5 +929,11 @@ public partial class MainWindow : Window
         public override string ToString() => Display;
     }
 
-    private sealed record PreviewRow(string Uri, string Kind, string Display, OpenAction Action);
+    private sealed record PreviewRow(
+        string Uri,
+        string Kind,
+        string Title,
+        string Subtitle,
+        string Glyph,
+        OpenAction Action);
 }

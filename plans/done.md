@@ -85,3 +85,7 @@
 - 2026-10-07 — Tray Find 热键 grill 收口（Q1–Q20）并回写规格 / config-and-install / explorer docs → [审核 §D–G](./confirmed/2026-10-07-tray-find-hotkey-review.md)
 - 2026-10-07 — 编写 Tray Find 热键实现计划（Find IPC / Tray / Service 保留键 / 文档）→ [实现计划](./2026-10-07-tray-find-hotkey-impl.md)
 - 2026-10-07 — Tray Find：#101 Find 单实例 Mutex+管道；#102 热键解析与配置；#103 Tray 托盘热键唤起；#104 Service 写配置保留未知键 + 文档 → [实现计划](./2026-10-07-tray-find-hotkey-impl.md)
+- 2026-10-07 — Tray Find 热键本地合入 `master`（fast-forward `34ffd85`；删除分支 `feature/tray-find-hotkey`）→ [实现计划](./2026-10-07-tray-find-hotkey-impl.md) · [docs/explorer.md](../docs/explorer.md)
+- 2026-10-07 — `docs/README.md` 补充「支持的操作系统与环境要求」（Windows 优先、.NET 8、Node≥20、Explorer/Tray 专用）
+- 2026-10-07 — Find UI：深色启动器风 + 自动聚焦输入框（`feature/find-ui-polish`；`FindResultPresentation` 单测）→ [审核](./confirmed/2026-10-07-find-ui-polish-review.md)
+- 2026-10-07 — Find：芯片标签 + AND/OR（默认 AND）+ 清空 + 无边框深色标题栏（`FindQueryCompose` 单测）→ [审核](./confirmed/2026-10-07-find-chip-and-or-review.md)

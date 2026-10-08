@@ -13,6 +13,10 @@ public static class Copy
     public const string CreateMissingLabel = "创建缺失标签";
     public const string AliasLabel = "别名";
     public const string QueryLabel = "查询";
+    public const string FindQueryPlaceholder = "输入标签后按回车键…";
+    public const string ClearTags = "清空标签";
+    public const string FindAnd = "AND";
+    public const string FindOr = "OR";
     public const string SubmitTag = "打标";
     public const string SubmitUntag = "去标";
     public const string Cancel = "取消";

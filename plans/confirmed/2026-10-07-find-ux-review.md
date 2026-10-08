@@ -62,6 +62,8 @@
 
 **确认**：选推荐 **C1**，并附加 **Host 窗口 `WindowStartupLocation=CenterScreen`**（所有 mode）。
 
+> **后续修订（同日）**：Find 视觉已按 [Find UI polish 审核](./2026-10-07-find-ui-polish-review.md) 改为方案 A（深色启动器风 + 自动聚焦）；本条 C1 的「不大改皮肤」对 Find 不再适用。交互（suggest / preview / Enter）仍以本文件为准。
+
 ---
 
 ## B. 落地摘要

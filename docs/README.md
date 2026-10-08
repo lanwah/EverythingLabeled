@@ -2,6 +2,21 @@
 
 本目录放**实现说明与开发指引**（如何运行、目录约定、已落地行为）。设计规格与契约以 [`plans/`](../plans/) 为准；看板活状态见 [`project.md`](../project.md)。
 
+## 支持的操作系统与环境要求
+
+v1 **以 Windows 为优先与验收平台**（配置默认落在 `%APPDATA%\EverythingLabeled\`）。Service / CLI / MCP / Client / PathUri 使用 `net8.0`、避开 Windows-only API，便于日后多平台；**Explorer 稀疏包、ExplorerHost、Tray 为 Windows 专用**（`net8.0-windows`，开发与注册按 **x64**）。浏览器扩展为 Chrome / Edge MV3，不绑定 OS。
+
+| 用途 | 要求 |
+|---|---|
+| 编译 / 跑 .NET 工程与测试 | [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| 全量验收（含右键菜单、Tray 热键） | Windows 10/11 x64 |
+| 仅 Service / CLI / MCP | 理论上其它 OS 可编可跑；v1 未作正式验收 |
+| 构建浏览器扩展（`ext/`） | Node.js ≥ 20（见 [浏览器扩展](./browser-extension.md)） |
+| 加载扩展 | Chrome 或 Edge（MV3） |
+| 查询缓存 Redis（可选） | 仅当配置 `Cache:Provider=Redis` 时需要可达的 Redis；默认 Memory，无需 |
+
+架构表述见 [本地守护进程架构](../plans/2026-09-22-local-daemon-architecture.md)。
+
 ## 组件关系与如何工作
 
 v1 形态：**本机守护进程为唯一数据入口**，CLI / MCP / Explorer / 浏览器扩展都是薄客户端。客户端不直连 SQLite；读写一律经 Service 的 HTTP JSON + Bearer（`127.0.0.1`，前缀 `/v1/...`）。架构基线见 [本地守护进程架构](../plans/2026-09-22-local-daemon-architecture.md)。

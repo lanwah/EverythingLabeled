@@ -8,7 +8,307 @@
         MinHeight="360"
         MinWidth="480"
         WindowStartupLocation="CenterScreen">
-    <DockPanel Margin="10">
+    <Window.Resources>
+        <SolidColorBrush x:Key="FindBgBrush" Color="#1B1F2A" />
+        <SolidColorBrush x:Key="FindFgBrush" Color="#F2F4F8" />
+        <SolidColorBrush x:Key="FindMutedBrush" Color="#9AA3B2" />
+        <SolidColorBrush x:Key="FindInputBgBrush" Color="#12151C" />
+        <SolidColorBrush x:Key="FindRowHoverBrush" Color="#252A38" />
+        <SolidColorBrush x:Key="FindRowSelectedBrush" Color="#2C3345" />
+        <SolidColorBrush x:Key="FindAccentBrush" Color="#4EA1FF" />
+        <SolidColorBrush x:Key="FindTealBrush" Color="#2EC4B6" />
+        <SolidColorBrush x:Key="FindTealDarkBrush" Color="#249E93" />
+        <SolidColorBrush x:Key="FindChipBrush" Color="#1FA396" />
+        <SolidColorBrush x:Key="FindBorderBrush" Color="#2E3545" />
+
+        <Style x:Key="FindQueryBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Padding" Value="0,2" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      Focusable="False" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style x:Key="FindSuggestItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindResultItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="0">
+                            <Grid>
+                                <Border x:Name="Accent"
+                                        Width="3"
+                                        HorizontalAlignment="Left"
+                                        Background="{StaticResource FindAccentBrush}"
+                                        CornerRadius="2"
+                                        Margin="0,8"
+                                        Visibility="Collapsed" />
+                                <ContentPresenter Margin="12,10,12,10" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
+                                <Setter TargetName="Accent" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindChromeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource FindMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource FindChromeButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FindModeRadioStyle" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource FindMutedBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowSelectedBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FindAccentBrush}" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1" />
+                                <Setter Property="Foreground" Value="{StaticResource FindAccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindClearButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource FindFgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource FindBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindRowHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindOpenButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource FindTealBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FindTealDarkBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FindChipRemoveStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4,0,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel x:Name="RootDock" Margin="10">
+        <Border x:Name="FindCaptionBar"
+                DockPanel.Dock="Top"
+                Background="{StaticResource FindBgBrush}"
+                Height="36"
+                Visibility="Collapsed"
+                MouseLeftButtonDown="OnFindCaptionMouseDown">
+            <Grid>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="12,0,0,0"
+                            IsHitTestVisible="False">
+                    <TextBlock Text="&#xE8B7;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Foreground="{StaticResource FindMutedBrush}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <TextBlock x:Name="FindCaptionTitle"
+                               Text="{x:Static local:Copy.WindowTitleFind}"
+                               Foreground="{StaticResource FindFgBrush}"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource FindChromeButtonStyle}"
+                            Content="&#xE921;"
+                            FontFamily="Segoe MDL2 Assets"
+                            Click="OnFindMinimize" />
+                    <Button Style="{StaticResource FindChromeButtonStyle}"
+                            Content="&#xE922;"
+                            FontFamily="Segoe MDL2 Assets"
+                            Click="OnFindMaximize" />
+                    <Button Style="{StaticResource FindCloseButtonStyle}"
+                            Content="&#xE8BB;"
+                            FontFamily="Segoe MDL2 Assets"
+                            Click="OnFindClose" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <TextBlock x:Name="BannerText"
                    DockPanel.Dock="Top"
                    TextWrapping="Wrap"
@@ -16,10 +316,29 @@
                    Margin="0,0,0,8"
                    Visibility="Collapsed" />
 
-        <TextBlock x:Name="StatusText"
+        <DockPanel x:Name="FooterDock"
                    DockPanel.Dock="Bottom"
-                   TextWrapping="Wrap"
-                   Margin="0,8,0,0" />
+                   LastChildFill="True"
+                   Margin="0,8,0,0">
+            <Button x:Name="FindOpenButton"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource FindOpenButtonStyle}"
+                    MinWidth="72"
+                    Margin="8,0,0,0"
+                    Visibility="Collapsed"
+                    Content="{x:Static local:Copy.Open}"
+                    Click="OnFindOpen" />
+            <Button x:Name="FindClearButton"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource FindClearButtonStyle}"
+                    MinWidth="88"
+                    Visibility="Collapsed"
+                    Content="{x:Static local:Copy.ClearTags}"
+                    Click="OnFindClearTags" />
+            <TextBlock x:Name="StatusText"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center" />
+        </DockPanel>
 
         <!-- tag -->
         <Grid x:Name="TagPanel" Visibility="Collapsed">
@@ -155,42 +474,151 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
+
+            <Grid Grid.Row="0" Margin="16,12,16,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0"
-                           VerticalAlignment="Center"
-                           Margin="0,0,8,0"
-                           Text="{x:Static local:Copy.QueryLabel}" />
-                <TextBox x:Name="FindQueryBox"
-                         Grid.Column="1"
-                         Height="24"
-                         VerticalContentAlignment="Center"
-                         TextChanged="OnFindQueryChanged"
-                         PreviewKeyDown="OnFindQueryKeyDown" />
+                <Border Grid.Column="0"
+                        Background="{StaticResource FindInputBgBrush}"
+                        BorderBrush="{StaticResource FindBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12,10"
+                        MinHeight="44">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="&#xE721;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="15"
+                                   Foreground="{StaticResource FindMutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0" />
+                        <Grid Grid.Column="1">
+                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ItemsControl x:Name="FindChipList">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource FindChipBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    Margin="0,0,6,4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding}"
+                                                               Foreground="White"
+                                                               FontSize="13"
+                                                               VerticalAlignment="Center" />
+                                                    <Button Style="{StaticResource FindChipRemoveStyle}"
+                                                            Content="×"
+                                                            Tag="{Binding}"
+                                                            Margin="6,0,0,0"
+                                                            Click="OnFindChipRemove" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid MinWidth="120" Margin="0,0,0,4">
+                                    <TextBlock x:Name="FindQueryPlaceholder"
+                                               Text="{x:Static local:Copy.FindQueryPlaceholder}"
+                                               Foreground="{StaticResource FindMutedBrush}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False" />
+                                    <TextBox x:Name="FindQueryBox"
+                                             Style="{StaticResource FindQueryBoxStyle}"
+                                             FontSize="14"
+                                             MinWidth="120"
+                                             TextChanged="OnFindQueryChanged"
+                                             PreviewKeyDown="OnFindQueryKeyDown" />
+                                </Grid>
+                            </WrapPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="1"
+                        Background="{StaticResource FindInputBgBrush}"
+                        BorderBrush="{StaticResource FindBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Padding="3">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="FindAndRadio"
+                                     GroupName="FindMode"
+                                     Style="{StaticResource FindModeRadioStyle}"
+                                     Content="{x:Static local:Copy.FindAnd}"
+                                     IsChecked="True"
+                                     Checked="OnFindModeChanged" />
+                        <RadioButton x:Name="FindOrRadio"
+                                     GroupName="FindMode"
+                                     Style="{StaticResource FindModeRadioStyle}"
+                                     Content="{x:Static local:Copy.FindOr}"
+                                     Checked="OnFindModeChanged" />
+                    </StackPanel>
+                </Border>
             </Grid>
+
             <ListBox x:Name="FindSuggestList"
                      Grid.Row="1"
-                     MaxHeight="120"
-                     Margin="0,4,0,0"
+                     Style="{StaticResource FindListBoxStyle}"
+                     ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
+                     MaxHeight="140"
+                     Margin="16,6,16,0"
                      MouseDoubleClick="OnSuggestItemActivate"
                      KeyDown="OnSuggestListKeyDown" />
+
             <ListBox x:Name="FindResultList"
                      Grid.Row="2"
-                     Margin="0,8,0,0"
+                     Style="{StaticResource FindListBoxStyle}"
+                     ItemContainerStyle="{StaticResource FindResultItemStyle}"
+                     Margin="8,4,8,8"
                      MouseDoubleClick="OnFindOpen"
-                     KeyDown="OnFindResultKeyDown" />
-            <Button x:Name="FindOpenButton"
-                    Grid.Row="3"
-                    HorizontalAlignment="Right"
-                    MinWidth="72"
-                    Margin="0,8,0,0"
-                    Content="{x:Static local:Copy.Open}"
-                    Click="OnFindOpen" />
+                     KeyDown="OnFindResultKeyDown">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Glyph}"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="18"
+                                       Foreground="{StaticResource FindMutedBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="4,0,14,0"
+                                       Width="22"
+                                       TextAlignment="Center" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource FindFgBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Subtitle}"
+                                           FontSize="12"
+                                           Foreground="{StaticResource FindMutedBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
     </DockPanel>
 </Window>
