@@ -10,3 +10,4 @@
 *.db-wal
 ext/node_modules/
 ext/dist/
+*.vscode
