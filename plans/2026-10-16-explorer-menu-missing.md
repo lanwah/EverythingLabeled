@@ -7,6 +7,7 @@
 - [Explorer 集成规格](./2026-09-27-explorer-integration.md) · [Explorer 实现计划](./2026-10-07-explorer-impl.md) · [docs/explorer.md](../docs/explorer.md)
 - 直接触发：`f18e293 #109`「由于系统升级之后右键菜单注册不上，因此回滚了代码到 108 的状态」
 - 环境：Windows 11 **26H2 / build 26300.9711**（`DisplayVersion=26H2`，`CurrentBuild=26300`）
+- 后续：本文 §3.1 的 as-built（包 `0.1.7.0`）是 **#110 当时的落地状态**；包版本随后已提到 **`0.1.8.0`**（菜单图标）→ [菜单图标存档](./2026-10-17-explorer-menu-icons.md)
 
 ## 1. 现象
 

@@ -121,4 +121,4 @@ build.bat -Configuration Release
 | [CLI](./cli.md) | backlog **#11** | `el` 工程布局、运行、配置优先级、如何跑 PathUri/Client/Cli 测试 |
 | [MCP](./mcp.md) | backlog **#12** | stdio host、`--help`/`--version`、配置优先级、Cursor `mcp.json`、Tools 测试 |
 | [浏览器扩展](./browser-extension.md) | backlog **#13** | `ext/` 构建与加载、Options 手工配置、Service 依赖、手工联调清单 |
-| [Explorer 上下文菜单](./explorer.md) | backlog **#14** | 稀疏包注册/卸载、Host 四 mode 自测、AppData 依赖、手工验收清单；含 Tray Find 热键说明 |
+| [Explorer 上下文菜单](./explorer.md) | backlog **#14** | 稀疏包注册/卸载、菜单四项图标、Host 四 mode 自测、AppData 依赖、手工验收清单；含 Tray Find 热键说明 |
