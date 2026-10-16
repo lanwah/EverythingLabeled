@@ -12,8 +12,8 @@
   <Identity
       Name="EverythingLabeled.ExplorerDev"
       Publisher="CN=EverythingLabeled-Dev"
-      Version="0.1.0.0"
-      ProcessorArchitecture="x64" />
+      Version="0.1.7.0"
+      ProcessorArchitecture="neutral" />
 
   <Properties>
     <DisplayName>EverythingLabeled</DisplayName>
@@ -46,7 +46,7 @@
           Square44x44Logo="Assets\Square44x44Logo.png" />
 
       <Extensions>
-        <com:Extension Category="windows.comServer">
+        <com:Extension Category="windows.comServer" uap10:RuntimeBehavior="packagedClassicApp">
           <com:ComServer>
             <com:SurrogateServer DisplayName="EverythingLabeled Explorer Commands">
               <com:Class

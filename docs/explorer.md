@@ -103,6 +103,8 @@ Export-Certificate -Cert $cert -FilePath "$env:TEMP\el-dev.cer"
 Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\LocalMachine\Root
 ```
 
+`signtool` 的 `/n` 后跟**裸 CN**（`EverythingLabeled-Dev`）；写成 `CN=EverythingLabeled-Dev` 会匹配不到证书，报 `No certificates were found that met all the given criteria`（证书本身 Subject 才带 `CN=`）。
+
 ## 注册（稀疏包 + ExternalLocation）
 
 输出目录（示例）：
@@ -112,6 +114,23 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 其中应有：`EverythingLabeled.ExplorerCommand.comhost.dll`、`AppxManifest.xml`、`Assets\`、以及拷贝来的 `EverythingLabeled.ExplorerHost.exe` 与依赖。
 
 `uap10:AllowExternalContent` 包必须用 **ExternalLocation** 指向该输出目录；不能只对 Manifest 做无外部位置的 `-Register`。
+
+### 两个必守的前提
+
+1. **打包前必须 `dotnet build`**：打包读的是输出目录里的 `AppxManifest.xml`，而它是**构建产物**（csproj 用 `CopyToOutputDirectory="PreserveNewest"` 从 `Package\` 拷出）。源码改过 / 回滚过但没重新构建时，会把**上一次**的旧清单打进包 —— 注册"成功"、右键却还是旧内容（甚至指向已不存在的 DLL）。
+2. **清单 `Version` 必须递增**：`Add-AppxPackage` 不允许降级，已装版本 ≥ 清单版本会报 `0x80073D06`。`ProcessorArchitecture` 用 `neutral`（与 PowerToys 那批右键菜单稀疏包一致）。
+
+### 一键注册（推荐）
+
+`scripts\register-explorer.ps1` 把上面两条与打包 / 签名 / 注册 / 回读校验串起来：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\register-explorer.ps1
+```
+
+流程：构建 → 校验输出清单与源码一致（不一致则覆盖并告警）→ 校验清单声明的 `Executable` 与 `com:Class Path` 在输出目录里真的存在 → 比版本 → `makeappx pack` + `signtool sign` → `Add-AppxPackage -ExternalLocation` → 回读 `PackagedCom` 打印每个 CLSID 实际解析到的 DLL。
+
+### 手工步骤（与脚本等价）
 
 ```powershell
 $out = (Resolve-Path "src\EverythingLabeled.ExplorerCommand\bin\Debug\net8.0-windows").Path
@@ -129,6 +148,12 @@ Add-AppxPackage -Path $msix -ExternalLocation $out
 注册后：资源管理器右键文件/文件夹应见应用名 **EverythingLabeled** 下的「打标 / 去标 / 看标签 / 按标签查找」；文件夹空白处仅「按标签查找」。菜单 Invoke **不**等待 Host 退出。
 
 若菜单未出现：结束并重启 `explorer.exe`，或注销再登录。
+
+排查时先看三处：
+
+- `Get-AppxPackage -Name EverythingLabeled.ExplorerDev` 的 `Version` 是否等于刚打的清单版本（对不上 = 打到过期产物）。
+- `HKLM\SOFTWARE\Classes\PackagedCom\Package\<PackageFullName>\Class\{CLSID}` 的 `DllPath` 指向的 DLL 是否存在于 ExternalLocation（不存在 = Explorer 创建 COM 失败，会**静默丢弃**该菜单项）。
+- 两处都对却仍不显示时，看**壳层**：若用 HKCU 空 `InprocServer32` 覆盖了 `{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}`（经典右键菜单 hack），packed 项会被**全部丢弃**；删掉该键并重启 `explorer.exe` 即恢复（2026-10-16 本机实测确认）→ [排查存档与恢复](../plans/2026-10-16-explorer-menu-missing.md)。
 
 ## 卸载
 

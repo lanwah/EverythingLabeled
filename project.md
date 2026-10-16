@@ -4,12 +4,13 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包已 Register 且右键四菜单验收通过 → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
+- v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包注册已修好（`0.1.7.0`/neutral）且**右键四菜单已恢复**（2026-10-16；两层原因：打过期产物 + HKCU 经典菜单覆盖）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
 - Find UX：末词 suggest + 实时 preview；Enter 填联想或打开；Host 居中；↓ 一次进下一项；失焦关闭 → [审核](plans/confirmed/2026-10-07-find-ux-review.md) · [docs/explorer.md](docs/explorer.md)
 - Find UI：#105 深色无边框标题栏 + 芯片 + AND/OR（默认 AND）+ 自动聚焦，已 FF 合入 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
 - Explorer Host 四页深色皮肤已落到 WPF（`Themes/HostDark.xaml`；打标/去标/看标签对齐 Find；别名联想浮动 Popup；缺失别名自动勾选「创建缺失标签」）→ [design/explorer-ui/](design/explorer-ui/index.html)
 - Tray Find 热键：#101–#104 已合入 `master` → [规格](plans/2026-10-07-tray-find-hotkey.md) · [docs/explorer.md](docs/explorer.md)
 - Tray/Host 图标：青绿标签形 `el.ico`（16–256）作托盘与 exe 图标 → [ExplorerShared/Assets/el.ico](src/EverythingLabeled.ExplorerShared/Assets/el.ico)
+- 稀疏包重新注册：清单提到 `0.1.7.0` / `neutral`，改用 [scripts/register-explorer.ps1](scripts/register-explorer.ps1) 一键注册（#109 回滚后 `bin` 里的旧清单曾被打进包，导致右键菜单不出现）→ [docs/explorer.md](docs/explorer.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -40,4 +41,6 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机手工验收 Explorer Host 打标 / 去标 / 看标签深色皮肤（对齐 [design/explorer-ui/](design/explorer-ui/index.html)；联想浮动；缺失别名自动勾选创建缺失）
+本机手工验收 Explorer 四菜单与 Host 三页（打标 / 去标 / 看标签深色皮肤，对齐 [design/explorer-ui/](design/explorer-ui/index.html)；联想浮动；缺失别名自动勾选创建缺失）→ [验收清单](docs/explorer.md)
+
+取舍记录：经典右键菜单与 packed 右键项**不可兼得**（当前选 Win11 新式菜单）→ [排查存档与恢复](plans/2026-10-16-explorer-menu-missing.md)
