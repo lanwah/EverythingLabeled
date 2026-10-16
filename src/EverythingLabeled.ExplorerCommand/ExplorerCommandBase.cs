@@ -22,8 +22,18 @@ public abstract class ExplorerCommandBase : IExplorerCommand
 
     public int GetIcon(IShellItemArray? psiItemArray, out string? ppszIcon)
     {
-        ppszIcon = null;
-        return HResults.E_NOTIMPL;
+        try
+        {
+            // 必须是绝对路径：包走 ExternalLocation，相对路径在壳层 surrogate 里无从解析。
+            ppszIcon = ExplorerIcons.Resolve(CommandDirectory.Resolve(), Mode);
+        }
+        catch
+        {
+            // 拿不到就当没图标 —— 图标这里出岔子不能让壳层把整项菜单丢掉
+            ppszIcon = null;
+        }
+
+        return ppszIcon is null ? HResults.E_NOTIMPL : HResults.S_OK;
     }
 
     public int GetToolTip(IShellItemArray? psiItemArray, out string? ppszInfotip)

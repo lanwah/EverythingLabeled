@@ -10,7 +10,7 @@ internal static class HostLauncher
 
     public static void StartFireAndForget(string mode, string? pathsFilePath)
     {
-        var directory = ResolveCommandDirectory();
+        var directory = CommandDirectory.Resolve();
         var hostPath = Path.Combine(directory, HostExeName);
         if (!File.Exists(hostPath))
         {
@@ -39,21 +39,6 @@ internal static class HostLauncher
             UseShellExecute = false,
             WorkingDirectory = directory,
         });
-    }
-
-    private static string ResolveCommandDirectory()
-    {
-        var location = typeof(HostLauncher).Assembly.Location;
-        if (!string.IsNullOrEmpty(location))
-        {
-            var dir = Path.GetDirectoryName(location);
-            if (!string.IsNullOrEmpty(dir))
-            {
-                return dir;
-            }
-        }
-
-        return AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
     private static class NativeMethods

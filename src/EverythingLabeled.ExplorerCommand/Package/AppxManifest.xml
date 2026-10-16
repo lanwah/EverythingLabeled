@@ -12,7 +12,7 @@
   <Identity
       Name="EverythingLabeled.ExplorerDev"
       Publisher="CN=EverythingLabeled-Dev"
-      Version="0.1.7.0"
+      Version="0.1.8.0"
       ProcessorArchitecture="neutral" />
 
   <Properties>

@@ -98,3 +98,4 @@
 - 2026-10-08 — Tray/Host 共用青绿标签图标（`ExplorerShared/Assets/el.ico`；托盘 + exe ApplicationIcon）
 - 2026-10-16 — Explorer 右键四菜单恢复：根因两层 —— ①打包用了 `bin` 里 10-08 的旧清单（COM 指向不存在的 `ElShell.dll`）；②HKCU 空 `InprocServer32` 覆盖了 Win11 新菜单 CLSID，packed 项被全丢。处置：重建重装 `0.1.7.0`/neutral、新增一键注册脚本、去掉壳层覆盖 → [存档](./2026-10-16-explorer-menu-missing.md)
 - 2026-10-16 — #110 Explorer 右键四菜单恢复本地合入 `master`（fast-forward `b7842d1`；删除分支 `feature/explorer-menu-fix`）→ [排查存档](./2026-10-16-explorer-menu-missing.md)
+- 2026-10-17 — Explorer 右键四项图标：黑方块根因两层 —— `GetIcon` 返 `E_NOTIMPL` + 包清单三个 Logo 是纯黑 50×50 占位（命令不给图标时壳层回落包 Logo）。处置：`scripts/make-explorer-icons.ps1` 生成四个青绿字形 `.ico`（DIB 帧）并把 Logo 换成真图、`GetIcon` 返绝对路径、重装 `0.1.8.0` → [存档](./2026-10-17-explorer-menu-icons.md)

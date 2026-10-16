@@ -115,6 +115,24 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 
 `uap10:AllowExternalContent` 包必须用 **ExternalLocation** 指向该输出目录；不能只对 Manifest 做无外部位置的 `-Register`。
 
+### 菜单图标
+
+四项各有一个青绿 `#2EC4B6` 字形图标，由 `ExplorerCommandBase.GetIcon` 返回**绝对路径**：
+
+| 菜单项 | mode | Glyph | 文件 |
+|---|---|---|---|
+| 打标 | `tag` | `E8EC` | `Assets\ElTag.ico` |
+| 去标 | `untag` | `E74D` | `Assets\ElUntag.ico` |
+| 看标签 | `tags` | `E8FD` | `Assets\ElTags.ico` |
+| 按标签查找 | `find` | `E721` | `Assets\ElFind.ico` |
+
+- 图标资源在 `src\EverythingLabeled.ExplorerCommand\Package\Assets\`，由 [scripts/make-explorer-icons.ps1](../scripts/make-explorer-icons.ps1) 生成（16/20/24/32/48 多尺寸、DIB 帧、透明底），该脚本同时用 `el.ico` 缩放生成清单要的三个 Logo（**不要**把它们留成纯黑占位图 —— 命令若拿不到图标，壳层会回落到包 Logo，黑图就显示成黑方块）。
+- `mode → 文件名` 的映射与路径解析在 `ExplorerShared/ExplorerIcons.cs`；「菜单扩展自己所在目录」的解析在 `ExplorerCommand/CommandDirectory.cs`（`HostLauncher` 共用同一个）。
+- `find` 用放大镜 `E721`，与 Host 标题栏的 `E8B7`（画出来是纸/文档）**故意不同** —— 那个字形当"查找"不对。
+- 必须绝对路径：包走 `ExternalLocation`，COM 服务器跑在壳层 surrogate 里，相对路径无从解析。图标缺失时 `GetIcon` 退回 `E_NOTIMPL`（当没图标），**不能让异常冒出去** —— 那会让壳层把整项菜单丢掉。
+
+改字号/改色后：重跑生成脚本 → `dotnet build` → 递增清单版本 → `register-explorer.ps1`。打包链路（csproj 通配 + 脚本 `Copy-Item Assets\*`）自动带上新文件，无需改。
+
 ### 两个必守的前提
 
 1. **打包前必须 `dotnet build`**：打包读的是输出目录里的 `AppxManifest.xml`，而它是**构建产物**（csproj 用 `CopyToOutputDirectory="PreserveNewest"` 从 `Package\` 拷出）。源码改过 / 回滚过但没重新构建时，会把**上一次**的旧清单打进包 —— 注册"成功"、右键却还是旧内容（甚至指向已不存在的 DLL）。
@@ -190,6 +208,7 @@ dotnet run --project src/EverythingLabeled.Tray
 稀疏包注册完成、Service 与 config 就绪后，建议对齐 [规格 §10](../plans/2026-09-27-explorer-integration.md#10-验收清单规格层) 逐项确认：
 
 - [ ] 稀疏包：子菜单四项（中文项名）；空白处仅「按标签查找」；看标签仅单选；Invoke 即发即忘
+- [ ] 稀疏包：四项各显示青绿字形图标（打标/去标/看标签/放大镜），**不是黑方块**
 - [ ] Host 硬规则：非法丢弃并提示 N；URI 去重；>100 拒绝不截断；DLL 不因数量灰打标/去标
 - [ ] PathUri 与 CLI **同一库**；含 UNC / symlink / junction；打标预检排除无效项
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
