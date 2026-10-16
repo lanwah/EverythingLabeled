@@ -97,3 +97,4 @@
 - 2026-10-08 — Explorer Host 打标/去标/看标签深色皮肤落到 WPF（`HostDark` 主题字典；浮动联想；缺失别名自动勾选创建缺失）→ [design/explorer-ui/](../design/explorer-ui/index.html)
 - 2026-10-08 — Tray/Host 共用青绿标签图标（`ExplorerShared/Assets/el.ico`；托盘 + exe ApplicationIcon）
 - 2026-10-16 — Explorer 右键四菜单恢复：根因两层 —— ①打包用了 `bin` 里 10-08 的旧清单（COM 指向不存在的 `ElShell.dll`）；②HKCU 空 `InprocServer32` 覆盖了 Win11 新菜单 CLSID，packed 项被全丢。处置：重建重装 `0.1.7.0`/neutral、新增一键注册脚本、去掉壳层覆盖 → [存档](./2026-10-16-explorer-menu-missing.md)
+- 2026-10-16 — #110 Explorer 右键四菜单恢复本地合入 `master`（fast-forward `b7842d1`；删除分支 `feature/explorer-menu-fix`）→ [排查存档](./2026-10-16-explorer-menu-missing.md)
