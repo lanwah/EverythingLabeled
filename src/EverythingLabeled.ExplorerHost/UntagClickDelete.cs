@@ -1,7 +1,7 @@
 namespace EverythingLabeled.ExplorerHost;
 
 /// <summary>
-/// Spec §5.3: untag single-select may click a tags-list alias to delete immediately.
+/// Spec §5.3: untag single-select may click × on a current-tag chip to delete immediately.
 /// Multi-select is hand-entry only.
 /// </summary>
 public static class UntagClickDelete

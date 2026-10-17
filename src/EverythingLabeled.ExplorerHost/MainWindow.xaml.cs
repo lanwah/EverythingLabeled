@@ -339,10 +339,7 @@ public partial class MainWindow : Window
         var show = _mode == HostMode.Untag && UntagClickDelete.IsEnabled(IncludedUris().Count);
         UntagTagListPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         if (!show)
-        {
             UntagTagList.ItemsSource = null;
-            UntagTagList.SelectedItem = null;
-        }
     }
 
     private void FillPathLists()
@@ -849,21 +846,17 @@ public partial class MainWindow : Window
 
     private void OnBatchCancel(object sender, RoutedEventArgs e) => _batchCts?.Cancel();
 
-    private async void OnUntagTagSelected(object sender, SelectionChangedEventArgs e)
+    private async void OnUntagChipRemove(object sender, RoutedEventArgs e)
     {
-        if (e.AddedItems.Count == 0)
+        if (sender is not Button { Tag: string alias })
             return;
         if (!UntagClickDelete.IsEnabled(IncludedUris().Count))
             return;
         if (_batchCts is not null || !_businessEnabled)
             return;
-        if (e.AddedItems[0] is not AliasRow row)
-            return;
 
-        UntagAliasBox.Text = row.Alias;
-        // Clear so the same alias can be clicked again after cancel / completion.
-        UntagTagList.SelectedItem = null;
-        await SubmitUntagAsync(row.Alias).ConfigureAwait(true);
+        UntagAliasBox.Text = alias;
+        await SubmitUntagAsync(alias).ConfigureAwait(true);
     }
 
     private void OnSwitchToTag(object sender, RoutedEventArgs e)

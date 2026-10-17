@@ -349,35 +349,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="HostTagRowItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{StaticResource HostBorderBrush}"
-                                BorderThickness="0,0,0,1"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="HostChipItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,8,8" />
@@ -667,11 +638,44 @@
                     <TextBlock DockPanel.Dock="Top"
                                Style="{StaticResource HostSectionLabelStyle}"
                                Text="{x:Static local:Copy.UntagTagListHint}" />
-                    <ListBox x:Name="UntagTagList"
-                             Style="{StaticResource HostSurfaceListStyle}"
-                             ItemContainerStyle="{StaticResource HostTagRowItemStyle}"
-                             DisplayMemberPath="Display"
-                             SelectionChanged="OnUntagTagSelected" />
+                    <Border Background="{StaticResource HostInputBgBrush}"
+                            BorderBrush="{StaticResource HostBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Focusable="False">
+                            <ItemsControl x:Name="UntagTagList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource HostChipBrush}"
+                                                CornerRadius="4"
+                                                Padding="8,4"
+                                                Margin="0,0,8,8">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Display}"
+                                                           Foreground="{StaticResource HostOnAccentBrush}"
+                                                           FontSize="13"
+                                                           VerticalAlignment="Center" />
+                                                <Button Style="{StaticResource FindChipRemoveStyle}"
+                                                        Content="×"
+                                                        Tag="{Binding Alias}"
+                                                        Margin="6,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Click="OnUntagChipRemove" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
                 </DockPanel>
             </Grid>
             <Grid Grid.Row="1" Margin="0,10,0,0">

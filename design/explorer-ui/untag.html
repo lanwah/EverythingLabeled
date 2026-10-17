@@ -45,23 +45,14 @@
             </div>
 
             <div style="flex:1;min-height:0;display:flex;flex-direction:column">
-              <p class="section-label">当前标签（单击即去标该别名）</p>
-              <div class="surface tag-list" style="flex:1">
-                <p class="empty-hint only-empty" style="min-height:120px">暂无标签</p>
-                <ul class="tag-list only-filled">
-                  <li>
-                    <span>工作</span>
-                    <span class="meta">单击移除</span>
-                  </li>
-                  <li>
-                    <span>React</span>
-                    <span class="meta">单击移除</span>
-                  </li>
-                  <li>
-                    <span>nis-app <span class="meta">(项目/nursing)</span></span>
-                    <span class="meta">单击移除</span>
-                  </li>
-                </ul>
+              <p class="section-label">当前标签（点叉号去除）</p>
+              <div class="surface tag-chip-well" id="current-tags">
+                <p class="empty-hint only-empty" id="tags-empty">暂无标签</p>
+                <div class="tag-chips only-filled" id="current-tag-chips">
+                  <span class="chip">工作 <button type="button" aria-label="去除 工作">×</button></span>
+                  <span class="chip">React <button type="button" aria-label="去除 React">×</button></span>
+                  <span class="chip">nis-app <button type="button" aria-label="去除 nis-app">×</button></span>
+                </div>
               </div>
             </div>
 
@@ -72,7 +63,7 @@
 
             <div class="footer">
               <span class="status only-empty">准备就绪</span>
-              <span class="status only-filled">单选路径 · 可点列表去标</span>
+              <span class="status only-filled" id="untag-status">点叉号去除对应标签</span>
               <div class="actions-right">
                 <button type="button" class="btn" disabled>取消</button>
                 <button type="button" class="btn btn-primary">去标</button>
@@ -84,5 +75,28 @@
     </div>
   </div>
   <script src="preview.js"></script>
+  <script>
+    (function () {
+      const well = document.getElementById("current-tags");
+      const chips = document.getElementById("current-tag-chips");
+      const status = document.getElementById("untag-status");
+      if (!well || !chips) return;
+
+      chips.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button || !chips.contains(button)) return;
+        const chip = button.closest(".chip");
+        if (!chip) return;
+        chip.remove();
+        if (chips.querySelector(".chip")) return;
+        const hint = document.createElement("p");
+        hint.className = "empty-hint";
+        hint.textContent = "暂无标签";
+        chips.hidden = true;
+        well.appendChild(hint);
+        if (status) status.textContent = "当前没有可去除的标签";
+      });
+    })();
+  </script>
 </body>
 </html>

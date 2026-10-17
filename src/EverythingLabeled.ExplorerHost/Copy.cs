@@ -29,7 +29,7 @@ public static class Copy
     public const string Open = "打开";
     public const string SwitchToTag = "切换到打标";
     public const string SwitchToUntag = "切换到去标";
-    public const string UntagTagListHint = "当前标签（单击即去标该别名）";
+    public const string UntagTagListHint = "当前标签（点叉号去除）";
     public const string ExcludedSuffix = "（已排除）";
     public const string CannotOpen = "不可打开";
     public const string TagsLoadFailed = "加载标签失败";

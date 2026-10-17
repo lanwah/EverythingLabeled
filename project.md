@@ -6,7 +6,7 @@
 ## 当前状态
 - v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包注册已修好（`0.1.8.0`/neutral）且**右键四菜单已恢复并带上图标**（2026-10-16/17；两层原因：打过期产物 + HKCU 经典菜单覆盖；图标：命令不给图标 + 包 Logo 是纯黑占位）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
 - Find UX/UI：末词 suggest + 实时 preview、Enter 填联想或打开、Host 居中、↑↓ 切换联想或结果列表、失焦关闭；#105 深色无边框标题栏 + 芯片 + AND/OR（默认 AND）+ 自动聚焦 → [审核](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
-- Explorer Host 四页深色皮肤已落到 WPF（`Themes/HostDark.xaml`；打标/去标/看标签对齐 Find；别名联想浮动 Popup；缺失别名自动勾选「创建缺失标签」）→ [design/explorer-ui/](design/explorer-ui/index.html)
+- Explorer Host 四页深色皮肤已落到 WPF（`Themes/HostDark.xaml`；打标/去标/看标签对齐 Find；别名联想浮动 Popup；缺失别名自动勾选「创建缺失标签」）；去标单选「当前标签」为带 × 芯片、点叉号去除 → [design/explorer-ui/untag.html](design/explorer-ui/untag.html)
 - Tray Find 热键：#101–#104 已合入 `master`；本机手工验收通过（2026-10-17：`Alt+L`/托盘菜单、单实例、热键配置）→ [规格](plans/2026-10-07-tray-find-hotkey.md) · [docs/explorer.md](docs/explorer.md)
 - 图标：托盘与 exe 用青绿标签形 `el.ico`（16–256）；右键四项各带青绿 `#2EC4B6` 字形图标（`ElTag/ElUntag/ElTags/ElFind.ico`，`GetIcon` 返绝对路径，字形由 [scripts/make-explorer-icons.ps1](scripts/make-explorer-icons.ps1) 生成）；Find 结果行文件夹用 `F12B`（MDL2 的 `E8B7` 画成竖页，和文件分不开）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md)
 - 稀疏包重新注册：清单提到 `0.1.8.0` / `neutral`，改用 [scripts/register-explorer.ps1](scripts/register-explorer.ps1) 一键注册（#109 回滚后 `bin` 里的旧清单曾被打进包，导致右键菜单不出现）→ [docs/explorer.md](docs/explorer.md)
@@ -26,7 +26,7 @@
 - #14：稀疏包 `IExplorerCommand` + WPF Host；先 Host 后菜单；同目录启 Host；开发期稀疏包注册；不做安装器 → [Explorer 规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
 - Find 简拼只走 Host 末词 suggest，query 引擎仍不认 `NameInitials`；实时 preview、无「预览」按钮、窗口居中 → [Find UX 审核](plans/confirmed/2026-10-07-find-ux-review.md)
 - Find UI：芯片 + 全局 AND/OR（默认 AND）；Find 无边框深色标题栏；Enter 落芯片；不做负词芯片/行内操作图标 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
-- Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局）
+- Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；去标当前标签为带 × 芯片）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 

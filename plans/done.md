@@ -103,3 +103,5 @@
 - 2026-10-17 — Tray Find 本机手工验收通过（`Alt+L`/托盘菜单、Find 单实例、热键配置）→ [Tray 规格 §8](./2026-10-07-tray-find-hotkey.md)
 - 2026-10-17 — Find 查询框补上 ↑：有联想时上下移动联想，否则上下移动结果列表（此前只处理了 ↓）
 - 2026-10-17 — Find 结果列表文件夹图标改为 Segoe MDL2 `F12B`（横向文件夹）；`E8B7` 在本机画成竖页，与文件 `E8A5` 分不清
+- 2026-10-17 — 去标效果图：当前标签改为带 × 芯片，点叉号去除（未改 WPF）→ [untag.html](../design/explorer-ui/untag.html)
+- 2026-10-17 — 去标 WPF：当前标签改为带 × 芯片，点叉号去除（对齐效果图；规格 §5.3 / docs 同步）→ [untag.html](../design/explorer-ui/untag.html)

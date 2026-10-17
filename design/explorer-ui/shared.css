@@ -770,11 +770,27 @@ a:hover {
 }
 
 .tag-chips .chip {
-  cursor: pointer;
+  cursor: default;
 }
 
-.tag-chips .chip:hover {
-  filter: brightness(1.08);
+.tag-chips .chip button {
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.tag-chips .chip button:hover {
+  opacity: 1;
+}
+
+.tag-chip-well {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tag-chip-well .tag-chips {
+  align-content: flex-start;
 }
 
 .split-body {
