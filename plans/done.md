@@ -110,3 +110,4 @@
 - 2026-10-17 — 网页图标改为整枚地球（去掉窗口框和十字经纬），仍用 `icons/webpage.svg`
 - 2026-10-17 — 对象图标预览改为内嵌 SVG mask：`file://` 下浏览器会拦截 CSS mask 加载旁边的 `.svg`，双击 HTML 也能看到图标
 - 2026-10-17 — Find 结果行 kind 图标落到 Host：`Themes/KindIcons.xaml` + `FindResultPresentation.IconKey`，对齐 design 三枚 SVG → [icons.html](../design/explorer-ui/icons.html)
+- 2026-10-17 — Find 关窗/失焦改为 Hide 保活，再按 `Alt+L` 走管道 Activate（不再每次冷启动 Host）→ [Tray 规格](./2026-10-07-tray-find-hotkey.md) · [审核 §I](./confirmed/2026-10-07-tray-find-hotkey-review.md)

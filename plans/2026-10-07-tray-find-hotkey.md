@@ -32,8 +32,8 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
            ├─ NotifyIcon + 菜单
            ├─ RegisterHotKey(findHotkey)（可关闭）
            ├─ 读写 config.json（findHotkey / runAtStartup）
-           └─ 热键 / 菜单 / 双击（≈300ms 防抖）
-                  ├─ 管道 Activate → 已有 Find：Restore + 尽力前置
+           └─ 热键 / 菜单 / 左键（首次立即；≈300ms 内连按合并）
+                  ├─ 管道 Activate → 已有 Find：Show/Restore + 尽力前置
                   └─ 否则 Start <TrayDir>\ExplorerHost.exe --mode find
 
 [Explorer 右键「按标签查找」 / CLI / 其它]
@@ -45,7 +45,7 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 | 组件 | 职责 |
 |---|---|
 | **`EverythingLabeled.Tray`**（WinForms） | 托盘、热键、自启、唤起/激活 Find；不承载业务 UI；无文件日志 |
-| **`ExplorerHost`（find）** | Find UI；Find 单实例 Mutex + 命名管道；关窗释放 |
+| **`ExplorerHost`（find）** | Find UI；Find 单实例 Mutex + 命名管道；关窗/失焦 **Hide** 保活（不释放） |
 | **`config.json`** | 共用 AppData；增 `findHotkey`、`runAtStartup`；写回须保留字段 |
 | **Service / CLI / Host 业务路径** | Service **不强制**写出新键默认值；**重写时必须保留**已有键 |
 
@@ -91,8 +91,8 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 1. `--mode find` 抢 Mutex（默认 `Local\EverythingLabeled.FindHost`；测试可覆盖如 `EL_FIND_MUTEX_NAME`）。
 2. **抢到**：显示窗口；命名管道（默认名与规格钉死，如 `EverythingLabeled.FindHost`）；收到单行 `Activate\n` → 若最小化则 Restore，再**尽力**前置（失败则任务栏闪烁，不视为 P0）。
 3. **未抢到**：发 `Activate` 后本进程退出。
-4. Tray：先 Activate；失败再 `Process.Start` 同目录 Host。热键/菜单连按约 **300ms** 防抖。
-5. **关 Find 窗** = 释放 Mutex/管道；下次热键/菜单 **新开** Host。
+4. Tray：先 Activate；失败再 `Process.Start` 同目录 Host。热键/菜单**首次立即**；约 **300ms** 内连按合并（不延迟首击）。
+5. **关 Find 窗 / 失焦** = **Hide**（进程与 Mutex/管道保持）；下次热键/菜单走管道 Activate（毫秒级）。仅进程真正退出时才释放 Mutex。
 
 管道仅本用户 Local；不做提权跨完整性级别。
 
@@ -111,7 +111,7 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 
 - 单测：热键解析（合法/非法/空/`none`/空白/大小写）；配置读默认；写回保留未知键。
 - Find 单实例：第二次启动 Activate 后退出（可覆盖 Mutex 名）。
-- 手工：`Alt+L` 打开/前置/最小化恢复；`none` 关热键；改 JSON 换键；托盘自启与 Run 值名；占用键提示；退出 Tray 不杀 Host；同目录缺 Host 提示。
+- 手工：`Alt+L` 打开/前置/最小化恢复；关窗或失焦后再 `Alt+L` 应毫秒级唤起（不冷启动）；`none` 关热键；改 JSON 换键；托盘自启与 Run 值名；占用键提示；退出 Tray 不杀 Host；同目录缺 Host 提示。
 
 ## 9. 规格联动
 

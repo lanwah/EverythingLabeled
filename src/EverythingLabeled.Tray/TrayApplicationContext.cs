@@ -10,9 +10,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly string _trayExePath;
     private readonly string _configPath;
     private readonly string _pipeName;
-    private readonly System.Windows.Forms.Timer _debounceTimer;
     private HotkeyRegistration? _hotkey;
     private bool _exiting;
+    private long _lastActivateTicks;
 
     public TrayApplicationContext()
     {
@@ -23,13 +23,6 @@ internal sealed class TrayApplicationContext : ApplicationContext
             ?? Path.Combine(_trayDirectory, "EverythingLabeled.Tray.exe");
         _configPath = TrayConfigStore.DefaultConfigPath();
         _pipeName = FindHostIpc.ResolvePipeName();
-
-        _debounceTimer = new System.Windows.Forms.Timer { Interval = FindLauncher.DebounceMs };
-        _debounceTimer.Tick += (_, _) =>
-        {
-            _debounceTimer.Stop();
-            ActivateFind();
-        };
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(Copy.MenuOpenFind, null, (_, _) => RequestActivateFind());
@@ -76,8 +69,13 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     private void RequestActivateFind()
     {
-        _debounceTimer.Stop();
-        _debounceTimer.Start();
+        // Coalesce rapid repeats without delaying the first press.
+        var now = Environment.TickCount64;
+        var last = Interlocked.Read(ref _lastActivateTicks);
+        if (last != 0 && now - last < FindLauncher.DebounceMs)
+            return;
+        Interlocked.Exchange(ref _lastActivateTicks, now);
+        ActivateFind();
     }
 
     private void ActivateFind()
@@ -158,8 +156,6 @@ internal sealed class TrayApplicationContext : ApplicationContext
             return;
         _exiting = true;
 
-        _debounceTimer.Stop();
-        _debounceTimer.Dispose();
         _hotkey?.Dispose();
         _hotkey = null;
         _notifyIcon.Visible = false;
@@ -183,7 +179,6 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         if (disposing && !_exiting)
         {
-            _debounceTimer.Dispose();
             _hotkey?.Dispose();
             _notifyIcon.Dispose();
         }

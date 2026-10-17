@@ -29,6 +29,8 @@ public partial class MainWindow : Window
     private bool _findUseOr;
     private string? _tagBatchStatusUntilEdit;
     private bool _tagHadAliasDraft;
+    private bool _allowFindExit;
+    private int _findActivation;
 
     public MainWindow(HostUiContext ctx)
     {
@@ -42,7 +44,13 @@ public partial class MainWindow : Window
 
         EnableHostWindowChrome();
         if (ctx.Mode == HostMode.Find)
+        {
             Deactivated += OnFindDeactivated;
+            Closing += OnFindClosing;
+            var app = System.Windows.Application.Current;
+            if (app is not null)
+                app.SessionEnding += (_, _) => _allowFindExit = true;
+        }
 
         _suggestTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(SuggestQuery.DebounceMs) };
         _suggestTimer.Tick += async (_, _) =>
@@ -91,19 +99,40 @@ public partial class MainWindow : Window
         if (_mode != HostMode.Find)
             return;
 
+        var activation = _findActivation;
         Dispatcher.BeginInvoke(
             () =>
             {
-                if (_mode == HostMode.Find && !IsActive)
-                    Close();
+                if (activation != _findActivation)
+                    return;
+                if (_mode == HostMode.Find && !IsActive && IsVisible)
+                    HideFind();
             },
             DispatcherPriority.Background);
+    }
+
+    private void OnFindClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_allowFindExit || _mode != HostMode.Find)
+            return;
+
+        e.Cancel = true;
+        HideFind();
+    }
+
+    private void HideFind()
+    {
+        if (_mode != HostMode.Find)
+            return;
+
+        Hide();
     }
 
     public void ActivateFromIpc()
     {
         void ActivateCore()
         {
+            _findActivation++;
             if (WindowState == WindowState.Minimized)
                 WindowState = WindowState.Normal;
 
@@ -265,7 +294,7 @@ public partial class MainWindow : Window
     private void OnFindMaximize(object sender, RoutedEventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
-    private void OnFindClose(object sender, RoutedEventArgs e) => Close();
+    private void OnFindClose(object sender, RoutedEventArgs e) => HideFind();
 
     private static class NativeMethods
     {

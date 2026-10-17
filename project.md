@@ -7,6 +7,7 @@
 - v1 设计基线与 #8–#14 / Tray / Find UI 已合入 `master` → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray 本机验收通过（2026-10-17）：稀疏包 `0.1.8.0` 右键四菜单青绿图标、Host 四页深色皮肤（打标/去标芯片、别名联想）、Tray `Alt+L` → [docs/explorer.md](docs/explorer.md) · [菜单图标](plans/2026-10-17-explorer-menu-icons.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find：末词 suggest + 实时 preview、芯片 + AND/OR、无边框深色标题栏；结果行文件/文件夹/网页图标已落到 Host（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [图标预览](design/explorer-ui/icons.html) · [docs/explorer.md](docs/explorer.md)
+- Find 关窗/失焦改为 Hide 保活（Mutex/管道不释放）；`Alt+L` 再开走管道 Activate。登录后第一次仍是冷启动 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [审核 §I](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
 - 公有仓库已发布：https://github.com/lanwah/EverythingLabeled（`master` 已推送）
 
 ## 关键决策
@@ -24,7 +25,7 @@
 - Find 简拼只走 Host 末词 suggest，query 引擎仍不认 `NameInitials`；实时 preview、无「预览」按钮、窗口居中 → [Find UX 审核](plans/confirmed/2026-10-07-find-ux-review.md)
 - Find UI：芯片 + 全局 AND/OR（默认 AND）；Find 无边框深色标题栏；Enter 落芯片；不做负词芯片/行内操作图标 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
 - Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；去标当前标签为带 × 芯片）
-- Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
+- Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；关窗/失焦 Hide 保活；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 待办

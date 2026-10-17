@@ -6,6 +6,7 @@ namespace EverythingLabeled.Tray;
 public static class FindLauncher
 {
     public const string HostExeName = "EverythingLabeled.ExplorerHost.exe";
+    /// <summary>Coalesce window for rapid hotkey/menu repeats (first press is immediate).</summary>
     public const int DebounceMs = 300;
 
     public static string ResolveHostPath(string trayDirectory) =>

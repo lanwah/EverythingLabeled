@@ -18,9 +18,9 @@
 - Find **单实例**（仅 `--mode find`）：默认 Mutex `Local\EverythingLabeled.FindHost`；命名管道默认名 `EverythingLabeled.FindHost`（`\\.\pipe\...`）；测试覆盖 `EL_FIND_MUTEX_NAME` / `EL_FIND_PIPE_NAME`。`tag`/`untag`/`tags` **不**抢 Find Mutex。
 - 管道协议：单行 UTF-8 明文 **`Activate\n`**（含换行）；其它行忽略。
 - Host 路径：Tray 仅认 `Path.Combine(TrayDir, "EverythingLabeled.ExplorerHost.exe")`；**无** `EL_HOST_PATH`。
-- 唤起路径：先 `TrySendActivate`；失败再 `Process.Start` 同目录 Host `--mode find`。热键/菜单/单击约 **300ms** 防抖。
-- 前置：若最小化则 Restore，再尽力 `Activate`/`SetForegroundWindow`；失败任务栏闪烁可接受，不视为缺陷。
-- 关 Find 窗 = 释放 Mutex + 停管道；下次热键**新开** Host。Tray **退出不杀** Host。
+- 唤起路径：先 `TrySendActivate`；失败再 `Process.Start` 同目录 Host `--mode find`。热键/菜单/单击**首次立即**；约 **300ms** 内连按合并。
+- 前置：若最小化则 Restore，再 `Show` + 尽力 `Activate`/`SetForegroundWindow`；失败任务栏闪烁可接受，不视为缺陷。
+- 关 Find 窗 / 失焦 = **Hide**（Mutex/管道保持）；下次热键走管道。进程退出（含注销 `SessionEnding`）才释放。Tray **退出不杀** Host。
 - `findHotkey`：默认 `"Alt+L"`；空串或规范化 `none` → 不注册；非法非空 → 回退 `Alt+L`；改 JSON 须**重启 Tray**。主键仅 `A–Z`/`0–9`/`F1–F12`/`Space`；修饰 `Ctrl`/`Alt`/`Shift`/`Win`，`+` 连接，大小写不敏感，段间可空白。
 - `runAtStartup` 默认 `true`；HKCU Run 值名 **`EverythingLabeled.Tray`** → Tray 绝对路径；与 Service 的 `EverythingLabeled` **并存**。
 - Config：`%AppData%\EverythingLabeled\config.json`（尊重 `EL_APPDATA` 根，与 Service `AppPaths` 一致）。Tray 可读缺文件（用默认）；写 `runAtStartup` 须 **JsonObject 保留未知键**，原子写（tmp + replace），失败短重试 1–2 次。Service `WriteAtomic`：**不**主动写出新键默认；若目标文件已存在则合并保留未知键。
@@ -302,7 +302,7 @@ public sealed class HotkeyRegistration : IDisposable
 
 1. `Program.Main`：抢 Tray Mutex（`Local\EverythingLabeled.Tray` / `EL_TRAY_MUTEX_NAME`）；失败 `return`。
 2. `Application.Run(new TrayApplicationContext())`。
-3. Context：`NotifyIcon` Visible；菜单三项；左键/双击 → 防抖后 `TryActivateOrStart`。
+3. Context：`NotifyIcon` Visible；菜单三项；左键 → 立即 `TryActivateOrStart`（300ms 内连按合并）。
 4. Load config → Parse hotkey；`Register` 则 `TryRegister`，失败气泡一次；`Disabled` 跳过。
 5. `runAtStartup==true` → `StartupRun.Apply(true, exePath)` 幂等；菜单勾选切换 → `TrySetRunAtStartup` + `StartupRun.Apply`；注册表失败则勾选回滚 + 短提示。
 6. 退出：UnregisterHotKey、Dispose icon；**不**杀 Host。
@@ -321,7 +321,7 @@ csproj Copy Target 与 Command 相同模式。`dotnet build src/EverythingLabele
 
 - [ ] **Step 4: 手工冒烟（实现者本机）**
 
-在 Tray 输出目录运行 Tray → `Alt+L` 开 Find；再按前置；关 Find 再按新开；托盘「退出」后 Find 仍在（若已开）。
+在 Tray 输出目录运行 Tray → `Alt+L` 开 Find；再按前置；关 Find 或失焦后再按应毫秒唤起（不冷启动）；托盘「退出」后 Find 仍在（若已开）。
 
 - [ ] **Step 5: Commit**
 
@@ -384,7 +384,7 @@ git commit -m @"
 | Find Mutex + 管道 Activate\n 全入口 | T1 |
 | 同目录 Host；无 EL_HOST_PATH | T3 |
 | Tray/Find Mutex 可覆盖 | T1、T3 |
-| 300ms 防抖；退出不杀 Host | T3 |
+| 首次立即、300ms 内连按合并；关窗 Hide；退出不杀 Host | T3 |
 | HKCU Run `EverythingLabeled.Tray` | T3 |
 | Service 不强制写出新键、重写保留 | T4 |
 | 单测热键/配置/单实例 | T1–T2、T4 |

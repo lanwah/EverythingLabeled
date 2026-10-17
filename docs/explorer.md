@@ -208,7 +208,7 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
 - 默认热键 `Alt+L`（config `findHotkey`；空串/`none` 关热键；改 JSON 后重启 Tray）；菜单仍可「打开查找」。
 - HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）；`runAtStartup` 默认 true，托盘可勾选切换。
 - 首次需手动启动一次 Tray（本切片无安装器自动拉起）。
-- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`；关窗后下次热键新开 Host；退出 Tray **不**杀已开 Host。
+- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`；关窗/失焦 **Hide** 保活，再按热键毫秒级 Activate；退出 Tray **不**杀已开 Host。
 
 ```powershell
 dotnet run --project src/EverythingLabeled.Tray
@@ -226,7 +226,7 @@ dotnet run --project src/EverythingLabeled.Tray
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
 - [ ] 打标/去标每次一别名；批量并发=`maxConcurrency`（缺省 4）；可取消；401 中止、其它按项继续
 - [ ] find：防抖末词 suggest（含简拼）+ 实时 preview；Enter 填联想或打开选中项；无「预览」按钮；Host 屏幕居中；打开后窗口保持；无 expand
-- [ ] find UI：深色无边框标题栏；芯片标签 + AND/OR（默认 AND）+ 清空；结果行按 kind 显示文件/文件夹/网页图标（`Themes/KindIcons.xaml`，对齐 [design/explorer-ui/icons](../design/explorer-ui/icons.html)）；打开/再激活自动聚焦；输入框 ↓ 一次进下一项；失焦（点窗外）关闭
+- [ ] find UI：深色无边框标题栏；芯片标签 + AND/OR（默认 AND）+ 清空；结果行按 kind 显示文件/文件夹/网页图标（`Themes/KindIcons.xaml`，对齐 [design/explorer-ui/icons](../design/explorer-ui/icons.html)）；打开/再激活自动聚焦；输入框 ↓ 一次进下一项；失焦或关窗只隐藏（进程保活，再按热键毫秒唤起）
 - [ ] 打标/去标/看标签 UI：深色无边框与 Find 同主题（`Themes/HostDark.xaml`）；别名联想浮动下拉不撑布局；打标时无精确匹配则自动勾选「创建缺失标签」；去标单选当前标签为带 × 芯片（点叉号去除）→ [design/explorer-ui/](../design/explorer-ui/index.html)
 - [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）
 - [ ] Command DLL 不承载业务 HTTP；Host 崩溃不拖死 Explorer（预期）
