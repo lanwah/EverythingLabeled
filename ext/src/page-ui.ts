@@ -1,5 +1,6 @@
 import { copy } from "./copy";
 import type { ElExtensionConfig } from "./config";
+import { shouldCheckCreateMissing } from "./create-missing-suggest";
 import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
 import {
@@ -418,20 +419,26 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     aliasInput.value = "";
     suggestList.replaceChildren();
+    createMissing.checked = false;
     setStatus(previewStatusText());
     await refreshTags();
   }
 
   const runSuggest = debounce(() => {
     void (async () => {
-      const q = aliasInput.value.trim();
-      if (q.length < 1) {
+      const q = normalizeQueryToken(aliasInput.value);
+      if (q == null) {
         suggestList.replaceChildren();
+        createMissing.checked = false;
         return;
       }
       const result = await send<SuggestItem[]>({ type: "suggest", q });
       suggestList.replaceChildren();
       if (!result.ok) return;
+      createMissing.checked = shouldCheckCreateMissing(
+        q,
+        result.data.map((item) => item.alias),
+      );
       for (const item of result.data) {
         const li = document.createElement("li");
         const btn = document.createElement("button");
@@ -440,6 +447,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
         btn.addEventListener("click", () => {
           aliasInput.value = item.alias;
           suggestList.replaceChildren();
+          createMissing.checked = false;
         });
         li.append(btn);
         suggestList.append(li);

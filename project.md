@@ -8,8 +8,7 @@
 - Explorer / Tray 本机验收通过（2026-10-17）：稀疏包 `0.1.8.0` 右键四菜单青绿图标、Host 四页深色皮肤（打标/去标芯片、别名联想）、Tray `Alt+L` → [docs/explorer.md](docs/explorer.md) · [菜单图标](plans/2026-10-17-explorer-menu-icons.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find：末词 suggest + 实时 preview、芯片 + AND/OR、无边框深色标题栏；结果行文件/文件夹/网页图标已落到 Host（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [图标预览](design/explorer-ui/icons.html) · [docs/explorer.md](docs/explorer.md)
 - Find 关窗/失焦改为 Hide 保活（Mutex/管道不释放）；`Alt+L` 再开走管道 Activate。登录后第一次仍是冷启动 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [审核 §I](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
-- 浏览器扩展打标页与 Options 按 [设计稿](design/explorer-ui/ext-page.html)；预览为芯片 + AND/OR，简拼走 suggest 回车落芯片（对齐 Find）→ [docs/browser-extension.md](docs/browser-extension.md)
-- 扩展工具栏图标：占位 PNG 补上白字「EL」（青绿底，对齐审核 Q18），`public`/`dist` 已同步
+- 浏览器扩展：预览芯片 + AND/OR；打标无精确别名时自动勾选「创建缺失标签」（对齐 Explorer Host）；工具栏图标白字「EL」→ [docs/browser-extension.md](docs/browser-extension.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
