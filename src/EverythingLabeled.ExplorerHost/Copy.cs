@@ -13,6 +13,7 @@ public static class Copy
     public const string CreateMissingLabel = "创建缺失标签";
     public const string AliasLabel = "别名";
     public const string AliasPlaceholder = "输入别名…";
+    public const string TagAliasContinuePlaceholder = "继续输入…";
     public const string UntagAliasPlaceholder = "或手动输入要去除的别名…";
     public const string PathsSectionLabel = "目标路径";
     public const string PathSectionLabel = "路径";
@@ -35,8 +36,12 @@ public static class Copy
     public const string PreviewFailed = "预览失败";
     public const string PreviewEmpty = "无匹配结果";
     public const string BatchRunning = "正在提交…";
+    public const string TagReady = "准备就绪";
 
     public static string PreviewCount(int count) => $"预览 {count} 条";
+
+    public static string TagWillApply(int pathCount, string alias) =>
+        $"将为 {pathCount} 项打上「{alias}」";
     public const string WindowTitleTag = "打标 — EverythingLabeled";
     public const string WindowTitleUntag = "去标 — EverythingLabeled";
     public const string WindowTitleTags = "看标签 — EverythingLabeled";

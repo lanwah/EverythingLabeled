@@ -25,7 +25,10 @@ public partial class MainWindow : Window
     private IReadOnlyList<PreviewRow> _previewRows = Array.Empty<PreviewRow>();
     private bool _suppressFindTextChanged;
     private readonly ObservableCollection<string> _findTags = new();
+    private readonly ObservableCollection<string> _tagAppliedAliases = new();
     private bool _findUseOr;
+    private string? _tagBatchStatusUntilEdit;
+    private bool _tagHadAliasDraft;
 
     public MainWindow(HostUiContext ctx)
     {
@@ -35,6 +38,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         FindChipList.ItemsSource = _findTags;
+        TagChipList.ItemsSource = _tagAppliedAliases;
 
         EnableHostWindowChrome();
         if (ctx.Mode == HostMode.Find)
@@ -161,6 +165,55 @@ public partial class MainWindow : Window
             : Visibility.Collapsed;
     }
 
+    private void UpdateTagAliasPlaceholder()
+    {
+        TagAliasPlaceholder.Text = _tagAppliedAliases.Count > 0
+            ? Copy.TagAliasContinuePlaceholder
+            : Copy.AliasPlaceholder;
+        TagAliasPlaceholder.Visibility = string.IsNullOrEmpty(TagAliasBox.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void RefreshTagAliasStatus()
+    {
+        if (_mode != HostMode.Tag || _batchCts is not null)
+            return;
+
+        var alias = SuggestQuery.Normalize(TagAliasBox.Text);
+        if (_tagBatchStatusUntilEdit is not null)
+        {
+            if (alias is null)
+            {
+                if (_tagHadAliasDraft)
+                    _tagBatchStatusUntilEdit = null;
+                else
+                {
+                    StatusText.Text = _tagBatchStatusUntilEdit;
+                    _tagHadAliasDraft = false;
+                    return;
+                }
+            }
+            else
+            {
+                _tagBatchStatusUntilEdit = null;
+            }
+        }
+
+        _tagHadAliasDraft = alias is not null;
+
+        if (alias is null)
+        {
+            StatusText.Text = Copy.TagReady;
+            return;
+        }
+
+        var count = IncludedTagTargets().Count;
+        StatusText.Text = count == 0
+            ? Copy.NoIncludedPaths
+            : Copy.TagWillApply(count, alias);
+    }
+
     private void ApplyHostChrome(HostMode mode)
     {
         var findMode = mode == HostMode.Find;
@@ -190,6 +243,8 @@ public partial class MainWindow : Window
             FindOrRadio.IsChecked = _findUseOr;
             StatusText.Text = Copy.PreviewCount(0);
         }
+        else if (mode == HostMode.Tag)
+            RefreshTagAliasStatus();
     }
 
     private void OnFindCaptionMouseDown(object sender, MouseButtonEventArgs e)
@@ -308,6 +363,7 @@ public partial class MainWindow : Window
     {
         var on = _businessEnabled;
         TagAliasBox.IsEnabled = on;
+        TagChipList.IsEnabled = on;
         TagSuggestList.IsEnabled = on;
         CreateMissingCheck.IsEnabled = on;
         TagSubmitButton.IsEnabled = on;
@@ -331,6 +387,7 @@ public partial class MainWindow : Window
     {
         var on = _businessEnabled && !busy;
         TagAliasBox.IsEnabled = on;
+        TagChipList.IsEnabled = on;
         TagSuggestList.IsEnabled = on;
         CreateMissingCheck.IsEnabled = on;
         TagSubmitButton.IsEnabled = on;
@@ -440,6 +497,12 @@ public partial class MainWindow : Window
 
         _activeAliasBox = box;
         _activeSuggestList = box == TagAliasBox ? TagSuggestList : UntagSuggestList;
+        if (box == TagAliasBox)
+        {
+            UpdateTagAliasPlaceholder();
+            RefreshTagAliasStatus();
+        }
+
         _suggestTimer.Stop();
         _suggestTimer.Start();
     }
@@ -477,9 +540,12 @@ public partial class MainWindow : Window
             }
 
             var items = result.Data!.Items;
-            _activeSuggestList.ItemsSource = items
+            var rows = items
                 .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
                 .ToList();
+            _activeSuggestList.ItemsSource = rows;
+            if (rows.Count > 0)
+                _activeSuggestList.SelectedIndex = 0;
             SyncAliasSuggestPopup(_activeSuggestList);
 
             if (_mode == HostMode.Tag)
@@ -607,10 +673,13 @@ public partial class MainWindow : Window
         _ = RunFindPreviewAsync();
     }
 
-    private async void OnTagSubmit(object sender, RoutedEventArgs e)
+    private async void OnTagSubmit(object sender, RoutedEventArgs e) =>
+        await SubmitTagAsync().ConfigureAwait(true);
+
+    private async Task SubmitTagAsync()
     {
         _createMissing = CreateMissingCheck.IsChecked == true;
-        var alias = SuggestQuery.Normalize(TagAliasBox.Text);
+        var alias = ResolveTagAliasForSubmit();
         if (alias is null)
         {
             StatusText.Text = Copy.EmptyAlias;
@@ -627,7 +696,7 @@ public partial class MainWindow : Window
         if (_ctx.Api is null || _ctx.Config is null)
             return;
 
-        await RunBatchAsync(
+        var summary = await RunBatchAsync(
             ct => BatchTagOps.TagAsync(
                 _ctx.Api,
                 targets,
@@ -635,6 +704,75 @@ public partial class MainWindow : Window
                 _createMissing,
                 _ctx.Config.MaxConcurrency,
                 ct)).ConfigureAwait(true);
+
+        if (_mode != HostMode.Tag)
+            return;
+
+        if (summary.Success > 0 && !_tagAppliedAliases.Contains(alias))
+            _tagAppliedAliases.Add(alias);
+
+        TagAliasBox.Text = string.Empty;
+        CloseAliasSuggestPopups();
+        UpdateTagAliasPlaceholder();
+        _tagBatchStatusUntilEdit = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
+        StatusText.Text = _tagBatchStatusUntilEdit;
+        _tagHadAliasDraft = false;
+        TagAliasBox.Focus();
+    }
+
+    private string? ResolveTagAliasForSubmit()
+    {
+        if (TagSuggestPopup.IsOpen
+            && TagSuggestList.Items.Count > 0
+            && SuggestQuery.Normalize(TagAliasBox.Text) is not null)
+        {
+            if (TagSuggestList.SelectedItem is not AliasRow row)
+            {
+                TagSuggestList.SelectedIndex = 0;
+                row = (AliasRow)TagSuggestList.SelectedItem!;
+            }
+
+            return row.Alias;
+        }
+
+        return SuggestQuery.Normalize(TagAliasBox.Text);
+    }
+
+    private async void OnTagChipRemove(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string alias })
+            return;
+
+        if (_batchCts is not null || !_businessEnabled)
+            return;
+
+        await SubmitUntagAsync(alias).ConfigureAwait(true);
+        _tagAppliedAliases.Remove(alias);
+        UpdateTagAliasPlaceholder();
+        RefreshTagAliasStatus();
+    }
+
+    private void OnTagAliasPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Down && TagSuggestPopup.IsOpen && TagSuggestList.Items.Count > 0)
+        {
+            ApplySuggestListDown(TagSuggestList);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Up && TagSuggestPopup.IsOpen && TagSuggestList.Items.Count > 0)
+        {
+            ApplySuggestListUp(TagSuggestList);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Enter)
+            return;
+
+        e.Handled = true;
+        _ = SubmitTagAsync();
     }
 
     private async void OnUntagSubmit(object sender, RoutedEventArgs e) =>
@@ -681,7 +819,7 @@ public partial class MainWindow : Window
             await LoadResourceTagsAsync().ConfigureAwait(true);
     }
 
-    private async Task RunBatchAsync(Func<CancellationToken, Task<BatchSummary>> run)
+    private async Task<BatchSummary> RunBatchAsync(Func<CancellationToken, Task<BatchSummary>> run)
     {
         _batchCts?.Cancel();
         _batchCts = new CancellationTokenSource();
@@ -691,11 +829,16 @@ public partial class MainWindow : Window
         try
         {
             var summary = await run(_batchCts.Token).ConfigureAwait(true);
-            StatusText.Text = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
+            if (_mode != HostMode.Tag)
+                StatusText.Text = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
+            return summary;
         }
         catch (OperationCanceledException)
         {
-            StatusText.Text = Copy.BatchSummary(0, 0, IncludedUris().Count);
+            var cancelled = new BatchSummary(0, 0, IncludedUris().Count, Array.Empty<BatchItemResult>());
+            if (_mode != HostMode.Tag)
+                StatusText.Text = Copy.BatchSummary(0, 0, cancelled.CancelledNotSent);
+            return cancelled;
         }
         finally
         {
@@ -923,13 +1066,25 @@ public partial class MainWindow : Window
             e.Handled = true;
     }
 
-    private static void ApplyFindListDown(ListBox list)
+    private static void ApplyFindListDown(ListBox list) => ApplySuggestListDown(list);
+
+    private static void ApplySuggestListDown(ListBox list)
     {
         var next = FindListNavigation.NextDownIndex(list.SelectedIndex, list.Items.Count);
         if (next < 0)
             return;
 
-        list.Focus();
+        list.SelectedIndex = next;
+        if (list.SelectedItem is not null)
+            list.ScrollIntoView(list.SelectedItem);
+    }
+
+    private static void ApplySuggestListUp(ListBox list)
+    {
+        var next = FindListNavigation.NextUpIndex(list.SelectedIndex, list.Items.Count);
+        if (next < 0)
+            return;
+
         list.SelectedIndex = next;
         if (list.SelectedItem is not null)
             list.ScrollIntoView(list.SelectedItem);

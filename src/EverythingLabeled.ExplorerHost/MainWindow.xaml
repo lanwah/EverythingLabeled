@@ -402,10 +402,28 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
+        <Style x:Key="TagAliasBoxStyle" TargetType="TextBox" BasedOn="{StaticResource FindQueryBoxStyle}">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      Focusable="False" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="HostSuggestPopupListStyle" TargetType="ListBox" BasedOn="{StaticResource FindListBoxStyle}">
             <Setter Property="Background" Value="{StaticResource HostInputBgBrush}" />
-            <Setter Property="MaxHeight" Value="140" />
-            <Setter Property="Padding" Value="0,4" />
+            <Setter Property="MaxHeight" Value="220" />
+            <Setter Property="MinWidth" Value="200" />
+            <Setter Property="Padding" Value="4,6" />
         </Style>
     </Window.Resources>
 
@@ -514,12 +532,64 @@
                            FontSize="13"
                            Text="{x:Static local:Copy.AliasLabel}" />
                 <Grid Grid.Column="1" x:Name="TagAliasField">
-                    <TextBox x:Name="TagAliasBox"
-                             Style="{StaticResource HostInputStyle}"
-                             Tag="{x:Static local:Copy.AliasPlaceholder}"
-                             TextChanged="OnSuggestAliasChanged" />
+                    <Border x:Name="TagAliasInputBorder"
+                            Background="{StaticResource HostInputBgBrush}"
+                            BorderBrush="{StaticResource HostBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            MinHeight="36"
+                            Padding="8,0">
+                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ItemsControl x:Name="TagChipList" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource HostChipBrush}"
+                                                CornerRadius="4"
+                                                Padding="8,4"
+                                                Margin="0,2,6,2"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding}"
+                                                           Foreground="{StaticResource HostOnAccentBrush}"
+                                                           FontSize="13"
+                                                           VerticalAlignment="Center" />
+                                                <Button Style="{StaticResource FindChipRemoveStyle}"
+                                                        Content="×"
+                                                        Tag="{Binding}"
+                                                        Margin="6,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Click="OnTagChipRemove" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid MinWidth="72"
+                                  MinHeight="24"
+                                  Margin="0,2,0,2"
+                                  VerticalAlignment="Center">
+                                <TextBlock x:Name="TagAliasPlaceholder"
+                                           Text="{x:Static local:Copy.AliasPlaceholder}"
+                                           Foreground="{StaticResource HostMutedBrush}"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False" />
+                                <TextBox x:Name="TagAliasBox"
+                                         Style="{StaticResource TagAliasBoxStyle}"
+                                         MinWidth="72"
+                                         VerticalAlignment="Center"
+                                         TextChanged="OnSuggestAliasChanged"
+                                         PreviewKeyDown="OnTagAliasPreviewKeyDown" />
+                            </Grid>
+                        </WrapPanel>
+                    </Border>
                     <Popup x:Name="TagSuggestPopup"
-                           PlacementTarget="{Binding ElementName=TagAliasBox}"
+                           PlacementTarget="{Binding ElementName=TagAliasInputBorder}"
                            Placement="Bottom"
                            StaysOpen="True"
                            AllowsTransparency="True"
@@ -528,7 +598,8 @@
                                 BorderBrush="{StaticResource HostBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8"
-                                MinWidth="{Binding ActualWidth, ElementName=TagAliasBox}"
+                                Width="{Binding ActualWidth, ElementName=TagAliasInputBorder}"
+                                MinWidth="{Binding ActualWidth, ElementName=TagAliasInputBorder}"
                                 Margin="0,4,0,0">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="24"

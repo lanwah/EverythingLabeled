@@ -28,4 +28,22 @@ public sealed class FindListNavigationTests
     {
         Assert.Equal(1, FindListNavigation.NextDownIndex(selectedIndex: 1, count: 2));
     }
+
+    [Fact]
+    public void NextUpIndex_empty_returns_minus_one()
+    {
+        Assert.Equal(-1, FindListNavigation.NextUpIndex(selectedIndex: -1, count: 0));
+    }
+
+    [Fact]
+    public void NextUpIndex_none_selected_selects_last()
+    {
+        Assert.Equal(1, FindListNavigation.NextUpIndex(selectedIndex: -1, count: 2));
+    }
+
+    [Fact]
+    public void NextUpIndex_on_first_stays()
+    {
+        Assert.Equal(0, FindListNavigation.NextUpIndex(selectedIndex: 0, count: 2));
+    }
 }

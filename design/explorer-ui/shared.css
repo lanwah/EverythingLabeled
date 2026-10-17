@@ -619,6 +619,49 @@ a:hover {
   min-width: 0;
 }
 
+.alias-chip-field {
+  min-height: 36px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.alias-chip-wrap {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tag-applied-chips {
+  display: contents;
+}
+
+.alias-chip-wrap input {
+  flex: 1;
+  min-width: 72px;
+  min-height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  line-height: 24px;
+  padding: 0 2px;
+  outline: none;
+}
+
+.alias-chip-field:focus-within {
+  border-color: var(--accent);
+}
+
+.panel[data-state="empty"] .alias-chip-field {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 .alias-field input,
 .alias-row > input {
   width: 100%;
@@ -645,7 +688,8 @@ a:hover {
   right: 0;
   top: calc(100% + 4px);
   z-index: 30;
-  max-height: 140px;
+  max-height: 220px;
+  min-width: 100%;
   margin: 0;
   padding: 4px 0;
   list-style: none;
@@ -662,8 +706,9 @@ a:hover {
 }
 
 .suggest-list li {
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.35;
   cursor: pointer;
 }
 

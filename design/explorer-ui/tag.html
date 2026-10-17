@@ -45,30 +45,30 @@
             </ul>
 
             <div class="alias-row">
-              <label for="alias">别名</label>
+              <label for="alias-input">别名</label>
               <div class="alias-field">
-                <input id="alias" type="text" value="" placeholder="输入别名…" class="only-empty" readonly />
-                <input id="alias-f" type="text" value="工作" class="only-filled" readonly />
-                <ul class="suggest-list only-filled" aria-label="联想">
-                  <li class="selected">工作</li>
-                  <li>工作区</li>
-                  <li>工作笔记</li>
-                </ul>
+                <div class="alias-chip-field surface">
+                  <div class="alias-chip-wrap">
+                    <span id="tag-chips" class="tag-applied-chips" aria-live="polite"></span>
+                    <input id="alias-input" type="text" value="" placeholder="输入别名…" autocomplete="off" spellcheck="false" />
+                  </div>
+                </div>
+                <ul id="alias-suggest" class="suggest-list" aria-label="联想" hidden></ul>
               </div>
             </div>
 
             <label class="check-row">
-              <input type="checkbox" checked class="only-filled" disabled />
+              <input id="create-missing" type="checkbox" class="only-filled" />
               <input type="checkbox" class="only-empty" disabled />
               <span>创建缺失标签</span>
             </label>
 
             <div class="footer">
-              <span class="status only-empty">准备就绪</span>
-              <span class="status only-filled">将为 3 项打上「工作」</span>
+              <span id="tag-status" class="status">准备就绪</span>
               <div class="actions-right">
                 <button type="button" class="btn" disabled>取消</button>
-                <button type="button" class="btn btn-primary">打标</button>
+                <button id="tag-submit" type="button" class="btn btn-primary only-filled">打标</button>
+                <button type="button" class="btn btn-primary only-empty" disabled>打标</button>
               </div>
             </div>
           </div>
@@ -77,5 +77,6 @@
     </div>
   </div>
   <script src="preview.js"></script>
+  <script src="tag.js"></script>
 </body>
 </html>
