@@ -1,5 +1,5 @@
 import { copy } from "./copy";
-import type { ElExtensionConfig } from "./config";
+import { DEFAULT_BASE_URL, type ElExtensionConfig } from "./config";
 import type { ElResponse } from "./messages";
 import { formatUiError } from "./ui-error";
 
@@ -13,18 +13,19 @@ const heading = document.createElement("div");
 const title = document.createElement("h1");
 title.textContent = "设置";
 const lead = document.createElement("p");
-lead.className = "lead";
+lead.className = "ext-lead";
 lead.textContent = "连接本机标签服务。地址和 Token 在这里手工填写。";
 heading.append(title, lead);
 head.append(heading);
 
-const status = document.createElement("p");
+const status = document.createElement("span");
 status.className = "status";
 
 const baseUrl = document.createElement("input");
 baseUrl.type = "text";
 baseUrl.autocomplete = "off";
 baseUrl.spellcheck = false;
+baseUrl.placeholder = DEFAULT_BASE_URL;
 
 const token = document.createElement("input");
 token.type = "password";
@@ -50,7 +51,9 @@ function field(text: string, control: HTMLElement): HTMLLabelElement {
 
 const confirmLabel = document.createElement("label");
 confirmLabel.className = "check-row";
-confirmLabel.append(confirmUntag, "去标前确认");
+const confirmText = document.createElement("span");
+confirmText.textContent = "去标前确认";
+confirmLabel.append(confirmUntag, confirmText);
 
 const form = document.createElement("form");
 form.className = "options-form";

@@ -60,11 +60,23 @@
           </div>
 
           <p class="section-label">预览</p>
-          <div class="query-row">
-            <input type="text" placeholder="输入标签，回车预览" aria-label="预览查询" value="" />
-            <button type="button" class="btn btn-primary">预览</button>
+          <div class="find-toolbar">
+            <div class="chip-field">
+              <div class="chip-wrap">
+                <span class="chip only-filled">工作 <button type="button" aria-label="移除">×</button></span>
+                <span class="chip only-filled">React <button type="button" aria-label="移除">×</button></span>
+                <div class="chip-input">
+                  <input class="only-empty" type="text" placeholder="输入标签后按回车键…" aria-label="标签查询" />
+                  <input class="only-filled" type="text" placeholder="继续输入…" aria-label="标签查询" />
+                </div>
+              </div>
+            </div>
+            <div class="mode-toggle" role="group" aria-label="匹配模式">
+              <button type="button" aria-pressed="true">AND</button>
+              <button type="button" aria-pressed="false">OR</button>
+            </div>
           </div>
-          <p class="empty-hint only-empty">输入标签后，这里显示匹配结果</p>
+          <p class="empty-hint only-empty">添加标签后，这里显示匹配结果</p>
           <ul class="result-list only-filled">
             <li class="selected">
               <span class="kind-icon webpage" role="img" aria-label="网页"></span>
@@ -84,6 +96,7 @@
           <div class="footer">
             <span class="status only-empty">预览 0 条</span>
             <span class="status only-filled">预览 2 条</span>
+            <button type="button" class="btn btn-ghost">清空标签</button>
             <button type="button" class="btn btn-primary">打开所选</button>
           </div>
         </div>

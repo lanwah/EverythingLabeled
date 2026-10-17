@@ -2,7 +2,14 @@ import { copy } from "./copy";
 import type { ElExtensionConfig } from "./config";
 import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
-import { tagChipLabel } from "./labels";
+import {
+  composePreviewQuery,
+  nextDownIndex,
+  nextUpIndex,
+  normalizeQueryToken,
+  tryAddPreviewTag,
+} from "./find-query";
+import { suggestRowLabel, tagChipLabel } from "./labels";
 import type { ElResponse } from "./messages";
 import { pickFollowTab } from "./follow-tab";
 import { decideOpen, defaultSelectedIds } from "./open-rules";
@@ -83,7 +90,11 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   const tagsLabel = el("p", "section-label");
   tagsLabel.textContent = "当前标签";
-  const chips = el("ul", "tag-chips surface");
+  const tagWell = el("div", "tag-chip-well surface");
+  const tagEmpty = el("p", "empty-hint");
+  tagEmpty.textContent = copy.tagsEmpty;
+  const chips = el("ul", "tag-chips");
+  tagWell.append(tagEmpty, chips);
 
   const tagLabel = el("p", "section-label");
   tagLabel.textContent = "打标";
@@ -109,7 +120,9 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   createMissing.checked = false;
   const createLabel = document.createElement("label");
   createLabel.className = "check-row";
-  createLabel.append(createMissing, "创建缺失标签");
+  const createText = document.createElement("span");
+  createText.textContent = "创建缺失标签";
+  createLabel.append(createMissing, createText);
   const tagActions = el("div", "actions-right");
   tagActions.append(untagBtn, tagBtn);
   const tagFooter = el("div", "footer");
@@ -117,26 +130,49 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   const previewLabel = el("p", "section-label");
   previewLabel.textContent = "预览";
+  const chipField = el("div", "chip-field");
+  const chipWrap = el("div", "chip-wrap");
+  const chipInputWrap = el("div", "chip-input");
   const qInput = document.createElement("input");
   qInput.type = "text";
   qInput.autocomplete = "off";
-  qInput.placeholder = "输入标签，回车预览";
-  qInput.setAttribute("aria-label", "预览查询");
-  const previewBtn = document.createElement("button");
-  previewBtn.type = "button";
-  previewBtn.className = "btn btn-primary";
-  previewBtn.textContent = "预览";
-  const queryRow = el("div", "query-row");
-  queryRow.append(qInput, previewBtn);
+  qInput.placeholder = copy.findQueryPlaceholder;
+  qInput.setAttribute("aria-label", "标签查询");
+  qInput.setAttribute("aria-autocomplete", "list");
+  const previewSuggest = el("ul", "suggest-list");
+  chipInputWrap.append(qInput);
+  chipWrap.append(chipInputWrap);
+  chipField.append(chipWrap, previewSuggest);
+  const andBtn = document.createElement("button");
+  andBtn.type = "button";
+  andBtn.textContent = "AND";
+  andBtn.setAttribute("aria-pressed", "true");
+  const orBtn = document.createElement("button");
+  orBtn.type = "button";
+  orBtn.textContent = "OR";
+  orBtn.setAttribute("aria-pressed", "false");
+  const modeToggle = el("div", "mode-toggle");
+  modeToggle.setAttribute("role", "group");
+  modeToggle.setAttribute("aria-label", "匹配模式");
+  modeToggle.append(andBtn, orBtn);
+  const queryRow = el("div", "find-toolbar");
+  queryRow.append(chipField, modeToggle);
   const hitsList = el("ul", "result-list surface");
   const previewHint = el("p", "empty-hint");
+  previewHint.textContent = copy.previewIdle;
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "btn";
+  clearBtn.textContent = copy.clearTags;
   const openBtn = document.createElement("button");
   openBtn.type = "button";
   openBtn.className = "btn btn-primary";
   openBtn.textContent = "打开所选";
-  const status = el("p", "status");
+  const status = el("span", "status");
+  const previewActions = el("div", "actions-right");
+  previewActions.append(clearBtn, openBtn);
   const previewFooter = el("div", "footer");
-  previewFooter.append(status, openBtn);
+  previewFooter.append(status, previewActions);
 
   root.append(
     head,
@@ -144,7 +180,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     pageCard,
     pageHint,
     tagsLabel,
-    chips,
+    tagWell,
     tagLabel,
     aliasField,
     tagFooter,
@@ -163,11 +199,24 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let hits: QueryHit[] = [];
   let selected = new Set<string>();
   let tagActionsEnabled = false;
+  let previewCount = 0;
+  let previewTags: string[] = [];
+  let previewUseOr = false;
+  let previewRequestId = 0;
+  let suggestRequestId = 0;
+  let suggestRows: { alias: string; label: string }[] = [];
+  let suggestIndex = -1;
+
+  function previewStatusText(): string {
+    return `预览 ${previewCount} 条`;
+  }
 
   function setStatus(text: string, kind: "ok" | "err" | "" = ""): void {
     status.className = kind ? `status ${kind}` : "status";
     status.textContent = text;
   }
+
+  setStatus(previewStatusText());
 
   function showConfigMissingBanner(): void {
     banner.replaceChildren();
@@ -198,12 +247,16 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   function renderPage(): void {
     const title = truncate(pageTitle || "(无标题)");
-    const uri = truncate(pageUrl);
+    const uri = pageUrl === "" ? copy.pageNotFollowed : truncate(pageUrl);
     pageTitleEl.textContent = title;
     pageUriEl.textContent = uri;
     pageCard.title = `${pageTitle} ${pageUrl}`.trim();
     const http = pageUrl !== "" && isHttpPage(pageUrl);
-    if (!http) {
+    if (pageUrl === "") {
+      pageHint.className = "hint";
+      pageHint.textContent = "";
+      setTagEnabled(false);
+    } else if (!http) {
       pageHint.className = "hint page-warn";
       pageHint.textContent = copy.pageCannotTag;
       setTagEnabled(false);
@@ -216,6 +269,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   function renderChips(items: TagInfo[]): void {
     chips.replaceChildren();
+    tagEmpty.hidden = items.length > 0;
     for (const tag of items) {
       const li = el("li", "chip");
       const name = document.createElement("span");
@@ -235,12 +289,16 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   function renderHits(next: QueryHit[]): void {
     hits = next;
+    previewCount = hits.length;
     selected = defaultSelectedIds(hits);
     hitsList.replaceChildren();
+    setStatus(previewStatusText());
     if (hits.length === 0) {
+      previewHint.hidden = false;
       previewHint.textContent = copy.previewEmpty;
       return;
     }
+    previewHint.hidden = true;
     previewHint.textContent = "";
     for (const hit of hits) {
       const li = document.createElement("li");
@@ -324,7 +382,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showFailure(result);
       return;
     }
-    setStatus("");
+    setStatus(previewStatusText());
     await refreshTags();
   }
 
@@ -339,7 +397,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     aliasInput.value = "";
     suggestList.replaceChildren();
-    setStatus("");
+    setStatus(previewStatusText());
     await refreshTags();
   }
 
@@ -360,7 +418,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     aliasInput.value = "";
     suggestList.replaceChildren();
-    setStatus("");
+    setStatus(previewStatusText());
     await refreshTags();
   }
 
@@ -405,41 +463,190 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     void untagByAlias();
   });
 
+  function clearPreviewSuggest(): void {
+    suggestRequestId += 1;
+    suggestRows = [];
+    suggestIndex = -1;
+    previewSuggest.replaceChildren();
+  }
+
+  function renderPreviewSuggest(): void {
+    previewSuggest.replaceChildren();
+    suggestRows.forEach((row, index) => {
+      const li = document.createElement("li");
+      if (index === suggestIndex) li.className = "selected";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = row.label;
+      btn.addEventListener("click", () => {
+        commitPreviewTag(row.alias);
+      });
+      li.append(btn);
+      previewSuggest.append(li);
+    });
+    const selected = previewSuggest.querySelector("li.selected");
+    selected?.scrollIntoView({ block: "nearest" });
+  }
+
+  function renderPreviewChips(): void {
+    for (const node of [...chipWrap.children]) {
+      if (node !== chipInputWrap) node.remove();
+    }
+    for (const alias of previewTags) {
+      const chip = el("span", "chip");
+      const name = document.createElement("span");
+      name.textContent = alias;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "×";
+      del.setAttribute("aria-label", "移除");
+      del.addEventListener("click", () => {
+        previewTags = previewTags.filter((tag) => tag !== alias);
+        renderPreviewChips();
+        void runPreview();
+        qInput.focus();
+      });
+      chip.append(name, del);
+      chipWrap.insertBefore(chip, chipInputWrap);
+    }
+    qInput.placeholder =
+      previewTags.length > 0 ? copy.findQueryContinue : copy.findQueryPlaceholder;
+  }
+
+  function commitPreviewTag(raw: string | null): void {
+    if (!tryAddPreviewTag(previewTags, raw)) return;
+    qInput.value = "";
+    clearPreviewSuggest();
+    renderPreviewChips();
+    void runPreview();
+  }
+
+  function showIdlePreview(): void {
+    hits = [];
+    previewCount = 0;
+    selected = new Set();
+    hitsList.replaceChildren();
+    previewHint.hidden = false;
+    previewHint.textContent = copy.previewIdle;
+    setStatus(previewStatusText());
+  }
+
   async function runPreview(): Promise<void> {
-    const result = await send<QueryHit[]>({ type: "preview", q: qInput.value });
+    const requestId = ++previewRequestId;
+    const q = composePreviewQuery(previewTags, previewUseOr);
+    if (q == null) {
+      showIdlePreview();
+      return;
+    }
+    const result = await send<QueryHit[]>({ type: "preview", q });
+    if (requestId !== previewRequestId) return;
     if (!result.ok) {
       showFailure(result);
       return;
     }
-    setStatus("");
     renderHits(result.data);
   }
 
-  previewBtn.addEventListener("click", () => {
+  const runPreviewSuggest = debounce(() => {
+    void (async () => {
+      const requestId = ++suggestRequestId;
+      const q = normalizeQueryToken(qInput.value);
+      if (q == null) {
+        clearPreviewSuggest();
+        return;
+      }
+      const result = await send<SuggestItem[]>({ type: "suggest", q });
+      if (requestId !== suggestRequestId) return;
+      if (!result.ok) {
+        suggestRows = [];
+        suggestIndex = -1;
+        previewSuggest.replaceChildren();
+        return;
+      }
+      suggestRows = result.data.map((item) => ({
+        alias: item.alias,
+        label: suggestRowLabel(item),
+      }));
+      suggestIndex = suggestRows.length > 0 ? 0 : -1;
+      renderPreviewSuggest();
+    })();
+  }, SUGGEST_MS);
+
+  function moveSuggest(down: boolean): void {
+    if (suggestRows.length === 0) return;
+    suggestIndex = down
+      ? nextDownIndex(suggestIndex, suggestRows.length)
+      : nextUpIndex(suggestIndex, suggestRows.length);
+    renderPreviewSuggest();
+  }
+
+  function setPreviewUseOr(useOr: boolean): void {
+    if (useOr === previewUseOr) return;
+    previewUseOr = useOr;
+    andBtn.setAttribute("aria-pressed", useOr ? "false" : "true");
+    orBtn.setAttribute("aria-pressed", useOr ? "true" : "false");
     void runPreview();
+  }
+
+  qInput.addEventListener("input", () => {
+    runPreviewSuggest();
   });
   qInput.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter") {
-      ev.preventDefault();
+    if (ev.key === "Backspace" && qInput.value === "" && previewTags.length > 0) {
+      previewTags.pop();
+      renderPreviewChips();
       void runPreview();
+      ev.preventDefault();
+      return;
     }
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      if (suggestRows.length === 0) return;
+      moveSuggest(ev.key === "ArrowDown");
+      ev.preventDefault();
+      return;
+    }
+    if (ev.key !== "Enter") return;
+    ev.preventDefault();
+    if (suggestRows.length > 0 && normalizeQueryToken(qInput.value) != null) {
+      const row = suggestRows[suggestIndex] ?? suggestRows[0];
+      if (row !== undefined) commitPreviewTag(row.alias);
+      return;
+    }
+    const draft = normalizeQueryToken(qInput.value);
+    if (draft != null) commitPreviewTag(draft);
+  });
+  andBtn.addEventListener("click", () => {
+    setPreviewUseOr(false);
+  });
+  orBtn.addEventListener("click", () => {
+    setPreviewUseOr(true);
+  });
+  clearBtn.addEventListener("click", () => {
+    previewTags = [];
+    qInput.value = "";
+    clearPreviewSuggest();
+    renderPreviewChips();
+    void runPreview();
+    qInput.focus();
   });
 
+  async function openSelected(): Promise<void> {
+    if (config === undefined) return;
+    const decision = decideOpen(hits, selected, config.previewLimit);
+    if (!decision.ok) {
+      setStatus(decision.reason === "none" ? copy.openNone : copy.openOverLimit, "err");
+      return;
+    }
+    const result = await send({ type: "openTabs", urls: decision.urls });
+    if (!result.ok) {
+      showFailure(result);
+      return;
+    }
+    setStatus(previewStatusText());
+  }
+
   openBtn.addEventListener("click", () => {
-    void (async () => {
-      if (config === undefined) return;
-      const decision = decideOpen(hits, selected, config.previewLimit);
-      if (!decision.ok) {
-        setStatus(decision.reason === "none" ? copy.openNone : copy.openOverLimit, "err");
-        return;
-      }
-      const result = await send({ type: "openTabs", urls: decision.urls });
-      if (!result.ok) {
-        showFailure(result);
-        return;
-      }
-      setStatus("");
-    })();
+    void openSelected();
   });
 
   followBtn.addEventListener("click", () => {
@@ -450,7 +657,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
         setStatus(copy.followNoHttpPage, "err");
         return;
       }
-      setStatus("");
+      setStatus(previewStatusText());
       await chrome.storage.session.set({
         pageSnapshot: { tabId: tab.id, url: tab.url, title: tab.title },
       });
