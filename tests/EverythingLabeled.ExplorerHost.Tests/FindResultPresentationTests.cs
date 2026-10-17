@@ -58,7 +58,7 @@ public sealed class FindResultPresentationTests
     }
 
     [Theory]
-    [InlineData("folder", "\uE8B7")]
+    [InlineData("folder", "\uF12B")]
     [InlineData("file", "\uE8A5")]
     [InlineData("url", "\uE774")]
     [InlineData("other", "\uE8A5")]

@@ -1029,21 +1029,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (e.Key == Key.Down)
+        if (e.Key is Key.Down or Key.Up)
         {
-            if (FindSuggestList.Items.Count > 0)
-            {
-                ApplyFindListDown(FindSuggestList);
+            if (MoveFocusedFindList(e.Key == Key.Down))
                 e.Handled = true;
-                return;
-            }
-
-            if (_previewRows.Count > 0)
-            {
-                ApplyFindListDown(FindResultList);
-                e.Handled = true;
-            }
-
             return;
         }
 
@@ -1066,7 +1055,22 @@ public partial class MainWindow : Window
             e.Handled = true;
     }
 
-    private static void ApplyFindListDown(ListBox list) => ApplySuggestListDown(list);
+    private bool MoveFocusedFindList(bool down)
+    {
+        ListBox? list = FindSuggestList.Items.Count > 0
+            ? FindSuggestList
+            : _previewRows.Count > 0
+                ? FindResultList
+                : null;
+        if (list is null)
+            return false;
+
+        if (down)
+            ApplySuggestListDown(list);
+        else
+            ApplySuggestListUp(list);
+        return true;
+    }
 
     private static void ApplySuggestListDown(ListBox list)
     {

@@ -101,3 +101,5 @@
 - 2026-10-17 — Explorer 右键四项图标：黑方块根因两层 —— `GetIcon` 返 `E_NOTIMPL` + 包清单三个 Logo 是纯黑 50×50 占位（命令不给图标时壳层回落包 Logo）。处置：`scripts/make-explorer-icons.ps1` 生成四个青绿字形 `.ico`（DIB 帧）并把 Logo 换成真图、`GetIcon` 返绝对路径、重装 `0.1.8.0` → [存档](./2026-10-17-explorer-menu-icons.md)
 - 2026-10-17 — Explorer 本机手工验收通过（右键四项青绿图标 + Host 三页深色皮肤/联想/缺失别名勾选）→ [验收清单](../docs/explorer.md)
 - 2026-10-17 — Tray Find 本机手工验收通过（`Alt+L`/托盘菜单、Find 单实例、热键配置）→ [Tray 规格 §8](./2026-10-07-tray-find-hotkey.md)
+- 2026-10-17 — Find 查询框补上 ↑：有联想时上下移动联想，否则上下移动结果列表（此前只处理了 ↓）
+- 2026-10-17 — Find 结果列表文件夹图标改为 Segoe MDL2 `F12B`（横向文件夹）；`E8B7` 在本机画成竖页，与文件 `E8A5` 分不清

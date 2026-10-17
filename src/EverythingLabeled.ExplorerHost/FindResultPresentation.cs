@@ -3,8 +3,9 @@ namespace EverythingLabeled.ExplorerHost;
 /// <summary>Pure helpers for Find result row title / subtitle / glyph.</summary>
 public static class FindResultPresentation
 {
-    // Segoe MDL2 Assets
-    public const string GlyphFolder = "\uE8B7";
+    // Segoe MDL2 Assets. E8B7 is named Folder but draws as a vertical page,
+    // so rows use FolderHorizontal (F12B) to separate folders from documents.
+    public const string GlyphFolder = "\uF12B";
     public const string GlyphFile = "\uE8A5";
     public const string GlyphUrl = "\uE774";
 
