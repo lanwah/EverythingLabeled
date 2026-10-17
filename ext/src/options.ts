@@ -5,6 +5,18 @@ import { formatUiError } from "./ui-error";
 
 const root = document.getElementById("app")!;
 root.replaceChildren();
+root.className = "ext-shell";
+
+const head = document.createElement("header");
+head.className = "ext-head";
+const heading = document.createElement("div");
+const title = document.createElement("h1");
+title.textContent = "设置";
+const lead = document.createElement("p");
+lead.className = "lead";
+lead.textContent = "连接本机标签服务。地址和 Token 在这里手工填写。";
+heading.append(title, lead);
+head.append(heading);
 
 const status = document.createElement("p");
 status.className = "status";
@@ -12,6 +24,7 @@ status.className = "status";
 const baseUrl = document.createElement("input");
 baseUrl.type = "text";
 baseUrl.autocomplete = "off";
+baseUrl.spellcheck = false;
 
 const token = document.createElement("input");
 token.type = "password";
@@ -26,34 +39,48 @@ previewLimit.min = "1";
 previewLimit.max = "16";
 previewLimit.step = "1";
 
-function labeled(text: string, control: HTMLElement): HTMLLabelElement {
+function field(text: string, control: HTMLElement): HTMLLabelElement {
   const label = document.createElement("label");
-  label.append(text, control);
+  label.className = "field";
+  const name = document.createElement("span");
+  name.textContent = text;
+  label.append(name, control);
   return label;
 }
 
+const confirmLabel = document.createElement("label");
+confirmLabel.className = "check-row";
+confirmLabel.append(confirmUntag, "去标前确认");
+
 const form = document.createElement("form");
+form.className = "options-form";
 form.append(
-  labeled("服务地址", baseUrl),
-  labeled("Token", token),
-  labeled("去标前确认", confirmUntag),
-  labeled("预览条数", previewLimit),
+  field("服务地址", baseUrl),
+  field("Token", token),
+  confirmLabel,
+  field("预览条数", previewLimit),
 );
 
 const saveBtn = document.createElement("button");
 saveBtn.type = "submit";
+saveBtn.className = "btn btn-primary";
 saveBtn.textContent = "保存";
 
 const probeBtn = document.createElement("button");
 probeBtn.type = "button";
+probeBtn.className = "btn";
 probeBtn.textContent = "探测连接";
 
 const actions = document.createElement("div");
-actions.className = "actions";
-actions.append(saveBtn, probeBtn);
+actions.className = "actions-right";
+actions.append(probeBtn, saveBtn);
 
-form.append(actions);
-root.append(form, status);
+const footer = document.createElement("div");
+footer.className = "footer";
+footer.append(status, actions);
+
+form.append(footer);
+root.append(head, form);
 
 async function send<T>(payload: unknown): Promise<ElResponse<T>> {
   const result = (await chrome.runtime.sendMessage(payload)) as ElResponse<T> | undefined;

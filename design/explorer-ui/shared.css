@@ -149,6 +149,122 @@ a:hover {
   color: var(--muted);
 }
 
+/* —— Browser extension mock —— */
+.ext-frame {
+  width: min(720px, 100%);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 16px 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.ext-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ext-head h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.ext-lead {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.page-card {
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.page-card .title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.page-card .sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field input {
+  width: 100%;
+  height: 36px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  padding: 0 10px;
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--accent);
+}
+
+.query-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.query-row input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  padding: 0 10px;
+  outline: none;
+}
+
+.ext-frame .tag-chip-well {
+  min-height: 52px;
+  flex: none;
+  margin-bottom: 4px;
+}
+
+.ext-frame .result-list {
+  max-height: 240px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+}
+
+.ext-frame .result-list li {
+  cursor: default;
+}
+
+.ext-frame .footer .status.ok {
+  color: #8ee4c2;
+}
+
 /* —— Preview chrome (outside window) —— */
 .preview-page {
   min-height: 100vh;

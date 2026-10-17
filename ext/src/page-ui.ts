@@ -47,54 +47,113 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+function kindIconClass(kind: string): string {
+  if (kind === "url") return "webpage";
+  if (kind === "folder") return "folder";
+  return "file";
+}
+
+function displayTitle(hit: QueryHit): string {
+  const name = hit.displayName;
+  return name == null || name.trim() === "" ? hit.uri : name;
+}
+
 export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   root.replaceChildren();
+  root.className = "ext-shell";
+
+  const head = el("header", "ext-head");
+  const heading = el("h1");
+  heading.textContent = "EverythingLabeled";
+  head.append(heading);
+
+  const followBtn = document.createElement("button");
+  followBtn.type = "button";
+  followBtn.className = "btn";
+  followBtn.textContent = "跟随当前网页";
+  if (mode === "app") head.append(followBtn);
 
   const banner = el("p", "banner");
   banner.hidden = true;
-  const pageMeta = el("p", "page-meta");
+  const pageCard = el("section", "page-card surface");
+  const pageTitleEl = el("div", "title");
+  const pageUriEl = el("div", "sub");
+  pageCard.append(pageTitleEl, pageUriEl);
   const pageHint = el("p", "hint");
-  const chips = el("ul", "chips");
+
+  const tagsLabel = el("p", "section-label");
+  tagsLabel.textContent = "当前标签";
+  const chips = el("ul", "tag-chips surface");
+
+  const tagLabel = el("p", "section-label");
+  tagLabel.textContent = "打标";
+  const aliasField = el("div", "alias-field");
   const aliasInput = document.createElement("input");
   aliasInput.type = "text";
   aliasInput.autocomplete = "off";
-  const suggestList = el("ul", "suggest");
+  aliasInput.placeholder = "输入别名…";
+  aliasInput.setAttribute("aria-label", "别名");
+  const suggestList = el("ul", "suggest-list");
+  aliasField.append(aliasInput, suggestList);
+
   const tagBtn = document.createElement("button");
   tagBtn.type = "button";
+  tagBtn.className = "btn btn-primary";
   tagBtn.textContent = "打标";
   const untagBtn = document.createElement("button");
   untagBtn.type = "button";
+  untagBtn.className = "btn";
   untagBtn.textContent = "去标";
   const createMissing = document.createElement("input");
   createMissing.type = "checkbox";
   createMissing.checked = false;
   const createLabel = document.createElement("label");
-  createLabel.className = "inline";
+  createLabel.className = "check-row";
   createLabel.append(createMissing, "创建缺失标签");
+  const tagActions = el("div", "actions-right");
+  tagActions.append(untagBtn, tagBtn);
+  const tagFooter = el("div", "footer");
+  tagFooter.append(createLabel, tagActions);
+
+  const previewLabel = el("p", "section-label");
+  previewLabel.textContent = "预览";
   const qInput = document.createElement("input");
   qInput.type = "text";
   qInput.autocomplete = "off";
+  qInput.placeholder = "输入标签，回车预览";
+  qInput.setAttribute("aria-label", "预览查询");
   const previewBtn = document.createElement("button");
   previewBtn.type = "button";
+  previewBtn.className = "btn btn-primary";
   previewBtn.textContent = "预览";
-  const hitsList = el("ul", "hits");
-  const previewHint = el("p", "hint");
+  const queryRow = el("div", "query-row");
+  queryRow.append(qInput, previewBtn);
+  const hitsList = el("ul", "result-list surface");
+  const previewHint = el("p", "empty-hint");
   const openBtn = document.createElement("button");
   openBtn.type = "button";
+  openBtn.className = "btn btn-primary";
   openBtn.textContent = "打开所选";
   const status = el("p", "status");
-  const followBtn = document.createElement("button");
-  followBtn.type = "button";
-  followBtn.textContent = "跟随浏览器当前网页";
+  const previewFooter = el("div", "footer");
+  previewFooter.append(status, openBtn);
 
-  const tagRow = el("div", "row");
-  tagRow.append(aliasInput, tagBtn, untagBtn, createLabel);
-  const queryRow = el("div", "row");
-  queryRow.append(qInput, previewBtn, openBtn);
-
-  root.append(banner, pageMeta, pageHint);
-  if (mode === "app") root.append(followBtn);
-  root.append(chips, tagRow, suggestList, queryRow, previewHint, hitsList, status);
+  root.append(
+    head,
+    banner,
+    pageCard,
+    pageHint,
+    tagsLabel,
+    chips,
+    tagLabel,
+    aliasField,
+    tagFooter,
+    previewLabel,
+    queryRow,
+    previewHint,
+    hitsList,
+    previewFooter,
+  );
 
   let config: ElExtensionConfig | undefined;
   let pageUrl = "";
@@ -140,8 +199,9 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   function renderPage(): void {
     const title = truncate(pageTitle || "(无标题)");
     const uri = truncate(pageUrl);
-    pageMeta.textContent = `${title} ${uri}`;
-    pageMeta.title = `${pageTitle} ${pageUrl}`.trim();
+    pageTitleEl.textContent = title;
+    pageUriEl.textContent = uri;
+    pageCard.title = `${pageTitle} ${pageUrl}`.trim();
     const http = pageUrl !== "" && isHttpPage(pageUrl);
     if (!http) {
       pageHint.className = "hint page-warn";
@@ -162,7 +222,8 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       name.textContent = tagChipLabel(tag);
       const del = document.createElement("button");
       del.type = "button";
-      del.textContent = "删除";
+      del.textContent = "×";
+      del.setAttribute("aria-label", "删除");
       del.disabled = !tagActionsEnabled;
       del.addEventListener("click", () => {
         void untagById(tag.id);
@@ -189,21 +250,21 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       const openable = isOpenableUrl(hit.kind, hit.uri);
       box.disabled = !openable;
       box.checked = selected.has(hit.id);
+      if (box.checked) li.classList.add("selected");
       box.addEventListener("change", () => {
         if (box.checked) selected.add(hit.id);
         else selected.delete(hit.id);
+        li.classList.toggle("selected", box.checked);
       });
-      const label = document.createElement("label");
-      label.className = "inline";
-      const text = truncate(hit.displayName || hit.uri);
-      label.append(box, ` ${text}`);
-      if (!openable) {
-        const note = document.createElement("span");
-        note.className = "muted";
-        note.textContent = ` ${copy.cannotOpen}`;
-        label.append(note);
-      }
-      li.append(label);
+      const icon = el("span", `kind-icon ${kindIconClass(hit.kind)}`);
+      icon.setAttribute("aria-hidden", "true");
+      const text = el("div", "result-text");
+      const title = el("div", "title");
+      title.textContent = truncate(displayTitle(hit));
+      const sub = el("div", "sub");
+      sub.textContent = openable ? hit.uri : `${hit.uri} · ${copy.cannotOpen}`;
+      text.append(title, sub);
+      li.append(box, icon, text);
       hitsList.append(li);
     }
   }

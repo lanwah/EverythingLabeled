@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>浏览器扩展 · 打标 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>浏览器扩展 · 打标</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">填充态</button>
+      </div>
+    </div>
+
+    <div class="preview-stage">
+      <div class="ext-frame">
+        <div class="panel is-active" data-state="filled">
+          <header class="ext-head">
+            <h1>EverythingLabeled</h1>
+            <button type="button" class="btn">跟随当前网页</button>
+          </header>
+
+          <section class="page-card surface">
+            <div class="title only-empty">(无标题)</div>
+            <div class="sub only-empty">还没有跟随网页</div>
+            <div class="title only-filled">Anthropic 发布 Git 版本控制</div>
+            <div class="sub only-filled">https://mp.weixin.qq.com/s/example</div>
+          </section>
+
+          <p class="section-label">当前标签</p>
+          <div class="tag-chip-well surface">
+            <p class="empty-hint only-empty">当前网页还没有标签</p>
+            <div class="tag-chips only-filled">
+              <span class="chip">Anthropic <button type="button" aria-label="删除">×</button></span>
+              <span class="chip">版本控制 <button type="button" aria-label="删除">×</button></span>
+            </div>
+          </div>
+
+          <p class="section-label">打标</p>
+          <div class="alias-field">
+            <input type="text" placeholder="输入别名…" aria-label="别名" />
+          </div>
+          <div class="footer">
+            <label class="check-row">
+              <input type="checkbox" />
+              <span>创建缺失标签</span>
+            </label>
+            <div class="actions-right">
+              <button type="button" class="btn">去标</button>
+              <button type="button" class="btn btn-primary">打标</button>
+            </div>
+          </div>
+
+          <p class="section-label">预览</p>
+          <div class="query-row">
+            <input type="text" placeholder="输入标签，回车预览" aria-label="预览查询" value="" />
+            <button type="button" class="btn btn-primary">预览</button>
+          </div>
+          <p class="empty-hint only-empty">输入标签后，这里显示匹配结果</p>
+          <ul class="result-list only-filled">
+            <li class="selected">
+              <span class="kind-icon webpage" role="img" aria-label="网页"></span>
+              <div class="result-text">
+                <div class="title">EverythingLabeled</div>
+                <div class="sub">https://github.com/lanwah/EverythingLabeled</div>
+              </div>
+            </li>
+            <li>
+              <span class="kind-icon webpage" role="img" aria-label="网页"></span>
+              <div class="result-text">
+                <div class="title">Anthropic 发布 Git 版本控制</div>
+                <div class="sub">https://mp.weixin.qq.com/s/example</div>
+              </div>
+            </li>
+          </ul>
+          <div class="footer">
+            <span class="status only-empty">预览 0 条</span>
+            <span class="status only-filled">预览 2 条</span>
+            <button type="button" class="btn btn-primary">打开所选</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>
