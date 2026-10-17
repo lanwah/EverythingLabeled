@@ -114,3 +114,4 @@
 - 2026-10-17 — 浏览器扩展预览对齐 Find：芯片 + AND/OR、简拼 suggest 回车落芯片（`find-query`）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-17 — 浏览器扩展工具栏图标：纯色占位补「EL」字样（16/32/48/128），对齐 [审核 Q18](./confirmed/2026-10-06-browser-extension-impl-review.md)；版本 `0.1.1`
 - 2026-10-17 — 扩展打标：输入别名无精确匹配时自动勾选「创建缺失标签」（对齐 Explorer `CreateMissingSuggest`）→ [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-17 — 浏览器扩展图标改为与 Tray 相同的青绿标签：从 `ExplorerShared/Assets/el.ico` 抽出 16/32/48 PNG，128 由 256 帧缩放，替换 `ext/public/icons`
