@@ -1,13 +1,12 @@
 namespace EverythingLabeled.ExplorerHost;
 
-/// <summary>Pure helpers for Find result row title / subtitle / glyph.</summary>
+/// <summary>Pure helpers for Find result row title / subtitle / kind icon key.</summary>
 public static class FindResultPresentation
 {
-    // Segoe MDL2 Assets. E8B7 is named Folder but draws as a vertical page,
-    // so rows use FolderHorizontal (F12B) to separate folders from documents.
-    public const string GlyphFolder = "\uF12B";
-    public const string GlyphFile = "\uE8A5";
-    public const string GlyphUrl = "\uE774";
+    // DrawingImage keys in Themes/KindIcons.xaml (mirrors design/explorer-ui/icons).
+    public const string IconKeyFile = "KindIconFile";
+    public const string IconKeyFolder = "KindIconFolder";
+    public const string IconKeyUrl = "KindIconUrl";
 
     public static string Title(string uri, string? displayName)
     {
@@ -43,11 +42,11 @@ public static class FindResultPresentation
         return canOpen ? line : line + "  [" + Copy.CannotOpen + "]";
     }
 
-    public static string Glyph(string kind) =>
+    public static string IconKey(string kind) =>
         kind switch
         {
-            "folder" => GlyphFolder,
-            "url" => GlyphUrl,
-            _ => GlyphFile,
+            "folder" => IconKeyFolder,
+            "url" => IconKeyUrl,
+            _ => IconKeyFile,
         };
 }

@@ -984,7 +984,6 @@ public partial class MainWindow : Window
                         h.Kind,
                         FindResultPresentation.Title(h.Uri, h.DisplayName),
                         FindResultPresentation.Subtitle(h.Uri, h.Kind, canOpen),
-                        FindResultPresentation.Glyph(h.Kind),
                         action);
                 })
                 .ToList();
@@ -1147,6 +1146,5 @@ public partial class MainWindow : Window
         string Kind,
         string Title,
         string Subtitle,
-        string Glyph,
         OpenAction Action);
 }

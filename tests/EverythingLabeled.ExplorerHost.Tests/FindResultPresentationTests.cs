@@ -58,12 +58,12 @@ public sealed class FindResultPresentationTests
     }
 
     [Theory]
-    [InlineData("folder", "\uF12B")]
-    [InlineData("file", "\uE8A5")]
-    [InlineData("url", "\uE774")]
-    [InlineData("other", "\uE8A5")]
-    public void Glyph_maps_kind(string kind, string expected)
+    [InlineData("folder", FindResultPresentation.IconKeyFolder)]
+    [InlineData("file", FindResultPresentation.IconKeyFile)]
+    [InlineData("url", FindResultPresentation.IconKeyUrl)]
+    [InlineData("other", FindResultPresentation.IconKeyFile)]
+    public void IconKey_maps_kind(string kind, string expected)
     {
-        Assert.Equal(expected, FindResultPresentation.Glyph(kind));
+        Assert.Equal(expected, FindResultPresentation.IconKey(kind));
     }
 }

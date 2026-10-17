@@ -105,3 +105,8 @@
 - 2026-10-17 — Find 结果列表文件夹图标改为 Segoe MDL2 `F12B`（横向文件夹）；`E8B7` 在本机画成竖页，与文件 `E8A5` 分不清
 - 2026-10-17 — 去标效果图：当前标签改为带 × 芯片，点叉号去除（未改 WPF）→ [untag.html](../design/explorer-ui/untag.html)
 - 2026-10-17 — 去标 WPF：当前标签改为带 × 芯片，点叉号去除（对齐效果图；规格 §5.3 / docs 同步）→ [untag.html](../design/explorer-ui/untag.html)
+- 2026-10-17 — 以公有仓库发布到 GitHub：https://github.com/lanwah/EverythingLabeled
+- 2026-10-17 — 按标签查找结果行对象图标设计稿：文件 / 文件夹 / 网页三枚 SVG，入口可预览 → [icons.html](../design/explorer-ui/icons.html)
+- 2026-10-17 — 网页图标改为整枚地球（去掉窗口框和十字经纬），仍用 `icons/webpage.svg`
+- 2026-10-17 — 对象图标预览改为内嵌 SVG mask：`file://` 下浏览器会拦截 CSS mask 加载旁边的 `.svg`，双击 HTML 也能看到图标
+- 2026-10-17 — Find 结果行 kind 图标落到 Host：`Themes/KindIcons.xaml` + `FindResultPresentation.IconKey`，对齐 design 三枚 SVG → [icons.html](../design/explorer-ui/icons.html)

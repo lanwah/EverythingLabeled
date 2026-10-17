@@ -4,13 +4,10 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线已齐；#8–#14、Tray Find（#101–#104）、Find UI（#105）已合入 `master`；本机稀疏包注册已修好（`0.1.8.0`/neutral）且**右键四菜单已恢复并带上图标**（2026-10-16/17；两层原因：打过期产物 + HKCU 经典菜单覆盖；图标：命令不给图标 + 包 Logo 是纯黑占位）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md) · [Tray](docs/explorer.md)
-- Find UX/UI：末词 suggest + 实时 preview、Enter 填联想或打开、Host 居中、↑↓ 切换联想或结果列表、失焦关闭；#105 深色无边框标题栏 + 芯片 + AND/OR（默认 AND）+ 自动聚焦 → [审核](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [视觉审核](plans/confirmed/2026-10-07-find-ui-polish-review.md)
-- Explorer Host 四页深色皮肤已落到 WPF（`Themes/HostDark.xaml`；打标/去标/看标签对齐 Find；别名联想浮动 Popup；缺失别名自动勾选「创建缺失标签」）；去标单选「当前标签」为带 × 芯片、点叉号去除 → [design/explorer-ui/untag.html](design/explorer-ui/untag.html)
-- Tray Find 热键：#101–#104 已合入 `master`；本机手工验收通过（2026-10-17：`Alt+L`/托盘菜单、单实例、热键配置）→ [规格](plans/2026-10-07-tray-find-hotkey.md) · [docs/explorer.md](docs/explorer.md)
-- 图标：托盘与 exe 用青绿标签形 `el.ico`（16–256）；右键四项各带青绿 `#2EC4B6` 字形图标（`ElTag/ElUntag/ElTags/ElFind.ico`，`GetIcon` 返绝对路径，字形由 [scripts/make-explorer-icons.ps1](scripts/make-explorer-icons.ps1) 生成）；Find 结果行文件夹用 `F12B`（MDL2 的 `E8B7` 画成竖页，和文件分不开）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md)
-- 稀疏包重新注册：清单提到 `0.1.8.0` / `neutral`，改用 [scripts/register-explorer.ps1](scripts/register-explorer.ps1) 一键注册（#109 回滚后 `bin` 里的旧清单曾被打进包，导致右键菜单不出现）→ [docs/explorer.md](docs/explorer.md)
-- Explorer 本机手工验收通过（2026-10-17）：右键四项青绿字形图标、Host 打标/去标/看标签深色皮肤（浮动联想、缺失别名自动勾选创建缺失）→ [验收清单](docs/explorer.md)
+- v1 设计基线与 #8–#14 / Tray / Find UI 已合入 `master` → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
+- Explorer / Tray 本机验收通过（2026-10-17）：稀疏包 `0.1.8.0` 右键四菜单青绿图标、Host 四页深色皮肤（打标/去标芯片、别名联想）、Tray `Alt+L` → [docs/explorer.md](docs/explorer.md) · [菜单图标](plans/2026-10-17-explorer-menu-icons.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
+- Find：末词 suggest + 实时 preview、芯片 + AND/OR、无边框深色标题栏；结果行文件/文件夹/网页图标已落到 Host（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [图标预览](design/explorer-ui/icons.html) · [docs/explorer.md](docs/explorer.md)
+- 公有仓库已发布：https://github.com/lanwah/EverythingLabeled（`master` 已推送）
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)

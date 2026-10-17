@@ -931,15 +931,28 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="{Binding Glyph}"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="18"
-                                       Foreground="{StaticResource HostMutedBrush}"
+                            <Rectangle Grid.Column="0"
+                                       Width="18"
+                                       Height="18"
                                        VerticalAlignment="Center"
                                        Margin="4,0,14,0"
-                                       Width="22"
-                                       TextAlignment="Center" />
+                                       SnapsToDevicePixels="True">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush Stretch="Uniform"
+                                                ImageSource="{Binding Kind, Converter={x:Static local:KindIconConverter.Instance}}" />
+                                </Rectangle.OpacityMask>
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Fill" Value="{StaticResource HostMutedBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                         Value="True">
+                                                <Setter Property="Fill" Value="{StaticResource HostAccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Title}"
                                            FontSize="14"
