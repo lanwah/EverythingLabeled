@@ -349,6 +349,26 @@
             </Setter>
         </Style>
 
+        <DataTemplate x:Key="RemovableAliasChipTemplate">
+            <Border Background="{StaticResource HostChipBrush}"
+                    CornerRadius="4"
+                    Padding="8,4"
+                    Margin="0,0,8,8">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Display}"
+                               Foreground="{StaticResource HostOnAccentBrush}"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+                    <Button Style="{StaticResource FindChipRemoveStyle}"
+                            Content="×"
+                            Tag="{Binding Alias}"
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="OnCurrentTagChipRemove" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
         <Style x:Key="HostChipItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,8,8" />
@@ -483,15 +503,44 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0"
                        Style="{StaticResource HostSectionLabelStyle}"
                        Text="{x:Static local:Copy.PathsSectionLabel}" />
             <ListBox x:Name="TagPathList"
                      Grid.Row="1"
+                     MinHeight="72"
                      Style="{StaticResource HostSurfaceListStyle}"
                      ItemContainerStyle="{StaticResource HostPathItemStyle}" />
-            <Grid Grid.Row="2" Margin="0,10,0,0">
+            <DockPanel x:Name="TagCurrentTagPanel"
+                       Grid.Row="2"
+                       MaxHeight="160"
+                       Margin="0,10,0,0"
+                       Visibility="Collapsed">
+                <TextBlock DockPanel.Dock="Top"
+                           Style="{StaticResource HostSectionLabelStyle}"
+                           Text="{x:Static local:Copy.UntagTagListHint}" />
+                <Border Background="{StaticResource HostInputBgBrush}"
+                        BorderBrush="{StaticResource HostBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Focusable="False">
+                        <ItemsControl x:Name="TagCurrentTagList"
+                                      ItemTemplate="{StaticResource RemovableAliasChipTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </DockPanel>
+            <Grid Grid.Row="3" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -590,11 +639,11 @@
                 </Grid>
             </Grid>
             <CheckBox x:Name="CreateMissingCheck"
-                      Grid.Row="3"
+                      Grid.Row="4"
                       Margin="0,10,0,0"
                       Style="{StaticResource HostCheckBoxStyle}"
                       Content="{x:Static local:Copy.CreateMissingLabel}" />
-            <DockPanel Grid.Row="4" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
+            <DockPanel Grid.Row="5" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
                 <Button x:Name="TagCancelButton"
                         Style="{StaticResource FindClearButtonStyle}"
                         MinWidth="72"
@@ -646,33 +695,13 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
                                       Focusable="False">
-                            <ItemsControl x:Name="UntagTagList">
+                            <ItemsControl x:Name="UntagTagList"
+                                          ItemTemplate="{StaticResource RemovableAliasChipTemplate}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel Orientation="Horizontal" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource HostChipBrush}"
-                                                CornerRadius="4"
-                                                Padding="8,4"
-                                                Margin="0,0,8,8">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Display}"
-                                                           Foreground="{StaticResource HostOnAccentBrush}"
-                                                           FontSize="13"
-                                                           VerticalAlignment="Center" />
-                                                <Button Style="{StaticResource FindChipRemoveStyle}"
-                                                        Content="×"
-                                                        Tag="{Binding Alias}"
-                                                        Margin="6,0,0,0"
-                                                        VerticalAlignment="Center"
-                                                        Click="OnUntagChipRemove" />
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>

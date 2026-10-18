@@ -116,3 +116,4 @@
 - 2026-10-17 — 扩展打标：输入别名无精确匹配时自动勾选「创建缺失标签」（对齐 Explorer `CreateMissingSuggest`）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-17 — 浏览器扩展图标改为与 Tray 相同的青绿标签：从 `ExplorerShared/Assets/el.ico` 抽出 16/32/48 PNG，128 由 256 帧缩放，替换 `ext/public/icons`
 - 2026-10-18 — 打标/去标/看标签标题栏 × 改为 `Close`；Find 仍 `Hide` 保活（共用按钮此前一律走 `HideFind`，非 Find 直接返回）
+- 2026-10-18 — 打标单选在目标路径与别名之间显示当前标签，点 × 走去标（多选不显示）→ [tag.html](../design/explorer-ui/tag.html) · [规格 §5.3](./2026-09-27-explorer-integration.md)

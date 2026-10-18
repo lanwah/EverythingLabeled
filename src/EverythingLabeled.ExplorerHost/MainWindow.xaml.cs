@@ -74,7 +74,7 @@ public partial class MainWindow : Window
 
         ApplyBanner(ctx.Banner);
         ShowMode(_mode);
-        if (_mode is HostMode.Tags or HostMode.Untag)
+        if (_mode is HostMode.Tags or HostMode.Untag or HostMode.Tag)
             _ = LoadResourceTagsAsync();
     }
 
@@ -346,7 +346,7 @@ public partial class MainWindow : Window
 
         FillPathLists();
         ApplyBusinessEnabled();
-        UpdateUntagTagListVisibility();
+        UpdateCurrentTagListVisibility();
         ApplyHostChrome(mode);
         CloseAliasSuggestPopups();
 
@@ -369,11 +369,16 @@ public partial class MainWindow : Window
             FocusFindQuery();
     }
 
-    private void UpdateUntagTagListVisibility()
+    private void UpdateCurrentTagListVisibility()
     {
-        var show = _mode == HostMode.Untag && UntagClickDelete.IsEnabled(IncludedUris().Count);
-        UntagTagListPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        if (!show)
+        var count = IncludedUris().Count;
+        var showTag = _mode == HostMode.Tag && UntagClickDelete.ShowsPanel(HostMode.Tag, count);
+        var showUntag = _mode == HostMode.Untag && UntagClickDelete.ShowsPanel(HostMode.Untag, count);
+        TagCurrentTagPanel.Visibility = showTag ? Visibility.Visible : Visibility.Collapsed;
+        UntagTagListPanel.Visibility = showUntag ? Visibility.Visible : Visibility.Collapsed;
+        if (!showTag)
+            TagCurrentTagList.ItemsSource = null;
+        if (!showUntag)
             UntagTagList.ItemsSource = null;
     }
 
@@ -401,6 +406,7 @@ public partial class MainWindow : Window
         TagSubmitButton.IsEnabled = on;
         UntagAliasBox.IsEnabled = on;
         UntagSuggestList.IsEnabled = on;
+        TagCurrentTagList.IsEnabled = on;
         UntagTagList.IsEnabled = on;
         UntagSubmitButton.IsEnabled = on;
         TagsTagList.IsEnabled = on;
@@ -425,6 +431,7 @@ public partial class MainWindow : Window
         TagSubmitButton.IsEnabled = on;
         UntagAliasBox.IsEnabled = on;
         UntagSuggestList.IsEnabled = on;
+        TagCurrentTagList.IsEnabled = on;
         UntagTagList.IsEnabled = on;
         UntagSubmitButton.IsEnabled = on;
         SwitchToTagButton.IsEnabled = on;
@@ -467,9 +474,10 @@ public partial class MainWindow : Window
 
     private async Task LoadResourceTagsAsync()
     {
+        TagCurrentTagList.ItemsSource = null;
         UntagTagList.ItemsSource = null;
         TagsTagList.ItemsSource = null;
-        UpdateUntagTagListVisibility();
+        UpdateCurrentTagListVisibility();
 
         if (!_businessEnabled || _ctx.Api is null)
             return;
@@ -488,7 +496,9 @@ public partial class MainWindow : Window
             }
 
             var rows = FlattenAliases(result.Data!.Items);
-            if (_mode == HostMode.Untag && UntagClickDelete.IsEnabled(uris.Count))
+            if (UntagClickDelete.ShowsPanel(HostMode.Tag, uris.Count))
+                TagCurrentTagList.ItemsSource = rows;
+            if (UntagClickDelete.ShowsPanel(HostMode.Untag, uris.Count))
                 UntagTagList.ItemsSource = rows;
             TagsTagList.ItemsSource = rows;
         }
@@ -750,6 +760,8 @@ public partial class MainWindow : Window
         StatusText.Text = _tagBatchStatusUntilEdit;
         _tagHadAliasDraft = false;
         TagAliasBox.Focus();
+        if (summary.Success > 0 && UntagClickDelete.ShowsPanel(HostMode.Tag, IncludedUris().Count))
+            await LoadResourceTagsAsync().ConfigureAwait(true);
     }
 
     private string? ResolveTagAliasForSubmit()
@@ -778,7 +790,9 @@ public partial class MainWindow : Window
         if (_batchCts is not null || !_businessEnabled)
             return;
 
-        await SubmitUntagAsync(alias).ConfigureAwait(true);
+        if (!await SubmitUntagAsync(alias).ConfigureAwait(true))
+            return;
+
         _tagAppliedAliases.Remove(alias);
         UpdateTagAliasPlaceholder();
         RefreshTagAliasStatus();
@@ -810,23 +824,23 @@ public partial class MainWindow : Window
     private async void OnUntagSubmit(object sender, RoutedEventArgs e) =>
         await SubmitUntagAsync(SuggestQuery.Normalize(UntagAliasBox.Text)).ConfigureAwait(true);
 
-    private async Task SubmitUntagAsync(string? alias)
+    private async Task<bool> SubmitUntagAsync(string? alias)
     {
         if (alias is null)
         {
             StatusText.Text = Copy.EmptyAlias;
-            return;
+            return false;
         }
 
         var uris = IncludedUris();
         if (uris.Count == 0)
         {
             StatusText.Text = Copy.NoIncludedPaths;
-            return;
+            return false;
         }
 
         if (_ctx.Api is null || _ctx.Config is null || !_businessEnabled)
-            return;
+            return false;
 
         if (_ctx.Config.ConfirmUntag)
         {
@@ -836,10 +850,10 @@ public partial class MainWindow : Window
                 MessageBoxButton.OKCancel,
                 MessageBoxImage.Question);
             if (confirm != MessageBoxResult.OK)
-                return;
+                return false;
         }
 
-        await RunBatchAsync(
+        var summary = await RunBatchAsync(
             ct => BatchTagOps.UntagAsync(
                 _ctx.Api,
                 uris,
@@ -847,8 +861,10 @@ public partial class MainWindow : Window
                 _ctx.Config.MaxConcurrency,
                 ct)).ConfigureAwait(true);
 
-        if (_mode == HostMode.Untag && UntagClickDelete.IsEnabled(uris.Count))
+        if (UntagClickDelete.ShowsPanel(_mode, uris.Count))
             await LoadResourceTagsAsync().ConfigureAwait(true);
+
+        return summary.Success > 0;
     }
 
     private async Task<BatchSummary> RunBatchAsync(Func<CancellationToken, Task<BatchSummary>> run)
@@ -881,22 +897,32 @@ public partial class MainWindow : Window
 
     private void OnBatchCancel(object sender, RoutedEventArgs e) => _batchCts?.Cancel();
 
-    private async void OnUntagChipRemove(object sender, RoutedEventArgs e)
+    private async void OnCurrentTagChipRemove(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: string alias })
             return;
-        if (!UntagClickDelete.IsEnabled(IncludedUris().Count))
+        if (!UntagClickDelete.ShowsPanel(_mode, IncludedUris().Count))
             return;
         if (_batchCts is not null || !_businessEnabled)
             return;
 
-        UntagAliasBox.Text = alias;
-        await SubmitUntagAsync(alias).ConfigureAwait(true);
+        if (_mode == HostMode.Untag)
+            UntagAliasBox.Text = alias;
+
+        if (!await SubmitUntagAsync(alias).ConfigureAwait(true))
+            return;
+
+        if (_mode != HostMode.Tag || !_tagAppliedAliases.Remove(alias))
+            return;
+
+        UpdateTagAliasPlaceholder();
+        RefreshTagAliasStatus();
     }
 
     private void OnSwitchToTag(object sender, RoutedEventArgs e)
     {
         ShowMode(HostMode.Tag);
+        _ = LoadResourceTagsAsync();
     }
 
     private void OnSwitchToUntag(object sender, RoutedEventArgs e)

@@ -44,6 +44,18 @@
               <li class="only-filled">D:\Projects\Other\EverythingLabeled\docs\explorer.md</li>
             </ul>
 
+            <div style="margin-top:10px">
+              <p class="section-label">当前标签（点叉号去除）</p>
+              <div class="surface tag-chip-well" id="current-tags">
+                <p class="empty-hint only-empty" id="tags-empty">暂无标签</p>
+                <div class="tag-chips only-filled" id="current-tag-chips">
+                  <span class="chip">工作 <button type="button" aria-label="去除 工作">×</button></span>
+                  <span class="chip">React <button type="button" aria-label="去除 React">×</button></span>
+                  <span class="chip">nis-app <button type="button" aria-label="去除 nis-app">×</button></span>
+                </div>
+              </div>
+            </div>
+
             <div class="alias-row">
               <label for="alias-input">别名</label>
               <div class="alias-field">
@@ -78,5 +90,26 @@
   </div>
   <script src="preview.js"></script>
   <script src="tag.js"></script>
+  <script>
+    (function () {
+      const well = document.getElementById("current-tags");
+      const chips = document.getElementById("current-tag-chips");
+      if (!well || !chips) return;
+
+      chips.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button || !chips.contains(button)) return;
+        const chip = button.closest(".chip");
+        if (!chip) return;
+        chip.remove();
+        if (chips.querySelector(".chip")) return;
+        const hint = document.createElement("p");
+        hint.className = "empty-hint";
+        hint.textContent = "暂无标签";
+        chips.hidden = true;
+        well.appendChild(hint);
+      });
+    })();
+  </script>
 </body>
 </html>
