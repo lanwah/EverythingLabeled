@@ -7,7 +7,7 @@
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray 本机验收通过（2026-10-17）：稀疏包 `0.1.8.0` 右键四菜单青绿图标、Host 四页深色皮肤（打标/去标芯片、别名联想）、Tray `Alt+L` → [docs/explorer.md](docs/explorer.md) · [菜单图标](plans/2026-10-17-explorer-menu-icons.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find：末词 suggest + 实时 preview、芯片 + AND/OR、无边框深色标题栏；结果行文件/文件夹/网页图标已落到 Host（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md) · [图标预览](design/explorer-ui/icons.html) · [docs/explorer.md](docs/explorer.md)
-- Find 关窗/失焦改为 Hide 保活（Mutex/管道不释放）；`Alt+L` 再开走管道 Activate。登录后第一次仍是冷启动 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [审核 §I](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
+- Find 关窗/失焦改为 Hide 保活（Mutex/管道不释放）；`Alt+L` 再开走管道 Activate。打标/去标/看标签标题栏关闭改为真正 `Close`（此前与 Find 共用 `HideFind`，非 Find 模式直接返回，点 × 无反应）。登录后第一次 Find 仍是冷启动 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [审核 §I](plans/confirmed/2026-10-07-tray-find-hotkey-review.md)
 - 浏览器扩展：预览芯片 + AND/OR；打标无精确别名时自动勾选「创建缺失标签」（对齐 Explorer Host）；工具栏图标与 Tray 共用青绿标签（`el.ico` 的 16/32/48，128 由 256 帧缩放）→ [docs/browser-extension.md](docs/browser-extension.md)
 
 ## 关键决策

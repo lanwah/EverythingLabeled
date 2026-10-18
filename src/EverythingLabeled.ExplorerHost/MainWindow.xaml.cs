@@ -294,7 +294,13 @@ public partial class MainWindow : Window
     private void OnFindMaximize(object sender, RoutedEventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
-    private void OnFindClose(object sender, RoutedEventArgs e) => HideFind();
+    private void OnFindClose(object sender, RoutedEventArgs e)
+    {
+        if (_mode == HostMode.Find)
+            HideFind();
+        else
+            Close();
+    }
 
     private static class NativeMethods
     {
