@@ -128,3 +128,4 @@
 - 2026-10-19 — 修复扩展 `options`/`page-ui` 误用未定义 `send`（应为 `sendToBackground`），设置页保存与打标/去标不再 ReferenceError
 - 2026-10-19 — 扩展 `onMessage` 改回 `return true` + `sendResponse`（勿 return Promise），修复 Popup/设置「扩展后台无响应」
 - 2026-10-19 — 管理标签底部「N 个标签」包进 `.footer`，与列表拉开间距（对齐 design mock）
+- 2026-10-19 — 扩展打标 suggest 默认选中首项，支持 ↑/↓ 与 Enter 直接打标（抽取 `suggest-nav`，预览共用）→ [docs/browser-extension.md](../docs/browser-extension.md)

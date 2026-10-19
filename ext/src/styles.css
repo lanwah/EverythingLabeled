@@ -235,6 +235,7 @@ body.options .ext-shell {
 }
 
 .suggest-list li.selected,
+.suggest-list li.selected button,
 .suggest-list button:hover {
   background: var(--row-hover);
 }

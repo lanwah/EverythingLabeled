@@ -7,8 +7,8 @@
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（首次仍冷启动）→ [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find：末词 suggest + 实时 preview、芯片 + AND/OR、结果行 kind 图标（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
-- 浏览器扩展 0.1.2：预览芯片 + AND/OR、管理标签（拼首/`NameInitials`）；`onMessage` 用 `return true`+`sendResponse`；设置/打标去标走 `sendToBackground` → [docs/browser-extension.md](docs/browser-extension.md)
-- 管理标签：Explorer 右键 + Host `library`；扩展 `library.html`；Service `POST /v1/tags/rename`；列表每页 50；扩展底部计数已有间距 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)
+- 浏览器扩展 0.1.2：预览芯片 + AND/OR；打标 suggest 默认首项 + ↑/↓/Enter 打标（`suggest-nav`）；管理标签（拼首/`library.html`/底部计数间距）；`onMessage` 用 `return true`+`sendResponse` → [docs/browser-extension.md](docs/browser-extension.md)
+- 管理标签：Explorer 右键 + Host `library`；Service `POST /v1/tags/rename`；列表每页 50 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -40,4 +40,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机验收：扩展「重新加载」后确认管理标签底部「N 个标签」与列表有间隙；拼首筛选与 Popup/设置仍正常 → [docs/browser-extension.md](docs/browser-extension.md)
+本机验收：扩展重新 `npm run build` 并「重新加载」后，Popup 打标联想默认高亮第一项，↑/↓ 切换，Enter 直接打标 → [docs/browser-extension.md](docs/browser-extension.md)

@@ -5,8 +5,6 @@ import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
 import {
   composePreviewQuery,
-  nextDownIndex,
-  nextUpIndex,
   normalizeQueryToken,
   tryAddPreviewTag,
 } from "./find-query";
@@ -15,6 +13,14 @@ import { sendToBackground } from "./runtime-message";
 import { pickFollowTab } from "./follow-tab";
 import { openOrFocusExtensionPage } from "./open-extension-page";
 import { decideOpen, defaultSelectedIds } from "./open-rules";
+import {
+  emptySuggestNav,
+  moveSuggestNav,
+  renderSuggestList,
+  selectedSuggestAlias,
+  suggestNavFromRows,
+  type SuggestNavState,
+} from "./suggest-nav";
 import { isHttpPage, isOpenableUrl } from "./uri";
 import { formatUiError } from "./ui-error";
 
@@ -102,6 +108,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   aliasInput.autocomplete = "off";
   aliasInput.placeholder = "输入别名…";
   aliasInput.setAttribute("aria-label", "别名");
+  aliasInput.setAttribute("aria-autocomplete", "list");
   const suggestList = el("ul", "suggest-list");
   aliasField.append(aliasInput, suggestList);
 
@@ -201,9 +208,10 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let previewTags: string[] = [];
   let previewUseOr = false;
   let previewRequestId = 0;
-  let suggestRequestId = 0;
-  let suggestRows: { alias: string; label: string }[] = [];
-  let suggestIndex = -1;
+  let tagSuggestRequestId = 0;
+  let tagSuggest: SuggestNavState = emptySuggestNav();
+  let previewSuggestRequestId = 0;
+  let previewSuggestNav: SuggestNavState = emptySuggestNav();
 
   function previewStatusText(): string {
     return `预览 ${previewCount} 条`;
@@ -394,7 +402,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       return;
     }
     aliasInput.value = "";
-    suggestList.replaceChildren();
+    clearTagSuggest();
     setStatus(previewStatusText());
     await refreshTags();
   }
@@ -415,40 +423,53 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       return;
     }
     aliasInput.value = "";
-    suggestList.replaceChildren();
+    clearTagSuggest();
     createMissing.checked = false;
     setStatus(previewStatusText());
     await refreshTags();
   }
 
+  function clearTagSuggest(): void {
+    tagSuggestRequestId += 1;
+    tagSuggest = emptySuggestNav();
+    suggestList.replaceChildren();
+  }
+
+  function paintTagSuggest(): void {
+    renderSuggestList(suggestList, tagSuggest, (alias) => {
+      aliasInput.value = alias;
+      clearTagSuggest();
+      createMissing.checked = false;
+    });
+  }
+
   const runSuggest = debounce(() => {
     void (async () => {
+      const requestId = ++tagSuggestRequestId;
       const q = normalizeQueryToken(aliasInput.value);
       if (q == null) {
-        suggestList.replaceChildren();
+        clearTagSuggest();
         createMissing.checked = false;
         return;
       }
       const result = await sendToBackground<SuggestItem[]>({ type: "suggest", q });
-      suggestList.replaceChildren();
-      if (!result.ok) return;
+      if (requestId !== tagSuggestRequestId) return;
+      if (!result.ok) {
+        tagSuggest = emptySuggestNav();
+        suggestList.replaceChildren();
+        return;
+      }
       createMissing.checked = shouldCheckCreateMissing(
         q,
         result.data.map((item) => item.alias),
       );
-      for (const item of result.data) {
-        const li = document.createElement("li");
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = item.alias;
-        btn.addEventListener("click", () => {
-          aliasInput.value = item.alias;
-          suggestList.replaceChildren();
-          createMissing.checked = false;
-        });
-        li.append(btn);
-        suggestList.append(li);
-      }
+      tagSuggest = suggestNavFromRows(
+        result.data.map((item) => ({
+          alias: item.alias,
+          label: suggestRowLabel(item),
+        })),
+      );
+      paintTagSuggest();
     })();
   }, SUGGEST_MS);
 
@@ -456,10 +477,22 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     runSuggest();
   });
   aliasInput.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter") {
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      if (tagSuggest.rows.length === 0) return;
+      tagSuggest = moveSuggestNav(tagSuggest, ev.key === "ArrowDown");
+      paintTagSuggest();
       ev.preventDefault();
-      void tagCurrent();
+      return;
     }
+    if (ev.key !== "Enter") return;
+    ev.preventDefault();
+    const fromSuggest = selectedSuggestAlias(tagSuggest);
+    if (fromSuggest !== undefined) {
+      aliasInput.value = fromSuggest;
+      clearTagSuggest();
+      createMissing.checked = false;
+    }
+    void tagCurrent();
   });
   tagBtn.addEventListener("click", () => {
     void tagCurrent();
@@ -469,28 +502,15 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   });
 
   function clearPreviewSuggest(): void {
-    suggestRequestId += 1;
-    suggestRows = [];
-    suggestIndex = -1;
+    previewSuggestRequestId += 1;
+    previewSuggestNav = emptySuggestNav();
     previewSuggest.replaceChildren();
   }
 
-  function renderPreviewSuggest(): void {
-    previewSuggest.replaceChildren();
-    suggestRows.forEach((row, index) => {
-      const li = document.createElement("li");
-      if (index === suggestIndex) li.className = "selected";
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = row.label;
-      btn.addEventListener("click", () => {
-        commitPreviewTag(row.alias);
-      });
-      li.append(btn);
-      previewSuggest.append(li);
+  function paintPreviewSuggest(): void {
+    renderSuggestList(previewSuggest, previewSuggestNav, (alias) => {
+      commitPreviewTag(alias);
     });
-    const selected = previewSuggest.querySelector("li.selected");
-    selected?.scrollIntoView({ block: "nearest" });
   }
 
   function renderPreviewChips(): void {
@@ -554,36 +574,28 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   const runPreviewSuggest = debounce(() => {
     void (async () => {
-      const requestId = ++suggestRequestId;
+      const requestId = ++previewSuggestRequestId;
       const q = normalizeQueryToken(qInput.value);
       if (q == null) {
         clearPreviewSuggest();
         return;
       }
       const result = await sendToBackground<SuggestItem[]>({ type: "suggest", q });
-      if (requestId !== suggestRequestId) return;
+      if (requestId !== previewSuggestRequestId) return;
       if (!result.ok) {
-        suggestRows = [];
-        suggestIndex = -1;
+        previewSuggestNav = emptySuggestNav();
         previewSuggest.replaceChildren();
         return;
       }
-      suggestRows = result.data.map((item) => ({
-        alias: item.alias,
-        label: suggestRowLabel(item),
-      }));
-      suggestIndex = suggestRows.length > 0 ? 0 : -1;
-      renderPreviewSuggest();
+      previewSuggestNav = suggestNavFromRows(
+        result.data.map((item) => ({
+          alias: item.alias,
+          label: suggestRowLabel(item),
+        })),
+      );
+      paintPreviewSuggest();
     })();
   }, SUGGEST_MS);
-
-  function moveSuggest(down: boolean): void {
-    if (suggestRows.length === 0) return;
-    suggestIndex = down
-      ? nextDownIndex(suggestIndex, suggestRows.length)
-      : nextUpIndex(suggestIndex, suggestRows.length);
-    renderPreviewSuggest();
-  }
 
   function setPreviewUseOr(useOr: boolean): void {
     if (useOr === previewUseOr) return;
@@ -605,16 +617,17 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       return;
     }
     if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-      if (suggestRows.length === 0) return;
-      moveSuggest(ev.key === "ArrowDown");
+      if (previewSuggestNav.rows.length === 0) return;
+      previewSuggestNav = moveSuggestNav(previewSuggestNav, ev.key === "ArrowDown");
+      paintPreviewSuggest();
       ev.preventDefault();
       return;
     }
     if (ev.key !== "Enter") return;
     ev.preventDefault();
-    if (suggestRows.length > 0 && normalizeQueryToken(qInput.value) != null) {
-      const row = suggestRows[suggestIndex] ?? suggestRows[0];
-      if (row !== undefined) commitPreviewTag(row.alias);
+    const fromSuggest = selectedSuggestAlias(previewSuggestNav);
+    if (fromSuggest !== undefined && normalizeQueryToken(qInput.value) != null) {
+      commitPreviewTag(fromSuggest);
       return;
     }
     const draft = normalizeQueryToken(qInput.value);
