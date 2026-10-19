@@ -61,4 +61,10 @@ public sealed class FindHostIpcTests
     {
         Assert.Equal("Activate\n", FindHostIpc.ActivateLine);
     }
+
+    [Fact]
+    public void WindowForeground_zero_hwnd_returns_false()
+    {
+        Assert.False(WindowForeground.TryBringToForeground(IntPtr.Zero));
+    }
 }

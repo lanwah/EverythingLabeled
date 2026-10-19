@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
-- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（首次仍冷启动）→ [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
+- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）→ [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find：末词 suggest + 实时 preview、芯片 + AND/OR、结果行 kind 图标（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
 - 浏览器扩展 0.1.2：预览芯片 + AND/OR；打标 suggest 默认首项 + ↑/↓/Enter 打标（`suggest-nav`）；管理标签（拼首/`library.html`/底部计数间距）；`onMessage` 用 `return true`+`sendResponse` → [docs/browser-extension.md](docs/browser-extension.md)
 - 管理标签：Explorer 右键 + Host `library`；Service `POST /v1/tags/rename`；列表每页 50 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)

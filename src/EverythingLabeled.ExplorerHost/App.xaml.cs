@@ -30,7 +30,7 @@ public partial class App : Application
             if (!FindSingleInstance.TryAcquire(
                     mutexName,
                     pipeName,
-                    () => _mainWindow?.ActivateFromIpc(),
+                    () => _mainWindow?.ActivateFromIpc() ?? 0,
                     out var findInstance))
             {
                 FindHostIpc.TrySendActivate(pipeName, TimeSpan.FromSeconds(1));

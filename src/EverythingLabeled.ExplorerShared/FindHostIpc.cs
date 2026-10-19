@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Pipes;
 using System.Text;
 
@@ -24,25 +25,52 @@ public static class FindHostIpc
         return string.IsNullOrWhiteSpace(overrideName) ? DefaultPipeName : overrideName;
     }
 
-    /// <summary>连接命名管道并写 ActivateLine；成功 true。超时/失败 false。</summary>
-    public static bool TrySendActivate(string pipeName, TimeSpan timeout)
+    /// <summary>
+    /// Connect, write ActivateLine, read HWND reply; optionally bring that window to the foreground.
+    /// Returns true when the activate round-trip succeeds.
+    /// </summary>
+    public static bool TrySendActivate(
+        string pipeName,
+        TimeSpan timeout,
+        bool bringToForeground = true)
     {
         try
         {
+            // Caller (Tray after hotkey) typically holds foreground rights; grant Host as well.
+            WindowForeground.AllowSetForegroundAny();
+
             using var client = new NamedPipeClientStream(
                 ".",
                 pipeName,
-                PipeDirection.Out,
+                PipeDirection.InOut,
                 PipeOptions.None);
             var ms = timeout.TotalMilliseconds;
             var timeoutMs = ms <= 0 ? 1 : (ms >= int.MaxValue ? int.MaxValue : (int)ms);
             client.Connect(timeoutMs);
-            using var writer = new StreamWriter(client, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+
+            using var writer = new StreamWriter(client, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), leaveOpen: true)
             {
                 AutoFlush = true,
                 NewLine = "\n",
             };
             writer.Write(ActivateLine);
+
+            using var reader = new StreamReader(
+                client,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                detectEncodingFromByteOrderMarks: false,
+                bufferSize: 256,
+                leaveOpen: true);
+            var line = reader.ReadLine();
+            if (line is null)
+                return false;
+
+            if (!long.TryParse(line.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var hwndVal))
+                return true;
+
+            if (bringToForeground && hwndVal != 0)
+                WindowForeground.TryBringToForeground(new IntPtr(hwndVal));
+
             return true;
         }
         catch

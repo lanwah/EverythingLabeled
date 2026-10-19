@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -8,13 +9,13 @@ public sealed class FindSingleInstance : IDisposable
 {
     private readonly Mutex _mutex;
     private readonly string _pipeName;
-    private readonly Action _onActivate;
+    private readonly Func<nint> _onActivate;
     private readonly SynchronizationContext? _syncContext;
     private readonly CancellationTokenSource _cts = new();
     private readonly Thread _pipeThread;
     private bool _disposed;
 
-    private FindSingleInstance(Mutex mutex, string pipeName, Action onActivate)
+    private FindSingleInstance(Mutex mutex, string pipeName, Func<nint> onActivate)
     {
         _mutex = mutex;
         _pipeName = pipeName;
@@ -31,7 +32,7 @@ public sealed class FindSingleInstance : IDisposable
     public static bool TryAcquire(
         string mutexName,
         string pipeName,
-        Action onActivate,
+        Func<nint> onActivate,
         out FindSingleInstance? instance)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(mutexName);
@@ -94,7 +95,7 @@ public sealed class FindSingleInstance : IDisposable
             {
                 server = new NamedPipeServerStream(
                     _pipeName,
-                    PipeDirection.In,
+                    PipeDirection.InOut,
                     maxNumberOfServerInstances: 1,
                     PipeTransmissionMode.Byte,
                     PipeOptions.Asynchronous);
@@ -111,7 +112,18 @@ public sealed class FindSingleInstance : IDisposable
                     leaveOpen: true);
                 var line = reader.ReadLine();
                 if (line is not null && string.Equals(line.TrimEnd(), "Activate", StringComparison.Ordinal))
-                    InvokeOnActivate();
+                {
+                    var hwnd = InvokeOnActivate();
+                    using var writer = new StreamWriter(
+                        server,
+                        new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                        leaveOpen: true)
+                    {
+                        AutoFlush = true,
+                        NewLine = "\n",
+                    };
+                    writer.WriteLine(hwnd.ToString(CultureInfo.InvariantCulture));
+                }
             }
             catch (OperationCanceledException)
             {
@@ -136,31 +148,35 @@ public sealed class FindSingleInstance : IDisposable
         }
     }
 
-    private void InvokeOnActivate()
+    private nint InvokeOnActivate()
     {
+        nint hwnd = 0;
         if (_syncContext is not null)
         {
-            _syncContext.Post(_ =>
-            {
-                try
+            // Send (not Post): client waits for HWND after Show/Activate completes.
+            _syncContext.Send(
+                _ =>
                 {
-                    _onActivate();
-                }
-                catch
-                {
-                    // ignore UI activation failures
-                }
-            }, null);
-            return;
+                    try
+                    {
+                        hwnd = _onActivate();
+                    }
+                    catch
+                    {
+                        // ignore UI activation failures
+                    }
+                },
+                null);
+            return hwnd;
         }
 
         try
         {
-            _onActivate();
+            return _onActivate();
         }
         catch
         {
-            // ignore
+            return 0;
         }
     }
 }

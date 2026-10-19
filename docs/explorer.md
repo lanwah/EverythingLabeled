@@ -34,7 +34,7 @@ Explorer 相关工程须 **Windows x64**（`net8.0-windows`）。
 
 | 方向 | 含义 |
 |---|---|
-| **Shared ← Host / Command / Tray** | 三者都 `ProjectReference` Shared。Shared **不**引用另外三者；只提供 paths-file 约定与 `FindHostIpc`（Mutex + 命名管道 `Activate\n`）。 |
+| **Shared ← Host / Command / Tray** | 三者都 `ProjectReference` Shared。Shared **不**引用另外三者；只提供 paths-file 约定、`FindHostIpc`（Mutex + 命名管道 `Activate\n` → HWND 回写）与 `WindowForeground`（跨进程抢前台）。 |
 | **Host ← Command / Tray（构建）** | Command、Tray 的 csproj **引用 Host**，以便先编 Host，再把 Host **整输出目录**拷到各自 `bin\...\`（同目录须有 `EverythingLabeled.ExplorerHost.exe`）。这是部署耦合，不是业务库引用。 |
 | **Host → Client / Shared** | Host 唯一承载业务与 HTTP：依赖 `EverythingLabeled.Client`（Bearer → Service）与 Shared；**不**依赖 Command / Tray。 |
 | **Command → Shared**（运行时） | 菜单 DLL 写 `--paths-file` 后即发即忘启动**同目录** Host；不做 HTTP、不读 token、不等待 Host 退出。 |
@@ -212,7 +212,7 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
 - 默认热键 `Alt+L`（config `findHotkey`；空串/`none` 关热键；改 JSON 后重启 Tray）；菜单仍可「打开查找」。
 - HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）；`runAtStartup` 默认 true，托盘可勾选切换。
 - 首次需手动启动一次 Tray（本切片无安装器自动拉起）。
-- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`；关窗/失焦 **Hide** 保活，再按热键毫秒级 Activate；退出 Tray **不**杀已开 Host。
+- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`（服务端回写 HWND；Tray 在热键上下文 `AllowSetForegroundWindow` + `SetForegroundWindow`）；关窗/失焦 **Hide** 保活，再按热键毫秒级 Activate；退出 Tray **不**杀已开 Host。
 
 ```powershell
 dotnet run --project src/EverythingLabeled.Tray

@@ -129,3 +129,5 @@
 - 2026-10-19 — 扩展 `onMessage` 改回 `return true` + `sendResponse`（勿 return Promise），修复 Popup/设置「扩展后台无响应」
 - 2026-10-19 — 管理标签底部「N 个标签」包进 `.footer`，与列表拉开间距（对齐 design mock）
 - 2026-10-19 — 扩展打标 suggest 默认选中首项，支持 ↑/↓ 与 Enter 直接打标（抽取 `suggest-nav`，预览共用）→ [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-19 — 修复 Alt+L 偶发只 Show 不抢前台：管道回写 HWND，Tray `AllowSetForegroundWindow` + 抢前台，Host `AttachThreadInput` 兜底 → [Tray 规格](./2026-10-07-tray-find-hotkey.md)
+- 2026-10-19 — 本机验收 Find 抢前台：Debug Tray 下 `Alt+L` 从 Notepad 抢焦 8/8

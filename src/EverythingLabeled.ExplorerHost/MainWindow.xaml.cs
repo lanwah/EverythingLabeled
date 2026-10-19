@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -7,6 +6,7 @@ using System.Windows.Interop;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using EverythingLabeled.Client;
+using EverythingLabeled.ExplorerShared;
 
 namespace EverythingLabeled.ExplorerHost;
 
@@ -128,8 +128,11 @@ public partial class MainWindow : Window
         Hide();
     }
 
-    public void ActivateFromIpc()
+    /// <summary>Show/restore Find and return HWND for the caller (Tray) to steal foreground.</summary>
+    public nint ActivateFromIpc()
     {
+        nint hwnd = 0;
+
         void ActivateCore()
         {
             _findActivation++;
@@ -139,7 +142,7 @@ public partial class MainWindow : Window
             Show();
             Activate();
 
-            // Brief Topmost flip helps some foreground races; ignore failures.
+            // Brief Topmost flip helps some Z-order races; ignore failures.
             var wasTopmost = Topmost;
             try
             {
@@ -151,16 +154,11 @@ public partial class MainWindow : Window
                 // ignore
             }
 
-            try
-            {
-                var helper = new WindowInteropHelper(this);
-                if (helper.Handle != IntPtr.Zero)
-                    _ = NativeMethods.SetForegroundWindow(helper.Handle);
-            }
-            catch
-            {
-                // Best-effort; taskbar flash is acceptable.
-            }
+            var helper = new WindowInteropHelper(this);
+            helper.EnsureHandle();
+            hwnd = helper.Handle;
+            if (hwnd != 0)
+                WindowForeground.TryBringToForeground(hwnd);
 
             FocusFindQuery();
         }
@@ -169,6 +167,8 @@ public partial class MainWindow : Window
             ActivateCore();
         else
             Dispatcher.Invoke(ActivateCore);
+
+        return hwnd;
     }
 
     private void FocusFindQuery()
@@ -300,13 +300,6 @@ public partial class MainWindow : Window
             HideFind();
         else
             Close();
-    }
-
-    private static class NativeMethods
-    {
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 
     private void ApplyBanner(string? banner)

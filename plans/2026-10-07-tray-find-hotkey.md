@@ -89,9 +89,9 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 **所有** Find 入口统一单实例（热键 / 托盘 / 右键 / CLI）。
 
 1. `--mode find` 抢 Mutex（默认 `Local\EverythingLabeled.FindHost`；测试可覆盖如 `EL_FIND_MUTEX_NAME`）。
-2. **抢到**：显示窗口；命名管道（默认名与规格钉死，如 `EverythingLabeled.FindHost`）；收到单行 `Activate\n` → 若最小化则 Restore，再**尽力**前置（失败则任务栏闪烁，不视为 P0）。
+2. **抢到**：显示窗口；命名管道（默认名与规格钉死，如 `EverythingLabeled.FindHost`）；收到单行 `Activate\n` → 若最小化则 Restore，Show/Activate，并向客户端回写 HWND。
 3. **未抢到**：发 `Activate` 后本进程退出。
-4. Tray：先 Activate；失败再 `Process.Start` 同目录 Host。热键/菜单**首次立即**；约 **300ms** 内连按合并（不延迟首击）。
+4. Tray：先 `AllowSetForegroundWindow`，再 Activate；读回 HWND 后由 **Tray**（持有热键前台权限）调用 `SetForegroundWindow`（Host 侧 `AttachThreadInput` 兜底）。失败再 `Process.Start` 同目录 Host，并短轮询 `MainWindowHandle` 前置。热键/菜单**首次立即**；约 **300ms** 内连按合并（不延迟首击）。
 5. **关 Find 窗 / 失焦** = **Hide**（进程与 Mutex/管道保持）；下次热键/菜单走管道 Activate（毫秒级）。仅进程真正退出时才释放 Mutex。
 
 管道仅本用户 Local；不做提权跨完整性级别。
@@ -105,7 +105,7 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 | Host.exe 找不到 | 气泡「无法启动查找」；Tray 不崩 |
 | config 缺失 | 热键/自启用默认；Tray 可跑 |
 | 自启写注册表失败 | 勾选回滚 + 短提示 |
-| 前置窗口失败 | 尽力而为；任务栏闪烁可接受 |
+| 前置窗口失败 | Tray+Host 双端尽力抢前台；仍失败时可能任务栏闪烁（少见） |
 
 ## 8. 测试与验收
 

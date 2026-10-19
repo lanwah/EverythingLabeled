@@ -11,12 +11,12 @@ public sealed class FindSingleInstanceTests
         var mutexName = @"Local\EL.FindSingle." + Guid.NewGuid().ToString("N");
         var pipeName = "EL.FindSingle.Pipe." + Guid.NewGuid().ToString("N");
 
-        Assert.True(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => { }, out var first));
+        Assert.True(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => 0, out var first));
         Assert.NotNull(first);
 
         try
         {
-            Assert.False(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => { }, out var second));
+            Assert.False(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => 0, out var second));
             Assert.Null(second);
         }
         finally
@@ -24,19 +24,28 @@ public sealed class FindSingleInstanceTests
             first!.Dispose();
         }
 
-        Assert.True(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => { }, out var third));
+        Assert.True(FindSingleInstance.TryAcquire(mutexName, pipeName, static () => 0, out var third));
         Assert.NotNull(third);
         third!.Dispose();
     }
 
     [Fact]
-    public void TryAcquire_pipe_activate_invokes_callback()
+    public void TryAcquire_pipe_activate_invokes_callback_and_returns_hwnd()
     {
         var mutexName = @"Local\EL.FindSingle.Act." + Guid.NewGuid().ToString("N");
         var pipeName = "EL.FindSingle.ActPipe." + Guid.NewGuid().ToString("N");
         using var signaled = new ManualResetEventSlim(false);
+        const nint expectedHwnd = 42;
 
-        Assert.True(FindSingleInstance.TryAcquire(mutexName, pipeName, () => signaled.Set(), out var instance));
+        Assert.True(FindSingleInstance.TryAcquire(
+            mutexName,
+            pipeName,
+            () =>
+            {
+                signaled.Set();
+                return expectedHwnd;
+            },
+            out var instance));
         Assert.NotNull(instance);
 
         try
@@ -47,7 +56,7 @@ public sealed class FindSingleInstanceTests
             var sent = false;
             for (var i = 0; i < 20 && !sent; i++)
             {
-                sent = FindHostIpc.TrySendActivate(pipeName, TimeSpan.FromMilliseconds(200));
+                sent = FindHostIpc.TrySendActivate(pipeName, TimeSpan.FromMilliseconds(200), bringToForeground: false);
                 if (!sent)
                     Thread.Sleep(50);
             }
