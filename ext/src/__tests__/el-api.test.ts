@@ -298,6 +298,36 @@ describe("createElApi", () => {
     expect(result).toEqual({ ok: true, data: [hit], message: null });
   });
 
+  it("lists tags with q and maps items/total", async () => {
+    const tag = {
+      id: "t1",
+      name: "工具",
+      namespace: null,
+      aliases: ["工具"],
+    };
+    const { fetch, calls } = scriptedFetch(() =>
+      ok({ items: [tag], offset: 0, limit: 50, total: 1 }),
+    );
+    const api = createElApi({ fetch });
+    const result = await api.listTags(BASE, TOKEN, "g", 50, 0);
+
+    expect(calls[0]!.url).toBe(`${BASE}/v1/tags?limit=50&offset=0&q=g`);
+    expect(result).toEqual({
+      ok: true,
+      data: { items: [tag], total: 1 },
+      message: null,
+    });
+  });
+
+  it("omits q when listing without a filter", async () => {
+    const { fetch, calls } = scriptedFetch(() =>
+      ok({ items: [], offset: 0, limit: 50, total: 0 }),
+    );
+    const api = createElApi({ fetch });
+    await api.listTags(BASE, TOKEN, null, 50, 0);
+    expect(calls[0]!.url).toBe(`${BASE}/v1/tags?limit=50&offset=0`);
+  });
+
   it("POSTs tag JSON body with Content-Type", async () => {
     const body = buildTagBody({
       uri: URI,

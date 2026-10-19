@@ -71,7 +71,7 @@ public partial class App : Application
                 businessEnabled = true;
         }
 
-        if (launchArgs.Mode != HostMode.Find)
+        if (launchArgs.Mode is not HostMode.Find and not HostMode.Library)
         {
             IReadOnlyList<string> paths = string.IsNullOrWhiteSpace(launchArgs.PathsFilePath)
                 ? Array.Empty<string>()
@@ -79,6 +79,11 @@ public partial class App : Application
 
             selection = SelectionNormalizer.Normalize(paths, launchArgs.Mode);
             ApplySelectionGates(selection, launchArgs.Mode, ref banner, ref businessEnabled);
+        }
+        else if (!string.IsNullOrWhiteSpace(launchArgs.PathsFilePath))
+        {
+            // library / find 忽略 paths-file；若误传则读完删除，避免残留临时文件。
+            _ = PathsFile.ReadAndDelete(launchArgs.PathsFilePath!);
         }
 
         var ctx = new HostUiContext
@@ -91,6 +96,12 @@ public partial class App : Application
             BusinessEnabled = businessEnabled,
             Http = _http,
         };
+
+        if (launchArgs.Mode == HostMode.Library)
+        {
+            new LibraryWindow(ctx).Show();
+            return;
+        }
 
         _mainWindow = new MainWindow(ctx);
         if (_findInstance is not null)

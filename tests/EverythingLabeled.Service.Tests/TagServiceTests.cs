@@ -131,4 +131,50 @@ public sealed class TagServiceTests
             $"expected validation_failed or bad_request, got {r.Code}");
         Assert.Equal(created.Data.DataVersion, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task Rename_swaps_matching_alias_and_name_keeps_other_aliases()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var tags = fx.GetTagService();
+        var created = await tags.CreateAsync(
+            new CreateTagRequest("工做", null, null, ["工做", "work"]),
+            CancellationToken.None);
+        Assert.True(created.IsSuccess);
+
+        var renamed = await tags.RenameAsync(new RenameTagRequest("工做", "工作"), CancellationToken.None);
+        Assert.True(renamed.IsSuccess);
+        Assert.Equal("工作", renamed.Data!.Name);
+        Assert.Contains("工作", renamed.Data.Aliases);
+        Assert.Contains("work", renamed.Data.Aliases);
+        Assert.DoesNotContain("工做", renamed.Data.Aliases);
+        Assert.True(renamed.Data.DataVersion > created.Data!.DataVersion);
+    }
+
+    [Fact]
+    public async Task Rename_same_normalized_alias_does_not_bump()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var tags = fx.GetTagService();
+        var created = await tags.CreateAsync(new CreateTagRequest("Work", null, null, null), CancellationToken.None);
+        Assert.True(created.IsSuccess);
+
+        var renamed = await tags.RenameAsync(new RenameTagRequest("Work", "work"), CancellationToken.None);
+        Assert.True(renamed.IsSuccess);
+        Assert.Equal(created.Data!.DataVersion, renamed.Data!.DataVersion);
+        Assert.Equal(created.Data.DataVersion, await DatabaseInitializer.GetDataVersionAsync(fx.Db, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Rename_to_alias_owned_by_other_tag_is_conflict()
+    {
+        await using var fx = await SqliteServiceFixture.CreateAsync();
+        var tags = fx.GetTagService();
+        Assert.True((await tags.CreateAsync(new CreateTagRequest("甲", null, null, null), CancellationToken.None)).IsSuccess);
+        Assert.True((await tags.CreateAsync(new CreateTagRequest("乙", null, null, null), CancellationToken.None)).IsSuccess);
+
+        var r = await tags.RenameAsync(new RenameTagRequest("甲", "乙"), CancellationToken.None);
+        Assert.False(r.IsSuccess);
+        Assert.Equal(ErrorCodes.AliasConflict, r.Code);
+    }
 }

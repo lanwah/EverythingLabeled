@@ -32,6 +32,9 @@ function apiStub() {
     untag: vi.fn(),
     suggest: vi.fn(),
     preview: vi.fn(),
+    listTags: vi.fn(),
+    renameTag: vi.fn(),
+    deleteTag: vi.fn(),
   };
 }
 
@@ -380,6 +383,34 @@ describe("handleRequest suggest and preview", () => {
       code: "bad_request",
       message: "syntax",
       httpStatus: 400,
+    });
+  });
+});
+
+describe("handleRequest listTags", () => {
+  it("passes trimmed q and default paging", async () => {
+    const api = apiStub();
+    api.listTags.mockResolvedValue(ok({ items: [], total: 0 }));
+    await handleRequest({ type: "listTags", q: "  g" }, configured(api));
+    expect(api.listTags).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "g", 50, 0);
+  });
+
+  it("sends null q when blank so the service returns the full page", async () => {
+    const api = apiStub();
+    api.listTags.mockResolvedValue(ok({ items: [], total: 0 }));
+    await handleRequest({ type: "listTags", q: "   " }, configured(api));
+    expect(api.listTags).toHaveBeenCalledWith(GOOD_BASE, TOKEN, null, 50, 0);
+  });
+
+  it("never returns undefined for an unknown type", async () => {
+    const result = await handleRequest(
+      { type: "notARealType" } as never,
+      configured(),
+    );
+    expect(result).toEqual({
+      ok: false,
+      code: "bad_request",
+      message: "unknown request: notARealType",
     });
   });
 });

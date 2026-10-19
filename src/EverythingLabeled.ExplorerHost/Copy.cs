@@ -46,6 +46,32 @@ public static class Copy
     public const string WindowTitleUntag = "去标 — EverythingLabeled";
     public const string WindowTitleTags = "看标签 — EverythingLabeled";
     public const string WindowTitleFind = "按标签查找 — EverythingLabeled";
+    public const string WindowTitleLibrary = "管理标签 — EverythingLabeled";
+    public const string LibrarySearchPlaceholder = "按名称前缀或拼首筛选…";
+    public const string LibraryEmpty = "还没有标签";
+    public const string LibraryNoMatch = "没有匹配的标签";
+    public const string LibraryRename = "改名";
+    public const string LibraryDelete = "删除";
+    public const string LibrarySave = "保存";
+    public const string LibraryRenameHint = "文件和网页上的绑定仍留在这个标签上。只替换与名称相同的别名。";
+    public const string LibraryDeleteTitle = "删除标签";
+    public const string LibraryLoadFailed = "加载标签失败";
+    public const string LibraryRenameFailed = "改名失败";
+    public const string LibraryDeleteFailed = "删除失败";
+    public const string LibraryEmptyName = "请输入新名称";
+
+    public static string LibraryCount(int count) => $"{count} 个标签";
+
+    public static string LibraryExtraAliases(IEnumerable<string> aliases, string name)
+    {
+        var extras = aliases
+            .Where(a => !string.Equals(a, name, StringComparison.Ordinal))
+            .ToList();
+        return extras.Count == 0 ? string.Empty : "另有别名：" + string.Join("、", extras);
+    }
+
+    public static string LibraryDeleteConfirm(string name) =>
+        $"将删除标签「{name}」。所有文件和网页上的这个标签都会去掉，且不能撤销。";
 
     public static string ConfigInvalid(string configPath) =>
         $"配置无效或缺失。请检查：{configPath}（baseUrl 须为 http://127.0.0.1，且需配置 token）";

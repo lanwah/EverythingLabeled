@@ -38,9 +38,21 @@ public sealed class HostArgsParserTests
         Assert.False(string.IsNullOrWhiteSpace(error));
     }
 
+    [Fact]
+    public void TryParse_library_without_paths_file()
+    {
+        var ok = HostArgsParser.TryParse(["--mode", "library"], out var args, out var error);
+
+        Assert.True(ok);
+        Assert.Equal(string.Empty, error);
+        Assert.Equal(HostMode.Library, args.Mode);
+        Assert.Null(args.PathsFilePath);
+    }
+
     [Theory]
     [InlineData("untag", HostMode.Untag)]
     [InlineData("tags", HostMode.Tags)]
+    [InlineData("library", HostMode.Library)]
     [InlineData("TAG", HostMode.Tag)]
     public void TryParse_mode_case_insensitive(string mode, HostMode expected)
     {

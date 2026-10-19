@@ -6,6 +6,7 @@ public enum HostMode
     Untag,
     Tags,
     Find,
+    Library,
 }
 
 public sealed record HostLaunchArgs(HostMode Mode, string? PathsFilePath);
@@ -92,6 +93,12 @@ public static class HostArgsParser
         if (string.Equals(value, "find", StringComparison.OrdinalIgnoreCase))
         {
             mode = HostMode.Find;
+            return true;
+        }
+
+        if (string.Equals(value, "library", StringComparison.OrdinalIgnoreCase))
+        {
+            mode = HostMode.Library;
             return true;
         }
 

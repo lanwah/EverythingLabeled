@@ -7,6 +7,7 @@ export const copy = {
   serviceUnreachable: "服务未运行或地址错误",
   tokenInvalid: "token 无效",
   tokenMissing: "未配置 token",
+  backgroundNoResponse: "扩展后台无响应，请到扩展管理页点「重新加载」",
   previewIdle: "添加标签后，这里显示匹配结果",
   findQueryPlaceholder: "输入标签后按回车键…",
   findQueryContinue: "继续输入…",
@@ -21,4 +22,24 @@ export const copy = {
   saved: "已保存",
   probeHealthOk: "服务可达（未校验 token）",
   probeTokenOk: "服务可达，token 有效",
+  libraryTitle: "管理标签",
+  libraryLead: "改名称或删除标签。绑定留在原标签上，直到标签被删除。",
+  libraryEmpty: "还没有标签",
+  libraryNoMatch: "没有匹配的标签",
+  librarySearchPlaceholder: "按名称前缀或拼首筛选…",
+  libraryRename: "改名",
+  libraryDelete: "删除",
+  librarySave: "保存",
+  libraryCancel: "取消",
+  libraryBack: "返回本页标签",
+  libraryRenameHint: "文件和网页上的绑定仍留在这个标签上。只替换与名称相同的别名。",
+  libraryDeleteTitle: "删除标签",
+  libraryEmptyName: "请输入新名称",
+  libraryCount: (n: number) => `${n} 个标签`,
+  libraryExtraAliases: (aliases: string[], name: string) => {
+    const extras = aliases.filter((a) => a !== name);
+    return extras.length === 0 ? "" : `另有别名：${extras.join("、")}`;
+  },
+  libraryDeleteConfirm: (name: string) =>
+    `将删除标签「${name}」。所有文件和网页上的这个标签都会去掉，且不能撤销。`,
 } as const;

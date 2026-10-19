@@ -11,8 +11,9 @@ import {
   tryAddPreviewTag,
 } from "./find-query";
 import { suggestRowLabel, tagChipLabel } from "./labels";
-import type { ElResponse } from "./messages";
+import { sendToBackground } from "./runtime-message";
 import { pickFollowTab } from "./follow-tab";
+import { openOrFocusExtensionPage } from "./open-extension-page";
 import { decideOpen, defaultSelectedIds } from "./open-rules";
 import { isHttpPage, isOpenableUrl } from "./uri";
 import { formatUiError } from "./ui-error";
@@ -29,18 +30,6 @@ type PageSnapshot = {
 
 const SUGGEST_MS = 250;
 const TRUNCATE = 80;
-
-async function send<T>(payload: unknown): Promise<ElResponse<T>> {
-  const result = (await chrome.runtime.sendMessage(payload)) as ElResponse<T> | undefined;
-  if (result === undefined) {
-    return {
-      ok: false,
-      code: "internal_error",
-      message: chrome.runtime.lastError?.message ?? "no response",
-    };
-  }
-  return result;
-}
 
 function truncate(text: string): string {
   return text.length <= TRUNCATE ? text : `${text.slice(0, TRUNCATE - 1)}…`;
@@ -73,13 +62,21 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   const head = el("header", "ext-head");
   const heading = el("h1");
   heading.textContent = "EverythingLabeled";
-  head.append(heading);
-
+  const headActions = el("div", "actions-right");
+  const libraryLink = el("a", "btn");
+  libraryLink.href = chrome.runtime.getURL("library.html");
+  libraryLink.textContent = copy.libraryTitle;
+  libraryLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    void openOrFocusExtensionPage("library.html");
+  });
+  headActions.append(libraryLink);
   const followBtn = document.createElement("button");
   followBtn.type = "button";
   followBtn.className = "btn";
   followBtn.textContent = "跟随当前网页";
-  if (mode === "app") head.append(followBtn);
+  if (mode === "app") headActions.append(followBtn);
+  head.append(heading, headActions);
 
   const banner = el("p", "banner");
   banner.hidden = true;
@@ -343,7 +340,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     resetTagsState();
     if (!tagActionsEnabled || pageUrl === "") return;
     const uri = pageUrl;
-    const result = await send<PageTags>({ type: "getTags", uri });
+    const result = await sendToBackground<PageTags>({ type: "getTags", uri });
     if (requestId !== tagsRequestId) return;
     if (!result.ok) {
       resetTagsState();
@@ -378,7 +375,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   async function untagById(tagId: string): Promise<void> {
     if (!tagActionsEnabled) return;
     if (!(await confirmUntagIfNeeded())) return;
-    const result = await send({ type: "untagById", uri: pageUrl, tagId });
+    const result = await sendToBackground({ type: "untagById", uri: pageUrl, tagId });
     if (!result.ok) {
       showFailure(result);
       return;
@@ -391,7 +388,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     const alias = aliasInput.value.trim();
     if (!tagActionsEnabled || alias === "") return;
     if (!(await confirmUntagIfNeeded())) return;
-    const result = await send({ type: "untagByAlias", uri: pageUrl, alias });
+    const result = await sendToBackground({ type: "untagByAlias", uri: pageUrl, alias });
     if (!result.ok) {
       showFailure(result);
       return;
@@ -405,7 +402,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   async function tagCurrent(): Promise<void> {
     const alias = aliasInput.value.trim();
     if (!tagActionsEnabled || alias === "") return;
-    const result = await send({
+    const result = await sendToBackground({
       type: "tag",
       uri: pageUrl,
       alias,
@@ -432,7 +429,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
         createMissing.checked = false;
         return;
       }
-      const result = await send<SuggestItem[]>({ type: "suggest", q });
+      const result = await sendToBackground<SuggestItem[]>({ type: "suggest", q });
       suggestList.replaceChildren();
       if (!result.ok) return;
       createMissing.checked = shouldCheckCreateMissing(
@@ -546,7 +543,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showIdlePreview();
       return;
     }
-    const result = await send<QueryHit[]>({ type: "preview", q });
+    const result = await sendToBackground<QueryHit[]>({ type: "preview", q });
     if (requestId !== previewRequestId) return;
     if (!result.ok) {
       showFailure(result);
@@ -563,7 +560,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
         clearPreviewSuggest();
         return;
       }
-      const result = await send<SuggestItem[]>({ type: "suggest", q });
+      const result = await sendToBackground<SuggestItem[]>({ type: "suggest", q });
       if (requestId !== suggestRequestId) return;
       if (!result.ok) {
         suggestRows = [];
@@ -645,7 +642,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       setStatus(decision.reason === "none" ? copy.openNone : copy.openOverLimit, "err");
       return;
     }
-    const result = await send({ type: "openTabs", urls: decision.urls });
+    const result = await sendToBackground({ type: "openTabs", urls: decision.urls });
     if (!result.ok) {
       showFailure(result);
       return;
@@ -673,7 +670,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   });
 
   async function boot(): Promise<void> {
-    const cfg = await send<ElExtensionConfig>({ type: "getConfig" });
+    const cfg = await sendToBackground<ElExtensionConfig>({ type: "getConfig" });
     if (!cfg.ok) {
       showFailure(cfg);
       return;

@@ -475,6 +475,33 @@ a:hover {
   background: transparent;
 }
 
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+a.btn:hover {
+  text-decoration: none;
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: #c50f1f;
+}
+
+.btn-row {
+  min-width: 0;
+  padding: 4px 10px;
+}
+
 /* —— Find —— */
 .find-toolbar {
   display: flex;
@@ -1020,8 +1047,208 @@ a:hover {
   display: none !important;
 }
 
-.panel[data-state="filled"] .only-empty {
+.panel:not([data-state="empty"]) .only-empty {
   display: none !important;
+}
+
+.panel:not([data-state="rename"]) .only-rename {
+  display: none !important;
+}
+
+.panel[data-state="rename"] .hide-when-rename {
+  display: none !important;
+}
+
+.panel:not([data-state="delete"]) .only-delete {
+  display: none !important;
+}
+
+/* —— Tag library (Host + extension) —— */
+.preview-note {
+  width: 100%;
+  margin: -8px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.library-stage {
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.menu-mock {
+  width: max-content;
+  min-width: 168px;
+  max-width: 320px;
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.menu-mock p {
+  margin: 0;
+  padding: 6px 8px 4px;
+  color: #9a9a9a;
+  font-size: 11px;
+}
+
+.menu-mock button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+  color: #f3f3f3;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 4px;
+}
+
+.menu-mock button[aria-current="true"] {
+  background: #3d3d3d;
+}
+
+.library-search {
+  margin: 12px 6px 0;
+}
+
+.library-search input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.library-list {
+  list-style: none;
+  margin: 10px 6px 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.library-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.library-list li:last-child {
+  border-bottom: none;
+}
+
+.library-name {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.library-alias {
+  color: var(--muted);
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.library-list .actions-right {
+  flex-shrink: 0;
+}
+
+.library-edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--row-selected);
+}
+
+.library-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.library-edit-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+
+.library-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.window,
+.ext-frame {
+  position: relative;
+}
+
+.library-dialog {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 14, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.ext-frame .library-dialog {
+  border-radius: 14px;
+}
+
+.ext-frame .library-list,
+.ext-frame .empty-hint {
+  min-height: 220px;
+}
+
+.library-dialog-card {
+  width: min(380px, 100%);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.library-dialog-card h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.library-dialog-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.library-dialog-card .footer {
+  margin-top: 14px;
 }
 
 @media (prefers-reduced-motion: reduce) {

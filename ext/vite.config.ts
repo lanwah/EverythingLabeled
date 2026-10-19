@@ -50,6 +50,7 @@ export default defineConfig({
         popup: resolve(root, "src/popup.html"),
         options: resolve(root, "src/options.html"),
         app: resolve(root, "src/app.html"),
+        library: resolve(root, "src/library.html"),
       },
     },
   },

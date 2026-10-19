@@ -316,6 +316,22 @@ public sealed class ElToolsTests
         public Task<ElResult<SuggestPage>> SuggestAsync(string prefix, int limit, CancellationToken ct = default) =>
             Task.FromResult(ElResult<SuggestPage>.Ok(new SuggestPage([], 0, limit, 0)));
 
+        public Task<ElResult<TagsPage>> ListTagsAsync(
+            string? q,
+            int limit,
+            int offset,
+            CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<TagInfo>> RenameTagAsync(
+            string from,
+            string to,
+            CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<MetaData>> DeleteTagAsync(Guid id, CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
         public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default)
         {
             HealthCalls++;

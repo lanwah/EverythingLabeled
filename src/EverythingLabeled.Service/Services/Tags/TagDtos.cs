@@ -42,4 +42,6 @@ public sealed record CreateTagRequest(
 
 public sealed record PatchTagRequest(string? Name, string? Namespace, int? Seq);
 
+public sealed record RenameTagRequest(string? From, string? To);
+
 public sealed record AddAliasRequest(string? Alias);

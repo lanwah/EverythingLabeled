@@ -12,7 +12,7 @@
   <Identity
       Name="EverythingLabeled.ExplorerDev"
       Publisher="CN=EverythingLabeled-Dev"
-      Version="0.1.8.0"
+      Version="0.1.9.0"
       ProcessorArchitecture="neutral" />
 
   <Properties>
@@ -65,6 +65,10 @@
                   Id="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A04"
                   Path="EverythingLabeled.ExplorerCommand.comhost.dll"
                   ThreadingModel="STA" />
+              <com:Class
+                  Id="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A05"
+                  Path="EverythingLabeled.ExplorerCommand.comhost.dll"
+                  ThreadingModel="STA" />
             </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
@@ -75,15 +79,18 @@
               <desktop5:Verb Id="ElTag" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A01" />
               <desktop5:Verb Id="ElUntag" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A02" />
               <desktop5:Verb Id="ElTags" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A03" />
+              <desktop5:Verb Id="ElLibrary" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A05" />
               <desktop5:Verb Id="ElFind" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A04" />
             </desktop5:ItemType>
             <desktop5:ItemType Type="Directory">
               <desktop5:Verb Id="ElTagDir" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A01" />
               <desktop5:Verb Id="ElUntagDir" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A02" />
               <desktop5:Verb Id="ElTagsDir" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A03" />
+              <desktop5:Verb Id="ElLibraryDir" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A05" />
               <desktop5:Verb Id="ElFindDir" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A04" />
             </desktop5:ItemType>
             <desktop5:ItemType Type="Directory\Background">
+              <desktop5:Verb Id="ElLibraryBackground" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A05" />
               <desktop5:Verb Id="ElFindBackground" Clsid="6F3C8A21-9B4E-4D71-A2C8-1E5F0D8B7A04" />
             </desktop5:ItemType>
           </desktop4:FileExplorerContextMenus>

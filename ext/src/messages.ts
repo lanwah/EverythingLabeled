@@ -32,7 +32,10 @@ export type ElRequest =
   | { type: "untagById"; uri: string; tagId: string }
   | { type: "untagByAlias"; uri: string; alias: string }
   | { type: "suggest"; q: string }
-  | { type: "preview"; q: string };
+  | { type: "preview"; q: string }
+  | { type: "listTags"; q: string | null }
+  | { type: "renameTag"; from: string; to: string }
+  | { type: "deleteTag"; id: string };
 
 export type ElResponse<T = unknown> =
   | { ok: true; data: T; message: string | null }
@@ -182,6 +185,33 @@ export async function handleRequest(req: ElRequest, deps: Deps): Promise<ElRespo
       return toElResponse(
         await api.preview(cfg.baseUrl, cfg.token, req.q, cfg.previewLimit),
       );
+    }
+    case "listTags": {
+      const q = req.q;
+      const query = q == null || q.trim() === "" ? null : q.trim();
+      return toElResponse(await api.listTags(cfg.baseUrl, cfg.token, query, 50, 0));
+    }
+    case "renameTag": {
+      if (req.from.trim() === "" || req.to.trim() === "") {
+        return { ok: false, code: "bad_request", message: "from and to are required" };
+      }
+      return toElResponse(
+        await api.renameTag(cfg.baseUrl, cfg.token, req.from, req.to),
+      );
+    }
+    case "deleteTag": {
+      if (req.id.trim() === "") {
+        return { ok: false, code: "bad_request", message: "id is required" };
+      }
+      return toElResponse(await api.deleteTag(cfg.baseUrl, cfg.token, req.id));
+    }
+    default: {
+      const type = (req as { type?: unknown }).type;
+      return {
+        ok: false,
+        code: "bad_request",
+        message: typeof type === "string" ? `unknown request: ${type}` : "unknown request",
+      };
     }
   }
 }

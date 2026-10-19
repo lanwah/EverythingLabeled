@@ -110,6 +110,36 @@ public sealed class HttpElApi : IElApi
             authorize: true,
             ct);
 
+    public Task<ElResult<TagsPage>> ListTagsAsync(
+        string? q,
+        int limit,
+        int offset,
+        CancellationToken ct = default)
+    {
+        var path =
+            "v1/tags?limit=" + limit.ToString(CultureInfo.InvariantCulture)
+            + "&offset=" + offset.ToString(CultureInfo.InvariantCulture);
+        if (q is not null)
+            path += "&q=" + Uri.EscapeDataString(q);
+        return SendAsync<TagsPage>(HttpMethod.Get, path, body: null, authorize: true, ct);
+    }
+
+    public Task<ElResult<TagInfo>> RenameTagAsync(string from, string to, CancellationToken ct = default) =>
+        SendAsync<TagInfo>(
+            HttpMethod.Post,
+            "v1/tags/rename",
+            new { from, to },
+            authorize: true,
+            ct);
+
+    public Task<ElResult<MetaData>> DeleteTagAsync(Guid id, CancellationToken ct = default) =>
+        SendAsync<MetaData>(
+            HttpMethod.Delete,
+            "v1/tags/" + id.ToString("D", CultureInfo.InvariantCulture),
+            body: null,
+            authorize: true,
+            ct);
+
     public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
         SendAsync<HealthData>(HttpMethod.Get, "v1/health", body: null, authorize: false, ct);
 

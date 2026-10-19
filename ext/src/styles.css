@@ -521,3 +521,156 @@ button.link {
 button.link:hover {
   text-decoration: underline;
 }
+
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+a.btn:hover {
+  text-decoration: none;
+}
+
+.btn-row {
+  min-width: 0;
+  padding: 4px 10px;
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: #c50f1f;
+}
+
+.library-search {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.library-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  min-height: 220px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.library-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.library-list li:last-child {
+  border-bottom: none;
+}
+
+.library-name {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.library-alias {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.library-edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--row-selected);
+}
+
+.library-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.library-edit-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+}
+
+.library-hint,
+.library-error {
+  margin: 0;
+  font-size: 12px;
+}
+
+.library-hint {
+  color: var(--muted);
+}
+
+.library-error {
+  color: #ffb4b4;
+}
+
+.library-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 10, 14, 0.62);
+}
+
+.library-dialog[hidden] {
+  display: none !important;
+}
+
+.library-dialog-card {
+  width: min(380px, 100%);
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.library-dialog-card h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.library-dialog-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.library-dialog-card .footer {
+  margin-top: 14px;
+}

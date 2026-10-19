@@ -198,6 +198,58 @@ public sealed class HttpElApiTests
         Assert.True(r.IsSuccess);
     }
 
+    [Fact]
+    public async Task ListTags_includes_optional_q()
+    {
+        var api = CreateApi((req, _, _) =>
+        {
+            var query = req.RequestUri!.Query;
+            Assert.Contains("limit=50", query);
+            Assert.Contains("offset=0", query);
+            Assert.True(query.Contains("q=%E5%B7%A5") || query.Contains("q=工"));
+            return Ok("""{"items":[],"offset":0,"limit":50,"total":0}""");
+        });
+
+        var r = await api.ListTagsAsync("工", 50, 0);
+        Assert.True(r.IsSuccess);
+    }
+
+    [Fact]
+    public async Task RenameTag_posts_from_to()
+    {
+        var api = CreateApi((req, body, _) =>
+        {
+            Assert.Equal(HttpMethod.Post, req.Method);
+            Assert.Equal("http://127.0.0.1:5123/v1/tags/rename", req.RequestUri!.ToString());
+            using var doc = JsonDocument.Parse(body);
+            Assert.Equal("工做", doc.RootElement.GetProperty("from").GetString());
+            Assert.Equal("工作", doc.RootElement.GetProperty("to").GetString());
+            return Ok("""{"id":"11111111-1111-1111-1111-111111111111","name":"工作","namespace":null,"seq":null,"nameInitials":"gz","aliases":["工作"],"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z","revision":1}""");
+        });
+
+        var r = await api.RenameTagAsync("工做", "工作");
+        Assert.True(r.IsSuccess);
+        Assert.Equal("工作", r.Data!.Name);
+    }
+
+    [Fact]
+    public async Task DeleteTag_uses_guid_path()
+    {
+        var id = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var api = CreateApi((req, _, _) =>
+        {
+            Assert.Equal(HttpMethod.Delete, req.Method);
+            Assert.Equal(
+                "http://127.0.0.1:5123/v1/tags/22222222-2222-2222-2222-222222222222",
+                req.RequestUri!.ToString());
+            return Ok("""{"dataVersion":3}""");
+        });
+
+        var r = await api.DeleteTagAsync(id);
+        Assert.True(r.IsSuccess);
+        Assert.Equal(3, r.Data!.DataVersion);
+    }
+
     private static HttpElApi CreateApi(Func<HttpRequestMessage, string, int, HttpResponseMessage> script)
     {
         var handler = new ScriptedHandler(script);

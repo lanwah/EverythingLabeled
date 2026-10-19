@@ -58,6 +58,15 @@ public static class TagEndpoints
             await context.WriteAsync(await tags.CreateAsync(body, cancellationToken));
         });
 
+        app.MapPost("/v1/tags/rename", async (
+            RenameTagRequest body,
+            TagService tags,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            await context.WriteAsync(await tags.RenameAsync(body, cancellationToken));
+        });
+
         app.MapGet("/v1/tags/{id:guid}/neighbors", async (
             Guid id,
             HttpContext context,

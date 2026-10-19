@@ -339,6 +339,22 @@ public sealed class TagCommandsTests
         public Task<ElResult<SuggestPage>> SuggestAsync(string prefix, int limit, CancellationToken ct = default) =>
             throw new NotImplementedException();
 
+        public Task<ElResult<TagsPage>> ListTagsAsync(
+            string? q,
+            int limit,
+            int offset,
+            CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<TagInfo>> RenameTagAsync(
+            string from,
+            string to,
+            CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<ElResult<MetaData>> DeleteTagAsync(Guid id, CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
         public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
 

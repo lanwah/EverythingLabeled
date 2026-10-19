@@ -120,6 +120,24 @@ export function createElApi(deps: { fetch: typeof fetch }): {
   ): Promise<ElResult<unknown>>;
   suggest(baseUrl: string, token: string, q: string): Promise<ElResult<SuggestItem[]>>;
   preview(baseUrl: string, token: string, q: string, limit: number): Promise<ElResult<QueryHit[]>>;
+  listTags(
+    baseUrl: string,
+    token: string,
+    q: string | null,
+    limit: number,
+    offset: number,
+  ): Promise<ElResult<{ items: TagInfo[]; total: number }>>;
+  renameTag(
+    baseUrl: string,
+    token: string,
+    from: string,
+    to: string,
+  ): Promise<ElResult<TagInfo>>;
+  deleteTag(
+    baseUrl: string,
+    token: string,
+    id: string,
+  ): Promise<ElResult<{ dataVersion: number }>>;
 } {
   const send = <T>(relative: string, baseUrl: string, init: RequestInit) =>
     request<T>(deps.fetch, joinUrl(baseUrl, relative), init);
@@ -133,6 +151,9 @@ export function createElApi(deps: { fetch: typeof fetch }): {
       headers: headers(token, true),
       body: JSON.stringify(body),
     });
+
+  const authDelete = <T>(relative: string, baseUrl: string, token: string) =>
+    send<T>(relative, baseUrl, { method: "DELETE", headers: headers(token) });
 
   async function unwrapItems<T>(
     result: ElResult<{ items?: T[] }>,
@@ -201,6 +222,27 @@ export function createElApi(deps: { fetch: typeof fetch }): {
           token,
         ),
       );
+    },
+    async listTags(baseUrl, token, q, limit, offset) {
+      let relative = `v1/tags?limit=${limit}&offset=${offset}`;
+      if (q !== null) relative += `&q=${encodeURIComponent(q)}`;
+      const page = await authGet<{ items?: TagInfo[]; total?: number }>(
+        relative,
+        baseUrl,
+        token,
+      );
+      if (!page.ok) return page;
+      return {
+        ok: true,
+        data: { items: page.data.items ?? [], total: page.data.total ?? 0 },
+        message: page.message,
+      };
+    },
+    renameTag(baseUrl, token, from, to) {
+      return authPost("v1/tags/rename", baseUrl, token, { from, to });
+    },
+    deleteTag(baseUrl, token, id) {
+      return authDelete(`v1/tags/${encodeURIComponent(id)}`, baseUrl, token);
     },
   };
 }

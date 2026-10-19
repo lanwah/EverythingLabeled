@@ -1,0 +1,266 @@
+<Window x:Class="EverythingLabeled.ExplorerHost.LibraryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="管理标签 — EverythingLabeled"
+        Height="520"
+        Width="640"
+        MinHeight="360"
+        MinWidth="480"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource HostBgBrush}">
+    <Window.Resources>
+        <Style x:Key="LibCaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="LibCloseButton" TargetType="Button" BasedOn="{StaticResource LibCaptionButton}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource HostDangerBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="LibRowButton" TargetType="Button">
+            <Setter Property="MinWidth" Value="56" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HostBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="LibPrimaryButton" TargetType="Button" BasedOn="{StaticResource LibRowButton}">
+            <Setter Property="Background" Value="{StaticResource HostTealBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="LibDangerButton" TargetType="Button" BasedOn="{StaticResource LibRowButton}">
+            <Setter Property="Background" Value="{StaticResource HostDangerBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <DockPanel>
+            <Border DockPanel.Dock="Top"
+                    Height="36"
+                    Background="{StaticResource HostBgBrush}"
+                    MouseLeftButtonDown="OnCaptionMouseDown">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="&#xE8F1;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=Title}"
+                                   Foreground="{StaticResource HostFgBrush}"
+                                   FontSize="13"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource LibCaptionButton}" Content="─" Click="OnMinimize" />
+                        <Button Style="{StaticResource LibCaptionButton}" Content="□" Click="OnMaximize" />
+                        <Button Style="{StaticResource LibCloseButton}" Content="✕" Click="OnClose" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="BannerText"
+                       DockPanel.Dock="Top"
+                       Margin="16,8,16,0"
+                       Foreground="{StaticResource HostDangerBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="16,8,16,12">
+                <TextBlock x:Name="StatusText"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           FontSize="13"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+
+            <DockPanel Margin="16,12,16,0">
+                <Grid DockPanel.Dock="Top" Height="40">
+                    <TextBox x:Name="SearchBox"
+                             Padding="12,8"
+                             FontSize="14"
+                             Background="{StaticResource HostInputBgBrush}"
+                             Foreground="{StaticResource HostFgBrush}"
+                             CaretBrush="{StaticResource HostFgBrush}"
+                             BorderBrush="{StaticResource HostBorderBrush}"
+                             BorderThickness="1"
+                             TextChanged="OnSearchChanged" />
+                    <TextBlock x:Name="SearchPlaceholder"
+                               Text="按名称前缀或拼首筛选…"
+                               IsHitTestVisible="False"
+                               Margin="14,0,12,0"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource HostMutedBrush}"
+                               FontSize="14" />
+                </Grid>
+
+                <TextBlock x:Name="EmptyHint"
+                           Text="还没有标签"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           Visibility="Collapsed" />
+
+                <ListBox x:Name="TagList"
+                         Margin="0,10,0,0"
+                         Background="{StaticResource HostInputBgBrush}"
+                         BorderBrush="{StaticResource HostBorderBrush}"
+                         BorderThickness="1"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         HorizontalContentAlignment="Stretch">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border BorderBrush="{StaticResource HostBorderBrush}"
+                                                BorderThickness="0,0,0,1"
+                                                Background="Transparent"
+                                                Padding="12,10">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Visibility="{Binding DisplayVisibility}">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               Foreground="{StaticResource HostFgBrush}" />
+                                    <TextBlock Text="{Binding ExtraAliases}"
+                                               FontSize="12"
+                                               Foreground="{StaticResource HostMutedBrush}"
+                                               Visibility="{Binding ExtraAliasesVisibility}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding DisplayVisibility}">
+                                    <Button Content="改名"
+                                            Style="{StaticResource LibRowButton}"
+                                            Click="OnRenameClick"
+                                            Tag="{Binding}" />
+                                    <Button Content="删除"
+                                            Style="{StaticResource LibRowButton}"
+                                            Click="OnDeleteClick"
+                                            Tag="{Binding}" />
+                                </StackPanel>
+
+                                <StackPanel Visibility="{Binding EditVisibility}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                                            <Button Content="取消"
+                                                    Style="{StaticResource LibRowButton}"
+                                                    Click="OnRenameCancel"
+                                                    Tag="{Binding}" />
+                                            <Button Content="保存"
+                                                    Style="{StaticResource LibPrimaryButton}"
+                                                    Click="OnRenameSave"
+                                                    Tag="{Binding}" />
+                                        </StackPanel>
+                                        <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                                 Padding="8,6"
+                                                 FontSize="14"
+                                                 Background="{StaticResource HostBgBrush}"
+                                                 Foreground="{StaticResource HostFgBrush}"
+                                                 CaretBrush="{StaticResource HostFgBrush}"
+                                                 BorderBrush="{StaticResource HostAccentBrush}"
+                                                 BorderThickness="1" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding RenameHint}"
+                                               Margin="0,6,0,0"
+                                               FontSize="12"
+                                               Foreground="{StaticResource HostMutedBrush}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding EditError}"
+                                               Margin="0,4,0,0"
+                                               FontSize="12"
+                                               Foreground="{StaticResource HostDangerBrush}"
+                                               TextWrapping="Wrap"
+                                               Visibility="{Binding EditErrorVisibility}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </DockPanel>
+
+        <Grid x:Name="DeleteOverlay" Visibility="Collapsed" Background="#9E080A0E">
+            <Border Width="380"
+                    MaxWidth="380"
+                    Margin="24"
+                    Padding="16"
+                    Background="{StaticResource HostBgBrush}"
+                    BorderBrush="{StaticResource HostBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="删除标签"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource HostFgBrush}"
+                               Margin="0,0,0,8" />
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                        <Button Content="取消" Style="{StaticResource LibRowButton}" Click="OnDeleteCancel" />
+                        <Button Content="删除" Style="{StaticResource LibDangerButton}" Click="OnDeleteConfirm" />
+                    </StackPanel>
+                    <TextBlock x:Name="DeleteMessage"
+                               TextWrapping="Wrap"
+                               FontSize="13"
+                               Foreground="{StaticResource HostMutedBrush}" />
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

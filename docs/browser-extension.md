@@ -40,6 +40,10 @@ Options 页填写 `baseUrl` 与 `token`。可从 CLI / AppData 的 `config.json`
 
 别名框输入后走 suggest（250ms）。返回里没有与输入**大小写不敏感的精确别名**时，自动勾选「创建缺失标签」；仅有前缀命中也勾选。输入清空、或点选一条已有别名时取消勾选。提交仍读当前勾选状态。
 
+## 管理标签
+
+独立页面 `library.html`（与 `app.html` 各用一个标签页）。入口：网页右键「EverythingLabeled：管理标签」，或 Popup / 本页标签页的「管理标签」（页面内直接开标签页，不在 Popup 里导航）。可按名称前缀或拼首筛选、改名、删除；删除前确认。当前页芯片上的 × 仍只是去标，不删词库。
+
 ## 手工联调清单
 
 Service 已起、Options 已填好、扩展已加载后建议逐项确认：
@@ -50,4 +54,6 @@ Service 已起、Options 已填好、扩展已加载后建议逐项确认：
 - 去标前有确认
 - 预览打开有硬顶（超出则拒绝/提示，不无限开 tab）
 - 右键「EverythingLabeled：管理本页标签」走 `app.html`，并复用已有 tab（不重复堆叠）
-- 非 `http`/`https` 页相关操作禁用
+- 右键「EverythingLabeled：管理标签」走 `library.html`，与 `app.html` 分开复用 tab
+- Popup / 本页标签页「管理标签」在页面里直接 `tabs` 打开 `library.html`（复用已有；勿在 Popup 内导航，也不要经 SW 再开页）
+- 非 `http`/`https` 页打标 / 去标 / 看本页标签禁用；管理标签可在普通网页右键使用

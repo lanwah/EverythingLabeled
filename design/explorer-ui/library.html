@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>管理标签 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>管理标签</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">列表</button>
+        <button type="button" data-state="rename">改名</button>
+        <button type="button" data-state="delete">删除确认</button>
+      </div>
+      <p class="preview-note">入口：资源管理器右键 → EverythingLabeled → 管理标签。文件、文件夹、空白处都有。不读取选中路径。打标 / 去标芯片上的 × 仍只从当前路径摘掉。</p>
+    </div>
+
+    <div class="preview-stage library-stage">
+      <aside class="menu-mock" aria-label="右键子菜单示意">
+        <p>EverythingLabeled</p>
+        <button type="button">打标</button>
+        <button type="button">去标</button>
+        <button type="button">看标签</button>
+        <button type="button" aria-current="true">管理标签</button>
+        <button type="button">按标签查找</button>
+      </aside>
+
+      <div class="window" role="dialog" aria-label="管理标签">
+        <div class="caption">
+          <div class="caption-left">
+            <span class="caption-icon" aria-hidden="true">&#xE8F1;</span>
+            <span>管理标签 — EverythingLabeled</span>
+          </div>
+          <div class="caption-controls">
+            <button type="button" aria-label="最小化">─</button>
+            <button type="button" aria-label="最大化">□</button>
+            <button type="button" class="close" aria-label="关闭">✕</button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="panel is-active" data-state="filled">
+            <div class="library-search">
+              <input type="text" placeholder="按名称前缀或拼首筛选…" aria-label="筛选标签" readonly />
+            </div>
+
+            <p class="empty-hint only-empty">还没有标签</p>
+
+            <ul class="library-list only-filled">
+              <li class="hide-when-rename">
+                <span class="library-name">工做</span>
+                <span class="library-alias"></span>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">改名</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+              <li class="library-edit only-rename">
+                <div class="library-edit-row">
+                  <input type="text" value="工作" aria-label="新名称" />
+                  <button type="button" class="btn btn-row">取消</button>
+                  <button type="button" class="btn btn-primary btn-row">保存</button>
+                </div>
+                <p class="library-hint">文件和网页上的绑定仍留在这个标签上。只替换与名称相同的别名。</p>
+              </li>
+              <li>
+                <span class="library-name">工作</span>
+                <span class="library-alias"></span>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">改名</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+              <li>
+                <span class="library-name">React</span>
+                <span class="library-alias">另有别名：前端</span>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">改名</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+              <li>
+                <span class="library-name">nis-app</span>
+                <span class="library-alias"></span>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">改名</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+            </ul>
+
+            <div class="footer">
+              <span class="status only-empty">词库是空的</span>
+              <span class="status only-filled hide-when-rename">4 个标签</span>
+              <span class="status only-rename">改名后按保存</span>
+            </div>
+
+            <div class="library-dialog only-delete" role="alertdialog" aria-labelledby="delete-title">
+              <div class="library-dialog-card">
+                <h2 id="delete-title">删除标签</h2>
+                <p>将删除标签「工做」。所有文件和网页上的这个标签都会去掉，且不能撤销。</p>
+                <div class="footer">
+                  <span class="status"></span>
+                  <button type="button" class="btn">取消</button>
+                  <button type="button" class="btn btn-danger">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import { copy } from "./copy";
 import { DEFAULT_BASE_URL, type ElExtensionConfig } from "./config";
-import type { ElResponse } from "./messages";
+import { sendToBackground } from "./runtime-message";
 import { formatUiError } from "./ui-error";
 
 const root = document.getElementById("app")!;
@@ -85,18 +85,6 @@ footer.append(status, actions);
 form.append(footer);
 root.append(head, form);
 
-async function send<T>(payload: unknown): Promise<ElResponse<T>> {
-  const result = (await chrome.runtime.sendMessage(payload)) as ElResponse<T> | undefined;
-  if (result === undefined) {
-    return {
-      ok: false,
-      code: "internal_error",
-      message: chrome.runtime.lastError?.message ?? "no response",
-    };
-  }
-  return result;
-}
-
 function showOk(text: string): void {
   status.className = "status ok";
   status.textContent = text;
@@ -121,7 +109,7 @@ function fill(cfg: ElExtensionConfig): void {
 }
 
 async function load(): Promise<void> {
-  const result = await send<ElExtensionConfig>({ type: "getConfig" });
+  const result = await sendToBackground<ElExtensionConfig>({ type: "getConfig" });
   if (!result.ok) {
     showErr(formatUiError(result));
     return;
@@ -132,7 +120,7 @@ async function load(): Promise<void> {
 form.addEventListener("submit", (ev) => {
   ev.preventDefault();
   void (async () => {
-    const result = await send({
+    const result = await sendToBackground({
       type: "saveConfig",
       draft: {
         baseUrl: baseUrl.value,
@@ -151,7 +139,7 @@ form.addEventListener("submit", (ev) => {
 
 probeBtn.addEventListener("click", () => {
   void (async () => {
-    const result = await send<{ tokenChecked?: boolean }>({
+    const result = await sendToBackground<{ tokenChecked?: boolean }>({
       type: "probe",
       baseUrl: baseUrl.value,
       token: token.value,

@@ -225,6 +225,72 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         return ServiceResult<DataVersionDto>.Ok(new DataVersionDto(version));
     }
 
+    public async Task<ServiceResult<TagWriteDto>> RenameAsync(RenameTagRequest body, CancellationToken ct)
+    {
+        var rejected = RejectAliases<TagWriteDto>([body.From, body.To]);
+        if (rejected is not null)
+            return rejected;
+
+        var from = body.From!;
+        var to = body.To!;
+        var fromNorm = AliasRules.Normalize(from);
+        var toNorm = AliasRules.Normalize(to);
+
+        var resolved = await ResolveByAliasOrId(from, null, ct);
+        if (!resolved.IsSuccess)
+        {
+            return ServiceResult<TagWriteDto>.Fail(
+                resolved.Code!,
+                resolved.Message!,
+                resolved.Details);
+        }
+
+        var tag = await LoadTagAsync(resolved.Data!.Id, ct);
+        if (tag is null)
+            return NotFound<TagWriteDto>();
+
+        if (fromNorm == toNorm)
+        {
+            var current = await uow.CommitAsync(ct);
+            return ServiceResult<TagWriteDto>.Ok(ToWrite(tag, current));
+        }
+
+        var conflict = await AliasTakenAsync(to, ct, tag.Id);
+        if (conflict is not null)
+            return conflict;
+
+        var hasTo = tag.Aliases.Any(a => a.AliasNormalized == toNorm);
+        if (!hasTo)
+        {
+            tag.Aliases.Add(new TagAlias
+            {
+                TagId = tag.Id,
+                Alias = to,
+                AliasNormalized = toNorm,
+            });
+        }
+
+        var fromRow = tag.Aliases.FirstOrDefault(a => a.AliasNormalized == fromNorm);
+        if (fromRow is not null)
+            db.TagAliases.Remove(fromRow);
+
+        if (tag.Name == from)
+        {
+            if (await NameTakenAsync(tag.Namespace, to, tag.Id, ct))
+                return NameConflict<TagWriteDto>(to);
+
+            tag.Name = to;
+            tag.NameNormalized = NormalizeName(to);
+            tag.NameInitials = initials.FromName(to);
+        }
+
+        tag.Revision++;
+        tag.UpdatedAt = DateTimeOffset.UtcNow;
+        uow.MarkDirty();
+        var version = await uow.CommitAsync(ct);
+        return ServiceResult<TagWriteDto>.Ok(ToWrite(tag, version));
+    }
+
     public async Task<ServiceResult<TagWriteDto>> AddAliasAsync(Guid id, string? alias, CancellationToken ct)
     {
         var rejected = RejectAliases<TagWriteDto>([alias]);
@@ -291,10 +357,17 @@ public sealed class TagService(ElDbContext db, IUnitOfWork uow, INameInitialsGen
         return query.AnyAsync(ct);
     }
 
-    private async Task<ServiceResult<TagWriteDto>?> AliasTakenAsync(string alias, CancellationToken ct)
+    private async Task<ServiceResult<TagWriteDto>?> AliasTakenAsync(
+        string alias,
+        CancellationToken ct,
+        Guid? excludeTagId = null)
     {
         var normalized = AliasRules.Normalize(alias);
-        var exists = await db.TagAliases.AnyAsync(a => a.AliasNormalized == normalized, ct);
+        var query = db.TagAliases.AsQueryable().Where(a => a.AliasNormalized == normalized);
+        if (excludeTagId is { } id)
+            query = query.Where(a => a.TagId != id);
+
+        var exists = await query.AnyAsync(ct);
         if (!exists)
             return null;
 

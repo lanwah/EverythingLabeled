@@ -9,7 +9,8 @@ public sealed class ExplorerIconsTests
     [InlineData("untag", "ElUntag.ico")]
     [InlineData("tags", "ElTags.ico")]
     [InlineData("find", "ElFind.ico")]
-    public void FileNameForMode_maps_the_four_verbs(string mode, string expected)
+    [InlineData("library", "ElLibrary.ico")]
+    public void FileNameForMode_maps_the_verbs(string mode, string expected)
     {
         Assert.Equal(expected, ExplorerIcons.FileNameForMode(mode));
     }

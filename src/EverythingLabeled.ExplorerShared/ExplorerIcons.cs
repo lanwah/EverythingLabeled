@@ -1,7 +1,7 @@
 namespace EverythingLabeled.ExplorerShared;
 
 /// <summary>
-/// 右键菜单四个动词各自的图标。图标是稀疏包输出目录下 <c>Assets\El*.ico</c>，
+/// 右键菜单各动词的图标。图标是稀疏包输出目录下 <c>Assets\El*.ico</c>，
 /// 由 <c>scripts/make-explorer-icons.ps1</c> 生成；菜单 DLL 的 <c>GetIcon</c> 用它返回绝对路径。
 /// </summary>
 public static class ExplorerIcons
@@ -16,6 +16,7 @@ public static class ExplorerIcons
         "untag" => "ElUntag.ico",
         "tags" => "ElTags.ico",
         "find" => "ElFind.ico",
+        "library" => "ElLibrary.ico",
         _ => null,
     };
 

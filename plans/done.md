@@ -117,3 +117,14 @@
 - 2026-10-17 — 浏览器扩展图标改为与 Tray 相同的青绿标签：从 `ExplorerShared/Assets/el.ico` 抽出 16/32/48 PNG，128 由 256 帧缩放，替换 `ext/public/icons`
 - 2026-10-18 — 打标/去标/看标签标题栏 × 改为 `Close`；Find 仍 `Hide` 保活（共用按钮此前一律走 `HideFind`，非 Find 直接返回）
 - 2026-10-18 — 打标单选在目标路径与别名之间显示当前标签，点 × 走去标（多选不显示）→ [tag.html](../design/explorer-ui/tag.html) · [规格 §5.3](./2026-09-27-explorer-integration.md)
+- 2026-10-18 — 管理标签：Service `POST /v1/tags/rename`；Explorer 右键第五项 + Host `library` 窗口；扩展 `library.html` + 右键/P Popup 入口；稀疏包 `0.1.9.0` → [docs/explorer.md](../docs/explorer.md) · [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-18 — 修复扩展 Popup「管理标签」在窄 popup 内导航导致竖条布局：改为打开独立标签页 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-18 — 修复 Popup「管理标签」闪一下消失：开页改在 Popup 内直接 `tabs`，不再经 SW（Popup 卸载会取消消息）→ [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-18 — 修复扩展管理标签一打开就出现空删除框：`.library-dialog` 的 `display: flex` 盖过 `hidden`，补 `[hidden]` 规则并先画出空状态
+- 2026-10-18 — 管理标签空状态不再重复「还没有标签」；筛选无命中改「没有匹配的标签」；占位改为名称前缀或拼首（Service `ListAsync` 已匹配 `NameInitials`）
+- 2026-10-19 — 修复管理标签拼首筛选：扩展/Host 列表加载用代数覆盖，不再因首屏 `busy` 静默丢掉带 `q` 的请求 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-19 — 修复扩展页 `sendMessage` 返回 `null` 时读 `.ok` 抛错，管理标签停在「还没有标签」：无响应改为失败回执 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-19 — 扩展后台改为 `onMessage` 直接 return Promise（对齐 Chrome 144+）；管理标签「no response」且页面 Network 无请求 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-19 — 修复扩展 `options`/`page-ui` 误用未定义 `send`（应为 `sendToBackground`），设置页保存与打标/去标不再 ReferenceError
+- 2026-10-19 — 扩展 `onMessage` 改回 `return true` + `sendResponse`（勿 return Promise），修复 Popup/设置「扩展后台无响应」
+- 2026-10-19 — 管理标签底部「N 个标签」包进 `.footer`，与列表拉开间距（对齐 design mock）

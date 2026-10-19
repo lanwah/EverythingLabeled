@@ -1,9 +1,10 @@
 (function () {
   const params = new URLSearchParams(location.search);
-  let state = params.get("state") === "empty" ? "empty" : "filled";
-
   const panel = document.querySelector(".panel");
   const buttons = document.querySelectorAll(".state-toggle button");
+  const requested = params.get("state");
+  const known = [...buttons].some((btn) => btn.dataset.state === requested);
+  let state = known ? requested : "filled";
 
   function apply(next) {
     state = next;

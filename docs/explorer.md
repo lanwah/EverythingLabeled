@@ -58,13 +58,16 @@ dotnet test tests/EverythingLabeled.Tray.Tests
 
 Command / Tray 的 csproj 会先编 Host，并把 Host **整输出目录**拷到各自输出旁（含 `EverythingLabeled.ExplorerHost.exe` 与依赖）。
 
-## 命令行启动 Host（四 mode）
+## 命令行启动 Host（五 mode）
 
 Service 已起、`%AppData%\EverythingLabeled\config.json` 已填时，可在不注册稀疏包的情况下自测 Host：
 
 ```powershell
 # 按标签查找（无选中）
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode find
+
+# 管理标签（词库改名 / 删除；不读选中路径）
+dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode library
 
 # 看标签（单选；paths-file 一行一个绝对路径）
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tags --paths-file <paths.txt>
@@ -76,7 +79,7 @@ dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tag --paths-fi
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode untag --paths-file <paths.txt>
 ```
 
-`find` 可省略 `--paths-file`；若传入，Host **忽略**其内容。
+`find` / `library` 可省略 `--paths-file`；若传入，Host **忽略**其内容（`library` 仍会删除误传的 paths-file）。
 
 ## 开发 Identity（钉死）
 
@@ -129,13 +132,14 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 
 ### 菜单图标
 
-四项各有一个青绿 `#2EC4B6` 字形图标，由 `ExplorerCommandBase.GetIcon` 返回**绝对路径**：
+五项各有一个青绿 `#2EC4B6` 字形图标，由 `ExplorerCommandBase.GetIcon` 返回**绝对路径**：
 
 | 菜单项 | mode | Glyph | 文件 |
 |---|---|---|---|
 | 打标 | `tag` | `E8EC` | `Assets\ElTag.ico` |
 | 去标 | `untag` | `E74D` | `Assets\ElUntag.ico` |
 | 看标签 | `tags` | `E8FD` | `Assets\ElTags.ico` |
+| 管理标签 | `library` | `E8F1` | `Assets\ElLibrary.ico` |
 | 按标签查找 | `find` | `E721` | `Assets\ElFind.ico` |
 
 - 图标资源在 `src\EverythingLabeled.ExplorerCommand\Package\Assets\`，由 [scripts/make-explorer-icons.ps1](../scripts/make-explorer-icons.ps1) 生成（16/20/24/32/48 多尺寸、DIB 帧、透明底），该脚本同时用 `el.ico` 缩放生成清单要的三个 Logo（**不要**把它们留成纯黑占位图 —— 命令若拿不到图标，壳层会回落到包 Logo，黑图就显示成黑方块）。
@@ -219,8 +223,8 @@ dotnet run --project src/EverythingLabeled.Tray
 
 稀疏包注册完成、Service 与 config 就绪后，建议对齐 [规格 §10](../plans/2026-09-27-explorer-integration.md#10-验收清单规格层) 逐项确认：
 
-- [ ] 稀疏包：子菜单四项（中文项名）；空白处仅「按标签查找」；看标签仅单选；Invoke 即发即忘
-- [ ] 稀疏包：四项各显示青绿字形图标（打标/去标/看标签/放大镜），**不是黑方块**
+- [ ] 稀疏包：子菜单五项（打标/去标/看标签/管理标签/按标签查找）；空白处「管理标签」+「按标签查找」；看标签仅单选；Invoke 即发即忘
+- [ ] 稀疏包：五项各显示青绿字形图标（含管理标签 `E8F1`），**不是黑方块**
 - [ ] Host 硬规则：非法丢弃并提示 N；URI 去重；>100 拒绝不截断；DLL 不因数量灰打标/去标
 - [ ] PathUri 与 CLI **同一库**；含 UNC / symlink / junction；打标预检排除无效项
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1

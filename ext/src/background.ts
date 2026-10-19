@@ -5,11 +5,14 @@ import {
 import { copy } from "./copy";
 import { createElApi } from "./el-api";
 import { handleRequest, type ElRequest, type ElResponse } from "./messages";
+import { openOrFocusExtensionPage } from "./open-extension-page";
 import { isHttpPage } from "./uri";
 
 const STORED_KEYS = ["baseUrl", "token", "confirmUntag", "previewLimit"] as const;
-const MENU_ID = "el-manage";
+const MENU_MANAGE_PAGE = "el-manage-page";
+const MENU_LIBRARY = "el-library";
 const APP_PAGE = "app.html";
+const LIBRARY_PAGE = "library.html";
 
 const api = createElApi({ fetch });
 
@@ -30,15 +33,22 @@ function failBadRequest(message: string): ElResponse {
   return { ok: false, code: "bad_request", message };
 }
 
-function isOpenTabsMessage(
+function isMessageType(
   message: unknown,
-): message is { type: "openTabs"; urls: unknown } {
+  type: string,
+): message is { type: string } {
   return (
     typeof message === "object" &&
     message !== null &&
     "type" in message &&
-    (message as { type: unknown }).type === "openTabs"
+    (message as { type: unknown }).type === type
   );
+}
+
+function isOpenTabsMessage(
+  message: unknown,
+): message is { type: "openTabs"; urls: unknown } {
+  return isMessageType(message, "openTabs");
 }
 
 async function resolveWindowId(
@@ -82,17 +92,37 @@ async function dispatch(
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  void dispatch(message, sender).then(sendResponse);
+  // 同步 return true 保活端口；勿把 listener 写成 async（会提前关通道，UI 收到 null）。
+  void dispatch(message, sender).then(
+    (response) => {
+      sendResponse(
+        response ?? {
+          ok: false,
+          code: "internal_error",
+          message: copy.backgroundNoResponse,
+        },
+      );
+    },
+    (err: unknown) => {
+      const text = err instanceof Error ? err.message : copy.backgroundNoResponse;
+      sendResponse({ ok: false, code: "internal_error", message: text } satisfies ElResponse);
+    },
+  );
   return true;
 });
 
 async function ensureContextMenu(): Promise<void> {
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
-    id: MENU_ID,
+    id: MENU_MANAGE_PAGE,
     title: "EverythingLabeled：管理本页标签",
     contexts: ["page"],
     documentUrlPatterns: ["http://*/*", "https://*/*"],
+  });
+  chrome.contextMenus.create({
+    id: MENU_LIBRARY,
+    title: "EverythingLabeled：管理标签",
+    contexts: ["page"],
   });
 }
 
@@ -109,19 +139,17 @@ async function openAppForTab(tab: chrome.tabs.Tab | undefined): Promise<void> {
   await chrome.storage.session.set({
     pageSnapshot: { tabId: tab.id, url, title: tab.title },
   });
-  const appUrl = chrome.runtime.getURL(APP_PAGE);
-  const existing = await chrome.tabs.query({ url: appUrl });
-  const found = existing[0];
-  if (found?.id !== undefined) {
-    await chrome.tabs.update(found.id, { active: true });
-    if (found.windowId !== undefined) {
-      await chrome.windows.update(found.windowId, { focused: true });
-    }
-    return;
-  }
-  await chrome.tabs.create({ url: appUrl });
+  await openOrFocusExtensionPage(APP_PAGE);
 }
 
-chrome.contextMenus.onClicked.addListener((_info, tab) => {
+function openLibrary(): Promise<void> {
+  return openOrFocusExtensionPage(LIBRARY_PAGE);
+}
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === MENU_LIBRARY) {
+    void openLibrary();
+    return;
+  }
   void openAppForTab(tab);
 });
