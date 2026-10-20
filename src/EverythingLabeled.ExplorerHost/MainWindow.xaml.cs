@@ -334,6 +334,7 @@ public partial class MainWindow : Window
             FindAndRadio.IsChecked = !_findUseOr;
             FindOrRadio.IsChecked = _findUseOr;
             SetHostStatus(Copy.PreviewCount(0));
+            ApplyFindListLayout();
         }
         else if (mode == HostMode.Tag)
             RefreshTagAliasStatus();
@@ -810,6 +811,7 @@ public partial class MainWindow : Window
 
         FindSuggestList.ItemsSource = null;
         UpdateFindPlaceholder();
+        ApplyFindListLayout();
         FocusFindQuery();
         _ = RunFindPreviewAsync();
     }
@@ -839,6 +841,7 @@ public partial class MainWindow : Window
 
         FindSuggestList.ItemsSource = null;
         UpdateFindPlaceholder();
+        ApplyFindListLayout();
         _ = RunFindPreviewAsync();
         FocusFindQuery();
     }
@@ -1093,6 +1096,48 @@ public partial class MainWindow : Window
         await RunFindPreviewAsync().ConfigureAwait(true);
     }
 
+    private void ApplyFindListLayout()
+    {
+        if (_mode != HostMode.Find)
+            return;
+
+        var hasDraft = SuggestQuery.Normalize(FindQueryBox.Text) is not null;
+        var suggestCount = FindSuggestList.Items.Count;
+        var hasPreviewQuery = FindQueryCompose.Compose(_findTags, _findUseOr) is not null;
+        var (placement, showPreview) = FindListLayout.Resolve(
+            hasDraft,
+            suggestCount,
+            _findTags.Count,
+            hasPreviewQuery);
+
+        switch (placement)
+        {
+            case FindSuggestPlacement.Main:
+                Grid.SetRow(FindSuggestList, 2);
+                FindSuggestList.Visibility = Visibility.Visible;
+                FindSuggestList.VerticalAlignment = VerticalAlignment.Stretch;
+                FindSuggestList.ClearValue(FrameworkElement.MaxHeightProperty);
+                FindSuggestList.Margin = new Thickness(8, 4, 8, 8);
+                break;
+            case FindSuggestPlacement.Compact:
+                Grid.SetRow(FindSuggestList, 1);
+                FindSuggestList.Visibility = Visibility.Visible;
+                FindSuggestList.VerticalAlignment = VerticalAlignment.Top;
+                FindSuggestList.MaxHeight = FindListLayout.CompactSuggestMaxHeight;
+                FindSuggestList.Margin = new Thickness(16, 6, 16, 0);
+                break;
+            default:
+                Grid.SetRow(FindSuggestList, 1);
+                FindSuggestList.Visibility = Visibility.Collapsed;
+                FindSuggestList.VerticalAlignment = VerticalAlignment.Top;
+                FindSuggestList.MaxHeight = FindListLayout.CompactSuggestMaxHeight;
+                FindSuggestList.Margin = new Thickness(16, 6, 16, 0);
+                break;
+        }
+
+        FindResultList.Visibility = showPreview ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private async Task RunFindSuggestAsync()
     {
         if (_ctx.Api is null || !_businessEnabled)
@@ -1104,6 +1149,7 @@ public partial class MainWindow : Window
             FindSuggestList.ItemsSource = null;
             if (_findTags.Count == 0)
                 SetHostStatus(FindStatusText.IdleOrSuggest(null, 0));
+            ApplyFindListLayout();
             return;
         }
 
@@ -1122,6 +1168,7 @@ public partial class MainWindow : Window
                 FindSuggestList.ItemsSource = null;
                 if (_findTags.Count == 0)
                     SetHostStatus(FindStatusText.IdleOrSuggest(token, 0));
+                ApplyFindListLayout();
                 return;
             }
 
@@ -1133,6 +1180,7 @@ public partial class MainWindow : Window
                 FindSuggestList.SelectedIndex = 0;
             if (_findTags.Count == 0)
                 SetHostStatus(FindStatusText.IdleOrSuggest(token, rows.Count));
+            ApplyFindListLayout();
         }
         catch (OperationCanceledException)
         {
@@ -1143,6 +1191,7 @@ public partial class MainWindow : Window
             FindSuggestList.ItemsSource = null;
             if (_findTags.Count == 0)
                 SetHostStatus(FindStatusText.IdleOrSuggest(token, 0));
+            ApplyFindListLayout();
         }
     }
 
@@ -1159,6 +1208,7 @@ public partial class MainWindow : Window
             SetHostStatus(FindStatusText.IdleOrSuggest(
                 SuggestQuery.Normalize(FindQueryBox.Text),
                 FindSuggestList.Items.Count));
+            ApplyFindListLayout();
             return;
         }
 
@@ -1184,6 +1234,7 @@ public partial class MainWindow : Window
                 SetHostStatus(result.Error?.Message ?? Copy.PreviewFailed);
                 _previewRows = Array.Empty<PreviewRow>();
                 FindResultList.ItemsSource = null;
+                ApplyFindListLayout();
                 return;
             }
 
@@ -1209,6 +1260,7 @@ public partial class MainWindow : Window
             SetHostStatus(_previewRows.Count == 0
                 ? Copy.PreviewEmpty
                 : Copy.PreviewCount(_previewRows.Count));
+            ApplyFindListLayout();
         }
         catch (OperationCanceledException)
         {
@@ -1219,6 +1271,7 @@ public partial class MainWindow : Window
             SetHostStatus(Copy.PreviewFailed + "：" + ex.Message);
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
+            ApplyFindListLayout();
         }
     }
 

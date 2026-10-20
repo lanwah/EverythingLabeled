@@ -925,16 +925,17 @@
 
             <ListBox x:Name="FindSuggestList"
                      Grid.Row="1"
+                     VerticalAlignment="Top"
                      Style="{StaticResource FindListBoxStyle}"
                      ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
                      DisplayMemberPath="Display"
-                     MaxHeight="140"
                      Margin="16,6,16,0"
                      MouseDoubleClick="OnSuggestItemActivate"
                      KeyDown="OnSuggestListKeyDown" />
 
             <ListBox x:Name="FindResultList"
                      Grid.Row="2"
+                     VerticalAlignment="Stretch"
                      Style="{StaticResource FindListBoxStyle}"
                      ItemContainerStyle="{StaticResource FindResultItemStyle}"
                      Margin="8,4,8,8"
