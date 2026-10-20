@@ -42,7 +42,7 @@ Options 页填写 `baseUrl` 与 `token`。可从 CLI / AppData 的 `config.json`
 
 ## 管理标签
 
-独立页面 `library.html`（与 `app.html` 各用一个标签页）。入口：网页右键「EverythingLabeled：管理标签」，或 Popup / 本页标签页的「管理标签」（页面内直接开标签页，不在 Popup 里导航）。可按名称前缀或拼首筛选、改名、删除；删除前确认。当前页芯片上的 × 仍只是去标，不删词库。
+独立页面 `library.html`（与 `app.html` 各用一个标签页）。入口：网页右键「EverythingLabeled：管理标签」，或 Popup / 本页标签页的「管理标签」（页面内直接开标签页，不在 Popup 里导航）。打开页面后筛选框获焦。可按名称前缀或拼首筛选、改名、删除；删除前确认。当前页芯片上的 × 仍只是去标，不删词库。
 
 ## 手工联调清单
 

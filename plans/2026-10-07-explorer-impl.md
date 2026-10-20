@@ -348,7 +348,7 @@ public static class FindOpen
 | mode | UI |
 |---|---|
 | tag | 列表（含排除说明）；别名输入 + suggest 250ms 防抖 limit 10；勾选创建缺失；提交走 BatchTagOps；进度/取消/汇总；成功保持窗口 |
-| untag | 单别名；单选可点 tags 列表删除或手输；多选手输；`confirmUntag` → 确认框含路径数；BatchTagOps.Untag |
+| untag | 单别名，只来自当前标签芯片叉号；单选可检索后点叉号；多选提示只选一个路径；`confirmUntag` → 确认框含路径数；BatchTagOps.Untag |
 | tags | 单路径列表；可切 tag/untag；Included≠1 → 提示并禁用业务 |
 | find | q（trim）+ preview；打开走 FindOpen；保持窗口 |
 

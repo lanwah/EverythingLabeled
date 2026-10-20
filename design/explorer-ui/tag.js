@@ -8,8 +8,6 @@
   const chipWrap = document.getElementById("tag-chips");
   const statusEl = document.getElementById("tag-status");
   const createMissing = document.getElementById("create-missing");
-  const submitBtn = document.getElementById("tag-submit");
-
   if (!panel || !aliasInput || !suggestList || !chipWrap || !statusEl) return;
 
   const applied = [];
@@ -216,8 +214,6 @@
       suggestIndex = -1;
     }
   });
-
-  submitBtn?.addEventListener("click", () => submitTag());
 
   document.querySelector(".state-toggle")?.addEventListener("click", () => {
     setTimeout(() => {

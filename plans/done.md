@@ -131,3 +131,7 @@
 - 2026-10-19 — 扩展打标 suggest 默认选中首项，支持 ↑/↓ 与 Enter 直接打标（抽取 `suggest-nav`，预览共用）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-19 — 修复 Alt+L 偶发只 Show 不抢前台：管道回写 HWND，Tray `AllowSetForegroundWindow` + 抢前台，Host `AttachThreadInput` 兜底 → [Tray 规格](./2026-10-07-tray-find-hotkey.md)
 - 2026-10-19 — 本机验收 Find 抢前台：Debug Tray 下 `Alt+L` 从 Notepad 抢焦 8/8
+- 2026-10-19 — Find 无芯片时拼首/前缀联想更新底部为「建议 N 条」，不再被空 preview 盖成「预览 0 条」
+- 2026-10-19 — 管理标签列表默认选中首项，↑/↓ 切换选中（筛选与删除后仍保持有选中行）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-19 — 打开管理标签后筛选框自动获焦（Host `library` 与扩展 `library.html`）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-19 — 打标页隐藏底部「取消」「打标」，别名框 Enter 直接提交 → [docs/explorer.md](../docs/explorer.md) · [tag.html](../design/explorer-ui/tag.html)

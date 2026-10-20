@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shell;
+using System.Windows.Threading;
 using EverythingLabeled.Client;
 
 namespace EverythingLabeled.ExplorerHost;
@@ -26,7 +27,28 @@ public partial class LibraryWindow : Window
         SearchBox.IsEnabled = ctx.BusinessEnabled && ctx.Api is not null;
         SearchPlaceholder.Text = Copy.LibrarySearchPlaceholder;
         ApplyBanner(ctx.Banner);
-        Loaded += async (_, _) => await ReloadAsync().ConfigureAwait(true);
+        Loaded += async (_, _) =>
+        {
+            FocusSearch();
+            await ReloadAsync().ConfigureAwait(true);
+            FocusSearch();
+        };
+    }
+
+    private void FocusSearch()
+    {
+        if (!SearchBox.IsEnabled)
+            return;
+
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                if (!IsLoaded)
+                    return;
+                SearchBox.Focus();
+                Keyboard.Focus(SearchBox);
+            },
+            DispatcherPriority.Input);
     }
 
     private void EnableHostWindowChrome()
@@ -112,6 +134,38 @@ public partial class LibraryWindow : Window
         EmptyHint.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         TagList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         StatusText.Text = empty ? string.Empty : Copy.LibraryCount(result.Data.Total);
+        if (!empty)
+            SelectTagIndex(0);
+    }
+
+    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Up or Key.Down))
+            return;
+        if (DeleteOverlay.Visibility == Visibility.Visible)
+            return;
+        if (Keyboard.FocusedElement is TextBox box && !ReferenceEquals(box, SearchBox))
+            return;
+        if (_rows.Count == 0)
+            return;
+
+        var next = e.Key == Key.Down
+            ? FindListNavigation.NextDownIndex(TagList.SelectedIndex, _rows.Count)
+            : FindListNavigation.NextUpIndex(TagList.SelectedIndex, _rows.Count);
+        if (next < 0)
+            return;
+
+        SelectTagIndex(next);
+        e.Handled = true;
+    }
+
+    private void SelectTagIndex(int index)
+    {
+        if (index < 0 || index >= _rows.Count)
+            return;
+
+        TagList.SelectedIndex = index;
+        TagList.ScrollIntoView(TagList.SelectedItem);
     }
 
     private void OnRenameClick(object sender, RoutedEventArgs e)
@@ -119,6 +173,7 @@ public partial class LibraryWindow : Window
         if (sender is not Button { Tag: LibraryRow row })
             return;
 
+        SelectRow(row);
         foreach (var other in _rows)
         {
             if (other != row)
@@ -178,6 +233,7 @@ public partial class LibraryWindow : Window
     {
         if (sender is not Button { Tag: LibraryRow row })
             return;
+        SelectRow(row);
         _pendingDelete = row;
         DeleteMessage.Text = Copy.LibraryDeleteConfirm(row.Name);
         DeleteOverlay.Visibility = Visibility.Visible;
@@ -205,6 +261,7 @@ public partial class LibraryWindow : Window
                 return;
             }
 
+            var index = _rows.IndexOf(row);
             _rows.Remove(row);
             _pendingDelete = null;
             DeleteOverlay.Visibility = Visibility.Collapsed;
@@ -213,6 +270,8 @@ public partial class LibraryWindow : Window
             EmptyHint.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
             TagList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
             StatusText.Text = empty ? string.Empty : Copy.LibraryCount(_rows.Count);
+            if (!empty)
+                SelectTagIndex(Math.Min(Math.Max(index, 0), _rows.Count - 1));
         }
         finally
         {
@@ -229,6 +288,13 @@ public partial class LibraryWindow : Window
         }
 
         return row.Tag.Aliases.Count > 0 ? row.Tag.Aliases[0] : row.Name;
+    }
+
+    private void SelectRow(LibraryRow row)
+    {
+        var index = _rows.IndexOf(row);
+        if (index >= 0)
+            SelectTagIndex(index);
     }
 
     private void OnCaptionMouseDown(object sender, MouseButtonEventArgs e)

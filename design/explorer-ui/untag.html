@@ -44,30 +44,41 @@
               </ul>
             </div>
 
-            <div style="flex:1;min-height:0;display:flex;flex-direction:column">
-              <p class="section-label">当前标签（点叉号去除）</p>
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
+              <p class="section-label">当前标签</p>
+              <div class="current-tag-filter">
+                <input id="current-tag-filter" type="search" placeholder="检索当前标签（可选）" autocomplete="off" spellcheck="false" aria-label="检索当前标签" />
+                <span class="match-count" id="current-tag-count" hidden>0 / 0</span>
+              </div>
               <div class="surface tag-chip-well" id="current-tags">
                 <p class="empty-hint only-empty" id="tags-empty">暂无标签</p>
+                <p class="empty-hint filter-empty" id="filter-miss">没有匹配的当前标签</p>
                 <div class="tag-chips only-filled" id="current-tag-chips">
-                  <span class="chip">工作 <button type="button" aria-label="去除 工作">×</button></span>
-                  <span class="chip">React <button type="button" aria-label="去除 React">×</button></span>
-                  <span class="chip">nis-app <button type="button" aria-label="去除 nis-app">×</button></span>
+                  <span class="chip" data-name="工作">工作 <button type="button" aria-label="去除 工作">×</button></span>
+                  <span class="chip" data-name="React">React <button type="button" aria-label="去除 React">×</button></span>
+                  <span class="chip" data-name="nis-app">nis-app <button type="button" aria-label="去除 nis-app">×</button></span>
+                  <span class="chip" data-name="护理">护理 <button type="button" aria-label="去除 护理">×</button></span>
+                  <span class="chip" data-name="前端">前端 <button type="button" aria-label="去除 前端">×</button></span>
+                  <span class="chip" data-name="文档">文档 <button type="button" aria-label="去除 文档">×</button></span>
+                  <span class="chip" data-name="设计">设计 <button type="button" aria-label="去除 设计">×</button></span>
+                  <span class="chip" data-name="查询">查询 <button type="button" aria-label="去除 查询">×</button></span>
+                  <span class="chip" data-name="缓存">缓存 <button type="button" aria-label="去除 缓存">×</button></span>
+                  <span class="chip" data-name="扩展">扩展 <button type="button" aria-label="去除 扩展">×</button></span>
+                  <span class="chip" data-name="Explorer">Explorer <button type="button" aria-label="去除 Explorer">×</button></span>
+                  <span class="chip" data-name="打标">打标 <button type="button" aria-label="去除 打标">×</button></span>
+                  <span class="chip" data-name="看标签">看标签 <button type="button" aria-label="去除 看标签">×</button></span>
+                  <span class="chip" data-name="热键">热键 <button type="button" aria-label="去除 热键">×</button></span>
+                  <span class="chip" data-name="SQLite">SQLite <button type="button" aria-label="去除 SQLite">×</button></span>
+                  <span class="chip" data-name="daemon">daemon <button type="button" aria-label="去除 daemon">×</button></span>
+                  <span class="chip" data-name="CLI">CLI <button type="button" aria-label="去除 CLI">×</button></span>
+                  <span class="chip" data-name="MCP">MCP <button type="button" aria-label="去除 MCP">×</button></span>
                 </div>
               </div>
             </div>
 
-            <div class="alias-row">
-              <label for="alias">别名</label>
-              <input id="alias" type="text" placeholder="或手动输入要去除的别名…" readonly />
-            </div>
-
             <div class="footer">
               <span class="status only-empty">准备就绪</span>
-              <span class="status only-filled" id="untag-status">点叉号去除对应标签</span>
-              <div class="actions-right">
-                <button type="button" class="btn" disabled>取消</button>
-                <button type="button" class="btn btn-primary">去标</button>
-              </div>
+              <span class="status only-filled" id="untag-status">点叉号去除；标签多时可检索</span>
             </div>
           </div>
         </div>
@@ -79,22 +90,53 @@
     (function () {
       const well = document.getElementById("current-tags");
       const chips = document.getElementById("current-tag-chips");
+      const input = document.getElementById("current-tag-filter");
+      const count = document.getElementById("current-tag-count");
       const status = document.getElementById("untag-status");
-      if (!well || !chips) return;
+      if (well == null || chips == null || input == null) return;
 
+      function applyFilter() {
+        const raw = input.value;
+        const query = raw.trim().toLowerCase();
+        const all = [...chips.querySelectorAll(".chip")];
+        let shown = 0;
+        for (const chip of all) {
+          const name = chip.dataset.name == null ? "" : chip.dataset.name;
+          const match = query === "" || name.toLowerCase().includes(query);
+          chip.classList.toggle("is-filtered-out", !match);
+          if (match) shown += 1;
+        }
+        const filtering = query !== "";
+        well.classList.toggle("is-filter-miss", filtering && all.length > 0 && shown === 0);
+        if (count != null) {
+          count.hidden = !filtering || all.length === 0;
+          count.textContent = shown + " / " + all.length;
+        }
+        if (status != null) {
+          if (all.length === 0) status.textContent = "当前没有可去除的标签";
+          else if (filtering && shown === 0) status.textContent = "没有匹配的当前标签";
+          else if (filtering) status.textContent = "匹配 " + shown + " / " + all.length + "，点叉号去除";
+          else status.textContent = "点叉号去除；标签多时可检索";
+        }
+        if (all.length === 0) {
+          chips.hidden = true;
+          if (well.querySelector(".cleared-hint") == null) {
+            const hint = document.createElement("p");
+            hint.className = "empty-hint cleared-hint";
+            hint.textContent = "暂无标签";
+            well.appendChild(hint);
+          }
+        }
+      }
+
+      input.addEventListener("input", applyFilter);
       chips.addEventListener("click", (event) => {
         const button = event.target.closest("button");
-        if (!button || !chips.contains(button)) return;
+        if (button == null || !chips.contains(button)) return;
         const chip = button.closest(".chip");
-        if (!chip) return;
+        if (chip == null) return;
         chip.remove();
-        if (chips.querySelector(".chip")) return;
-        const hint = document.createElement("p");
-        hint.className = "empty-hint";
-        hint.textContent = "暂无标签";
-        chips.hidden = true;
-        well.appendChild(hint);
-        if (status) status.textContent = "当前没有可去除的标签";
+        applyFilter();
       });
     })();
   </script>

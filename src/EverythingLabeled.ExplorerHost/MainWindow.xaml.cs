@@ -26,6 +26,8 @@ public partial class MainWindow : Window
     private bool _suppressFindTextChanged;
     private readonly ObservableCollection<string> _findTags = new();
     private readonly ObservableCollection<string> _tagAppliedAliases = new();
+    private List<AliasRow> _untagAliases = [];
+    private bool _untagTagsLoaded;
     private bool _findUseOr;
     private string? _tagBatchStatusUntilEdit;
     private bool _tagHadAliasDraft;
@@ -69,7 +71,7 @@ public partial class MainWindow : Window
             else if (_mode == HostMode.Tag)
                 TagAliasBox.Focus();
             else if (_mode == HostMode.Untag)
-                UntagAliasBox.Focus();
+                UntagTagFilterBox.Focus();
         };
 
         ApplyBanner(ctx.Banner);
@@ -274,6 +276,8 @@ public partial class MainWindow : Window
         }
         else if (mode == HostMode.Tag)
             RefreshTagAliasStatus();
+        else if (mode == HostMode.Untag)
+            RefreshUntagChrome();
     }
 
     private void OnFindCaptionMouseDown(object sender, MouseButtonEventArgs e)
@@ -346,14 +350,12 @@ public partial class MainWindow : Window
         _activeAliasBox = mode switch
         {
             HostMode.Tag => TagAliasBox,
-            HostMode.Untag => UntagAliasBox,
             HostMode.Find => FindQueryBox,
             _ => null,
         };
         _activeSuggestList = mode switch
         {
             HostMode.Tag => TagSuggestList,
-            HostMode.Untag => UntagSuggestList,
             HostMode.Find => FindSuggestList,
             _ => null,
         };
@@ -366,13 +368,18 @@ public partial class MainWindow : Window
     {
         var count = IncludedUris().Count;
         var showTag = _mode == HostMode.Tag && UntagClickDelete.ShowsPanel(HostMode.Tag, count);
-        var showUntag = _mode == HostMode.Untag && UntagClickDelete.ShowsPanel(HostMode.Untag, count);
+        var showUntag = _mode == HostMode.Untag;
         TagCurrentTagPanel.Visibility = showTag ? Visibility.Visible : Visibility.Collapsed;
         UntagTagListPanel.Visibility = showUntag ? Visibility.Visible : Visibility.Collapsed;
         if (!showTag)
             TagCurrentTagList.ItemsSource = null;
         if (!showUntag)
+        {
+            _untagAliases = [];
+            _untagTagsLoaded = false;
             UntagTagList.ItemsSource = null;
+            ApplyUntagTagFilter(updateStatus: false);
+        }
     }
 
     private void FillPathLists()
@@ -397,11 +404,8 @@ public partial class MainWindow : Window
         TagSuggestList.IsEnabled = on;
         CreateMissingCheck.IsEnabled = on;
         TagSubmitButton.IsEnabled = on;
-        UntagAliasBox.IsEnabled = on;
-        UntagSuggestList.IsEnabled = on;
         TagCurrentTagList.IsEnabled = on;
         UntagTagList.IsEnabled = on;
-        UntagSubmitButton.IsEnabled = on;
         TagsTagList.IsEnabled = on;
         SwitchToTagButton.IsEnabled = on;
         SwitchToUntagButton.IsEnabled = on;
@@ -412,6 +416,7 @@ public partial class MainWindow : Window
         FindClearButton.IsEnabled = on;
         FindAndRadio.IsEnabled = on;
         FindOrRadio.IsEnabled = on;
+        UpdateUntagFilterEnabled();
     }
 
     private void SetBusy(bool busy)
@@ -422,11 +427,8 @@ public partial class MainWindow : Window
         TagSuggestList.IsEnabled = on;
         CreateMissingCheck.IsEnabled = on;
         TagSubmitButton.IsEnabled = on;
-        UntagAliasBox.IsEnabled = on;
-        UntagSuggestList.IsEnabled = on;
         TagCurrentTagList.IsEnabled = on;
         UntagTagList.IsEnabled = on;
-        UntagSubmitButton.IsEnabled = on;
         SwitchToTagButton.IsEnabled = on;
         SwitchToUntagButton.IsEnabled = on;
         FindQueryBox.IsEnabled = on;
@@ -436,9 +438,9 @@ public partial class MainWindow : Window
         FindClearButton.IsEnabled = on;
         FindAndRadio.IsEnabled = on;
         FindOrRadio.IsEnabled = on;
+        UpdateUntagFilterEnabled();
 
         TagCancelButton.IsEnabled = busy && _mode == HostMode.Tag;
-        UntagCancelButton.IsEnabled = busy && _mode == HostMode.Untag;
     }
 
     private IReadOnlyList<(string Uri, string Kind)> IncludedTagTargets()
@@ -465,19 +467,28 @@ public partial class MainWindow : Window
             .ToList();
     }
 
-    private async Task LoadResourceTagsAsync()
+    private async Task LoadResourceTagsAsync(bool refreshUntagStatus = true)
     {
         TagCurrentTagList.ItemsSource = null;
-        UntagTagList.ItemsSource = null;
         TagsTagList.ItemsSource = null;
+        _untagAliases = [];
+        _untagTagsLoaded = false;
         UpdateCurrentTagListVisibility();
 
         if (!_businessEnabled || _ctx.Api is null)
+        {
+            if (refreshUntagStatus)
+                RefreshUntagChrome();
             return;
+        }
 
         var uris = IncludedUris();
         if (uris.Count != 1)
+        {
+            if (refreshUntagStatus)
+                RefreshUntagChrome();
             return;
+        }
 
         try
         {
@@ -485,19 +496,25 @@ public partial class MainWindow : Window
             if (!result.IsSuccess)
             {
                 StatusText.Text = result.Error?.Message ?? Copy.TagsLoadFailed;
+                ApplyUntagTagFilter(updateStatus: false);
                 return;
             }
 
             var rows = FlattenAliases(result.Data!.Items);
             if (UntagClickDelete.ShowsPanel(HostMode.Tag, uris.Count))
                 TagCurrentTagList.ItemsSource = rows;
-            if (UntagClickDelete.ShowsPanel(HostMode.Untag, uris.Count))
-                UntagTagList.ItemsSource = rows;
+            _untagAliases = rows;
+            _untagTagsLoaded = true;
             TagsTagList.ItemsSource = rows;
+            if (_mode == HostMode.Untag)
+                ApplyUntagTagFilter(updateStatus: refreshUntagStatus);
+            else if (UntagClickDelete.ShowsPanel(HostMode.Untag, uris.Count))
+                UntagTagList.ItemsSource = rows;
         }
         catch (Exception ex)
         {
             StatusText.Text = Copy.TagsLoadFailed + "：" + ex.Message;
+            ApplyUntagTagFilter(updateStatus: false);
         }
     }
 
@@ -508,12 +525,12 @@ public partial class MainWindow : Window
         {
             if (tag.Aliases.Count == 0)
             {
-                rows.Add(new AliasRow(tag.Name, FormatTagLabel(tag.Name, tag.Namespace, tag.Name)));
+                rows.Add(new AliasRow(tag.Name, FormatTagLabel(tag.Name, tag.Namespace, tag.Name), tag.NameInitials));
                 continue;
             }
 
             foreach (var alias in tag.Aliases)
-                rows.Add(new AliasRow(alias, FormatTagLabel(alias, tag.Namespace, tag.Name)));
+                rows.Add(new AliasRow(alias, FormatTagLabel(alias, tag.Namespace, tag.Name), tag.NameInitials));
         }
 
         return rows;
@@ -525,18 +542,92 @@ public partial class MainWindow : Window
         return alias == name ? head : $"{alias}  ({head})";
     }
 
+    private void OnUntagTagFilterChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateUntagFilterPlaceholder();
+        if (_mode == HostMode.Untag)
+            ApplyUntagTagFilter(updateStatus: _batchCts is null);
+    }
+
+    private void OnUntagTagFilterFocusChanged(object sender, RoutedEventArgs e) =>
+        UpdateUntagFilterPlaceholder();
+
+    private void RefreshUntagChrome()
+    {
+        if (_mode != HostMode.Untag || _batchCts is not null)
+            return;
+
+        var included = IncludedUris().Count;
+        if (!UntagClickDelete.ShowsPanel(HostMode.Untag, included))
+        {
+            ApplyUntagTagFilter(updateStatus: false);
+            if (included == 0)
+                StatusText.Text = Copy.TagReady;
+            else
+            {
+                StatusText.Text = Copy.UntagNeedsOnePath;
+                UntagTagsEmpty.Text = Copy.UntagNeedsOnePath;
+                UntagTagsEmpty.Visibility = Visibility.Visible;
+            }
+
+            return;
+        }
+
+        if (!_untagTagsLoaded)
+        {
+            StatusText.Text = Copy.TagReady;
+            ApplyUntagTagFilter(updateStatus: false);
+            return;
+        }
+
+        ApplyUntagTagFilter(updateStatus: true);
+    }
+
+    private void UpdateUntagFilterPlaceholder()
+    {
+        var show = string.IsNullOrEmpty(UntagTagFilterBox.Text) && !UntagTagFilterBox.IsKeyboardFocused;
+        UntagTagFilterPlaceholder.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateUntagFilterEnabled()
+    {
+        var enabled = _businessEnabled
+            && _batchCts is null
+            && _untagTagsLoaded
+            && _untagAliases.Count > 0
+            && UntagClickDelete.ShowsPanel(HostMode.Untag, IncludedUris().Count);
+        UntagTagFilterBox.IsEnabled = enabled;
+        UntagTagFilterPlaceholder.Opacity = enabled ? 1 : 0.45;
+    }
+
+    private void ApplyUntagTagFilter(bool updateStatus)
+    {
+        var query = UntagTagFilterBox.Text;
+        var shown = _untagAliases
+            .Where(row => CurrentTagFilter.Matches(row.Display, row.Alias, row.NameInitials, query))
+            .ToList();
+        UntagTagList.ItemsSource = shown;
+        var view = CurrentTagFilter.Describe(_untagAliases.Count, shown.Count, query);
+        UntagTagFilterCount.Text = view.CountText;
+        UntagTagFilterCount.Visibility = view.ShowCount ? Visibility.Visible : Visibility.Collapsed;
+        UntagTagsEmpty.Text = Copy.UntagTagsEmpty;
+        UntagTagsEmpty.Visibility = view.ShowEmpty ? Visibility.Visible : Visibility.Collapsed;
+        UntagFilterMiss.Visibility = view.ShowMiss ? Visibility.Visible : Visibility.Collapsed;
+        UpdateUntagFilterPlaceholder();
+        UpdateUntagFilterEnabled();
+        if (updateStatus && _mode == HostMode.Untag && _batchCts is null)
+            StatusText.Text = view.Status;
+    }
+
     private void OnSuggestAliasChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is not TextBox box || !_businessEnabled)
+        if (sender is not TextBox box || box != TagAliasBox || !_businessEnabled)
             return;
 
         _activeAliasBox = box;
-        _activeSuggestList = box == TagAliasBox ? TagSuggestList : UntagSuggestList;
-        if (box == TagAliasBox)
-        {
-            UpdateTagAliasPlaceholder();
-            RefreshTagAliasStatus();
-        }
+        _activeSuggestList = TagSuggestList;
+        UpdateTagAliasPlaceholder();
+        RefreshTagAliasStatus();
 
         _suggestTimer.Stop();
         _suggestTimer.Start();
@@ -576,7 +667,7 @@ public partial class MainWindow : Window
 
             var items = result.Data!.Items;
             var rows = items
-                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
+                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name), i.NameInitials))
                 .ToList();
             _activeSuggestList.ItemsSource = rows;
             if (rows.Count > 0)
@@ -599,19 +690,13 @@ public partial class MainWindow : Window
 
     private void SyncAliasSuggestPopup(ListBox? list)
     {
-        var open = list is { Items.Count: > 0 };
-        if (list == TagSuggestList)
-            TagSuggestPopup.IsOpen = open;
-        else if (list == UntagSuggestList)
-            UntagSuggestPopup.IsOpen = open;
+        TagSuggestPopup.IsOpen = list == TagSuggestList && list.Items.Count > 0;
     }
 
     private void CloseAliasSuggestPopups()
     {
         TagSuggestPopup.IsOpen = false;
-        UntagSuggestPopup.IsOpen = false;
         TagSuggestList.ItemsSource = null;
-        UntagSuggestList.ItemsSource = null;
     }
 
     private void OnSuggestItemActivate(object sender, MouseButtonEventArgs e) => ApplySuggestSelection(sender as ListBox);
@@ -814,9 +899,6 @@ public partial class MainWindow : Window
         _ = SubmitTagAsync();
     }
 
-    private async void OnUntagSubmit(object sender, RoutedEventArgs e) =>
-        await SubmitUntagAsync(SuggestQuery.Normalize(UntagAliasBox.Text)).ConfigureAwait(true);
-
     private async Task<bool> SubmitUntagAsync(string? alias)
     {
         if (alias is null)
@@ -855,7 +937,7 @@ public partial class MainWindow : Window
                 ct)).ConfigureAwait(true);
 
         if (UntagClickDelete.ShowsPanel(_mode, uris.Count))
-            await LoadResourceTagsAsync().ConfigureAwait(true);
+            await LoadResourceTagsAsync(refreshUntagStatus: false).ConfigureAwait(true);
 
         return summary.Success > 0;
     }
@@ -898,9 +980,6 @@ public partial class MainWindow : Window
             return;
         if (_batchCts is not null || !_businessEnabled)
             return;
-
-        if (_mode == HostMode.Untag)
-            UntagAliasBox.Text = alias;
 
         if (!await SubmitUntagAsync(alias).ConfigureAwait(true))
             return;
@@ -952,6 +1031,8 @@ public partial class MainWindow : Window
         if (token is null)
         {
             FindSuggestList.ItemsSource = null;
+            if (_findTags.Count == 0)
+                StatusText.Text = FindStatusText.IdleOrSuggest(null, 0);
             return;
         }
 
@@ -968,15 +1049,19 @@ public partial class MainWindow : Window
             if (!result.IsSuccess)
             {
                 FindSuggestList.ItemsSource = null;
+                if (_findTags.Count == 0)
+                    StatusText.Text = FindStatusText.IdleOrSuggest(token, 0);
                 return;
             }
 
             var rows = result.Data!.Items
-                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name)))
+                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name), i.NameInitials))
                 .ToList();
             FindSuggestList.ItemsSource = rows;
             if (rows.Count > 0)
                 FindSuggestList.SelectedIndex = 0;
+            if (_findTags.Count == 0)
+                StatusText.Text = FindStatusText.IdleOrSuggest(token, rows.Count);
         }
         catch (OperationCanceledException)
         {
@@ -985,6 +1070,8 @@ public partial class MainWindow : Window
         catch
         {
             FindSuggestList.ItemsSource = null;
+            if (_findTags.Count == 0)
+                StatusText.Text = FindStatusText.IdleOrSuggest(token, 0);
         }
     }
 
@@ -998,7 +1085,9 @@ public partial class MainWindow : Window
         {
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
-            StatusText.Text = Copy.PreviewCount(0);
+            StatusText.Text = FindStatusText.IdleOrSuggest(
+                SuggestQuery.Normalize(FindQueryBox.Text),
+                FindSuggestList.Items.Count);
             return;
         }
 
@@ -1190,7 +1279,7 @@ public partial class MainWindow : Window
         FindOpen.Execute(row.Action);
     }
 
-    private sealed record AliasRow(string Alias, string Display)
+    private sealed record AliasRow(string Alias, string Display, string NameInitials)
     {
         public override string ToString() => Display;
     }

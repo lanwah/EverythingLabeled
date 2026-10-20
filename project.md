@@ -5,10 +5,10 @@
 
 ## 当前状态
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
-- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）→ [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
-- Find：末词 suggest + 实时 preview、芯片 + AND/OR、结果行 kind 图标（`KindIcons.xaml`）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
+- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
+- Find：末词 suggest + 实时 preview、芯片 + AND/OR、结果行 kind 图标；无芯片时拼首联想底部显示「建议 N 条」（落芯片后仍为「预览 N 条」）→ [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [芯片](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
 - 浏览器扩展 0.1.2：预览芯片 + AND/OR；打标 suggest 默认首项 + ↑/↓/Enter 打标（`suggest-nav`）；管理标签（拼首/`library.html`/底部计数间距）；`onMessage` 用 `return true`+`sendResponse` → [docs/browser-extension.md](docs/browser-extension.md)
-- 管理标签：Explorer 右键 + Host `library`；Service `POST /v1/tags/rename`；列表每页 50 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)
+- 管理标签：Explorer 右键 + Host `library`；打开后筛选框获焦；列表加载/筛选后默认选中首项，↑/↓ 切换（选中行左侧强调条；悬停略提亮且保留强调条，行内按钮深色悬停）；Service `POST /v1/tags/rename`；列表每页 50 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
@@ -24,13 +24,14 @@
 - #14：稀疏包 `IExplorerCommand` + WPF Host；先 Host 后菜单；同目录启 Host；开发期稀疏包注册；不做安装器 → [Explorer 规格](plans/2026-09-27-explorer-integration.md) · [实现计划](plans/2026-10-07-explorer-impl.md)
 - Find 简拼只走 Host 末词 suggest，query 引擎仍不认 `NameInitials`；实时 preview、无「预览」按钮、窗口居中 → [Find UX 审核](plans/confirmed/2026-10-07-find-ux-review.md)
 - Find UI：芯片 + 全局 AND/OR（默认 AND）；Find 无边框深色标题栏；Enter 落芯片；不做负词芯片/行内操作图标 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)
-- Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；打标与去标单选当前标签为带 × 芯片）
+- Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；打标与去标单选当前标签为带 × 芯片；打标页不显示底部取消/打标，Enter 提交；去标页不显示别名与底部取消/去标，当前标签可检索后点叉号去除）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；关窗/失焦 Hide 保活；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 待办
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
 - v1 安装器：规格已确认（[配置与安装](plans/2026-09-27-config-and-install.md)），实现计划尚未起草
+- 本机验收：扩展重新 `npm run build` 并「重新加载」后，Popup 打标联想默认高亮第一项，↑/↓ 切换，Enter 直接打标 → [docs/browser-extension.md](docs/browser-extension.md)
 
 已完成记录 → [plans/done.md](plans/done.md)
 
@@ -40,4 +41,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机验收：扩展重新 `npm run build` 并「重新加载」后，Popup 打标联想默认高亮第一项，↑/↓ 切换，Enter 直接打标 → [docs/browser-extension.md](docs/browser-extension.md)
+本机验收 Host 去标：单选点叉号去除；检索只缩小当前标签；窗口无别名、取消、去标按钮 → [docs/explorer.md](docs/explorer.md)

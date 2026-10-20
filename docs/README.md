@@ -109,7 +109,7 @@ build.bat -Configuration Release
 .\build.ps1 -Configuration Release
 ```
 
-`build.bat` 调用同目录 `build.ps1`。等价命令：`dotnet build EverythingLabeled.sln`（可加 `-c Release`）。
+`build.bat` 调用同目录 `build.ps1`。编译前会结束本仓库输出目录里仍在运行的 `EverythingLabeled.Tray` 与 `EverythingLabeled.ExplorerHost`（Find 关窗只隐藏，托盘退出也不会结束 Host，否则会锁住 DLL）。等价命令：`dotnet build EverythingLabeled.sln`（可加 `-c Release`；直接 `dotnet build` 不会先结束这两个进程）。
 
 ## 分项文档
 

@@ -14,7 +14,13 @@ public static class Copy
     public const string AliasLabel = "别名";
     public const string AliasPlaceholder = "输入别名…";
     public const string TagAliasContinuePlaceholder = "继续输入…";
-    public const string UntagAliasPlaceholder = "或手动输入要去除的别名…";
+    public const string CurrentTagsLabel = "当前标签";
+    public const string UntagFilterPlaceholder = "检索当前标签，支持拼首（可选）";
+    public const string UntagChipHint = "点叉号去除；标签多时可检索";
+    public const string UntagFilterMiss = "没有匹配的当前标签";
+    public const string UntagNoCurrentTags = "当前没有可去除的标签";
+    public const string UntagTagsEmpty = "暂无标签";
+    public const string UntagNeedsOnePath = "去标请只选中一个路径";
     public const string PathsSectionLabel = "目标路径";
     public const string PathSectionLabel = "路径";
     public const string TagsSectionLabel = "标签";
@@ -39,6 +45,8 @@ public static class Copy
     public const string TagReady = "准备就绪";
 
     public static string PreviewCount(int count) => $"预览 {count} 条";
+
+    public static string SuggestCount(int count) => $"建议 {count} 条";
 
     public static string TagWillApply(int pathCount, string alias) =>
         $"将为 {pathCount} 项打上「{alias}」";
@@ -81,6 +89,9 @@ public static class Copy
 
     public static string ConfirmUntag(int pathCount) =>
         $"确定要从 {pathCount} 个路径移除该标签吗？";
+
+    public static string UntagFilterMatch(int shown, int total) =>
+        $"匹配 {CurrentTagFilter.CountText(shown, total)}，点叉号去除";
 
     public static string BatchSummary(int success, int failed, int cancelled) =>
         $"完成：成功 {success}，失败 {failed}，已取消未发送 {cancelled}";

@@ -1012,6 +1012,68 @@ a.btn:hover {
   opacity: 1;
 }
 
+.tag-chips .chip.is-filtered-out {
+  display: none;
+}
+
+.current-tag-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.current-tag-filter input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+  outline: none;
+}
+
+.current-tag-filter input:focus {
+  border-color: var(--accent);
+}
+
+.current-tag-filter .match-count {
+  color: var(--muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  min-width: 3.2em;
+  text-align: right;
+}
+
+.panel[data-state="empty"] .current-tag-filter input {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.panel[data-state="empty"] .current-tag-filter .match-count {
+  display: none;
+}
+
+.tag-chip-well .filter-empty {
+  display: none;
+}
+
+.tag-chip-well.is-filter-miss .filter-empty {
+  display: flex;
+}
+
+.panel[data-state="empty"] .tag-chip-well .filter-empty {
+  display: none !important;
+}
+
+.tag-chip-well.is-filter-miss .tag-chips {
+  display: none;
+}
+
 .tag-chip-well {
   flex: 1;
   min-height: 120px;

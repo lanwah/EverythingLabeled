@@ -643,7 +643,11 @@
                       Margin="0,10,0,0"
                       Style="{StaticResource HostCheckBoxStyle}"
                       Content="{x:Static local:Copy.CreateMissingLabel}" />
-            <DockPanel Grid.Row="5" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
+            <DockPanel Grid.Row="5"
+                       Margin="0,10,0,0"
+                       LastChildFill="False"
+                       HorizontalAlignment="Right"
+                       Visibility="Collapsed">
                 <Button x:Name="TagCancelButton"
                         Style="{StaticResource FindClearButtonStyle}"
                         MinWidth="72"
@@ -662,36 +666,63 @@
         <!-- untag -->
         <Grid x:Name="UntagPanel" Visibility="Collapsed" Margin="16,12,16,0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0"
+            <TextBlock Grid.Row="0"
+                       Style="{StaticResource HostSectionLabelStyle}"
+                       Text="{x:Static local:Copy.PathsSectionLabel}" />
+            <ListBox x:Name="UntagPathList"
+                     Grid.Row="1"
+                     MinHeight="72"
+                     MaxHeight="120"
+                     Style="{StaticResource HostSurfaceListStyle}"
+                     ItemContainerStyle="{StaticResource HostPathItemStyle}" />
+            <DockPanel x:Name="UntagTagListPanel"
+                       Grid.Row="2"
+                       Margin="0,10,0,0">
+                <TextBlock DockPanel.Dock="Top"
                            Style="{StaticResource HostSectionLabelStyle}"
-                           Text="{x:Static local:Copy.PathsSectionLabel}" />
-                <ListBox x:Name="UntagPathList"
-                         Grid.Row="1"
-                         MinHeight="72"
-                         Style="{StaticResource HostSurfaceListStyle}"
-                         ItemContainerStyle="{StaticResource HostPathItemStyle}" />
-                <DockPanel x:Name="UntagTagListPanel"
-                           Grid.Row="2"
-                           Height="160"
-                           Margin="0,10,0,0">
-                    <TextBlock DockPanel.Dock="Top"
-                               Style="{StaticResource HostSectionLabelStyle}"
-                               Text="{x:Static local:Copy.UntagTagListHint}" />
-                    <Border Background="{StaticResource HostInputBgBrush}"
-                            BorderBrush="{StaticResource HostBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="12">
+                           Text="{x:Static local:Copy.CurrentTagsLabel}" />
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <TextBox x:Name="UntagTagFilterBox"
+                                 Style="{StaticResource HostInputStyle}"
+                                 Height="32"
+                                 FontSize="13"
+                                 HorizontalContentAlignment="Left"
+                                 TextChanged="OnUntagTagFilterChanged"
+                                 GotFocus="OnUntagTagFilterFocusChanged"
+                                 LostFocus="OnUntagTagFilterFocusChanged" />
+                        <TextBlock x:Name="UntagTagFilterPlaceholder"
+                                   Text="{x:Static local:Copy.UntagFilterPlaceholder}"
+                                   IsHitTestVisible="False"
+                                   Margin="10,0,10,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   FontSize="13" />
+                    </Grid>
+                    <TextBlock x:Name="UntagTagFilterCount"
+                               Grid.Column="1"
+                               Margin="8,0,0,0"
+                               MinWidth="40"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Right"
+                               Foreground="{StaticResource HostMutedBrush}"
+                               FontSize="12"
+                               Visibility="Collapsed" />
+                </Grid>
+                <Border Background="{StaticResource HostInputBgBrush}"
+                        BorderBrush="{StaticResource HostBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                    <Grid>
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
                                       Focusable="False">
@@ -704,67 +735,22 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
                         </ScrollViewer>
-                    </Border>
-                </DockPanel>
-            </Grid>
-            <Grid Grid.Row="1" Margin="0,10,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0"
-                           VerticalAlignment="Center"
-                           Margin="0,0,10,0"
-                           Foreground="{StaticResource HostMutedBrush}"
-                           FontSize="13"
-                           Text="{x:Static local:Copy.AliasLabel}" />
-                <Grid Grid.Column="1">
-                    <TextBox x:Name="UntagAliasBox"
-                             Style="{StaticResource HostInputStyle}"
-                             Tag="{x:Static local:Copy.UntagAliasPlaceholder}"
-                             TextChanged="OnSuggestAliasChanged" />
-                    <Popup x:Name="UntagSuggestPopup"
-                           PlacementTarget="{Binding ElementName=UntagAliasBox}"
-                           Placement="Bottom"
-                           StaysOpen="True"
-                           AllowsTransparency="True"
-                           PopupAnimation="Fade">
-                        <Border Background="{StaticResource HostInputBgBrush}"
-                                BorderBrush="{StaticResource HostBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                MinWidth="{Binding ActualWidth, ElementName=UntagAliasBox}"
-                                Margin="0,4,0,0">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="24"
-                                                  ShadowDepth="8"
-                                                  Opacity="0.45"
-                                                  Direction="270"
-                                                  Color="Black" />
-                            </Border.Effect>
-                            <ListBox x:Name="UntagSuggestList"
-                                     Style="{StaticResource HostSuggestPopupListStyle}"
-                                     ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
-                                     DisplayMemberPath="Display"
-                                     MouseDoubleClick="OnSuggestItemActivate"
-                                     KeyDown="OnSuggestListKeyDown" />
-                        </Border>
-                    </Popup>
-                </Grid>
-            </Grid>
-            <DockPanel Grid.Row="2" Margin="0,10,0,0" LastChildFill="False" HorizontalAlignment="Right">
-                <Button x:Name="UntagCancelButton"
-                        Style="{StaticResource FindClearButtonStyle}"
-                        MinWidth="72"
-                        Content="{x:Static local:Copy.Cancel}"
-                        IsEnabled="False"
-                        Click="OnBatchCancel" />
-                <Button x:Name="UntagSubmitButton"
-                        Style="{StaticResource FindOpenButtonStyle}"
-                        MinWidth="88"
-                        Margin="8,0,0,0"
-                        Content="{x:Static local:Copy.SubmitUntag}"
-                        Click="OnUntagSubmit" />
+                        <TextBlock x:Name="UntagTagsEmpty"
+                                   Text="{x:Static local:Copy.UntagTagsEmpty}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   FontSize="13"
+                                   Visibility="Collapsed" />
+                        <TextBlock x:Name="UntagFilterMiss"
+                                   Text="{x:Static local:Copy.UntagFilterMiss}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   FontSize="13"
+                                   Visibility="Collapsed" />
+                    </Grid>
+                </Border>
             </DockPanel>
         </Grid>
 
@@ -941,6 +927,7 @@
                      Grid.Row="1"
                      Style="{StaticResource FindListBoxStyle}"
                      ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
+                     DisplayMemberPath="Display"
                      MaxHeight="140"
                      Margin="16,6,16,0"
                      MouseDoubleClick="OnSuggestItemActivate"

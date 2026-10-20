@@ -1,8 +1,8 @@
 namespace EverythingLabeled.ExplorerHost;
 
 /// <summary>
-/// Spec §5.3: tag and untag, when exactly one path is included, show current-tag chips.
-/// Clicking × removes that alias. Multi-select stays hand-entry only.
+/// Tag and untag, when exactly one path is included, show current-tag chips.
+/// Clicking × removes that alias. Untag has no alias box; multi-select does not show chips.
 /// </summary>
 public static class UntagClickDelete
 {

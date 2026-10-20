@@ -241,6 +241,7 @@ function mountLibrary(root: HTMLElement): void {
 
   render();
   void reload();
+  search.focus();
 }
 
 const root = document.getElementById("app");
