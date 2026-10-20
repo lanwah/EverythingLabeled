@@ -16,6 +16,8 @@
     <Color x:Key="HostDangerColor">#E81123</Color>
     <Color x:Key="HostDangerDarkColor">#C50F1F</Color>
     <Color x:Key="HostOnAccentColor">#FFFFFF</Color>
+    <Color x:Key="HostScrollBarThumbColor">#3A4152</Color>
+    <Color x:Key="HostScrollBarThumbHoverColor">#565F74</Color>
 
     <SolidColorBrush x:Key="HostBgBrush" Color="{StaticResource HostBgColor}" />
     <SolidColorBrush x:Key="HostFgBrush" Color="{StaticResource HostFgColor}" />
@@ -37,4 +39,6 @@
     <SolidColorBrush x:Key="HostDangerBrush" Color="{StaticResource HostDangerColor}" />
     <SolidColorBrush x:Key="HostDangerDarkBrush" Color="{StaticResource HostDangerDarkColor}" />
     <SolidColorBrush x:Key="HostOnAccentBrush" Color="{StaticResource HostOnAccentColor}" />
+    <SolidColorBrush x:Key="HostScrollBarThumbBrush" Color="{StaticResource HostScrollBarThumbColor}" />
+    <SolidColorBrush x:Key="HostScrollBarThumbHoverBrush" Color="{StaticResource HostScrollBarThumbHoverColor}" />
 </ResourceDictionary>
