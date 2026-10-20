@@ -7,6 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>EverythingLabeled.Service</AssemblyName>
     <RootNamespace>EverythingLabeled.Service</RootNamespace>
+    <ApplicationIcon>Assets\service.ico</ApplicationIcon>
   </PropertyGroup>
 
     <ItemGroup>

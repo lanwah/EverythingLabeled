@@ -26,6 +26,7 @@
 - Find UI：芯片输入；多标签逻辑读 `findTagLogic`（默认 `and`），不在 UI 切换；Find 无边框深色标题栏；Enter 落芯片 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)（UI 切换已改为配置项）
 - Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；打标与去标单选当前标签为带 × 芯片；打标页不显示底部取消/打标，Enter 提交；去标页不显示别名与底部取消/去标，当前标签可检索后点叉号去除）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；关窗/失焦 Hide 保活；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
+- Service exe 图标：`Assets/service.ico`（服务器 E968 + 标签角标 E8EC，与 Tray/Host 纯标签 `el.ico` 区分）→ `scripts/make-service-icon.ps1` · [Service 骨架](docs/service-skeleton.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 待办

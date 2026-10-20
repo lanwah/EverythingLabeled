@@ -48,6 +48,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Drawing
 
+. (Join-Path $PSScriptRoot 'IcoDibHelpers.ps1')
+
 $root = Split-Path -Parent $PSScriptRoot
 $assetDir = Join-Path $root 'src\EverythingLabeled.ExplorerCommand\Package\Assets'
 $sourceIcon = Join-Path $root 'src\EverythingLabeled.ExplorerShared\Assets\el.ico'
@@ -67,152 +69,6 @@ $verbs = [ordered]@{
 $sizes = @(16, 20, 24, 32, 48)
 $glyphScale = 0.95   # 字形占画布比例；MDL2 字形自带留白，0.95 视觉居中偏满
 
-function New-GlyphBitmap {
-    param([int]$CodePoint, [int]$Size, [System.Drawing.Color]$Ink)
-
-    # 直接按目标尺寸画 + 纯 AntiAlias。试过 4× 超采样再降采样，16px 下反而更糊
-    # （双三次降采样把描边泡开），直接画最清晰。
-    $bitmap = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-
-    $g = [System.Drawing.Graphics]::FromImage($bitmap)
-    $font = New-Object System.Drawing.Font('Segoe MDL2 Assets', [single]($Size * $glyphScale), [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
-    $brush = New-Object System.Drawing.SolidBrush($Ink)
-    $format = New-Object System.Drawing.StringFormat
-    try {
-        $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-        $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
-        $g.Clear([System.Drawing.Color]::Transparent)
-
-        $format.Alignment = [System.Drawing.StringAlignment]::Center
-        $format.LineAlignment = [System.Drawing.StringAlignment]::Center
-        $format.FormatFlags = [System.Drawing.StringFormatFlags]::NoClip
-        $rect = New-Object System.Drawing.RectangleF(0, 0, [single]$Size, [single]$Size)
-        $g.DrawString([string][char]$CodePoint, $font, $brush, $rect, $format)
-    } finally {
-        $format.Dispose(); $brush.Dispose(); $font.Dispose(); $g.Dispose()
-    }
-
-    return $bitmap
-}
-
-# 单帧编码成 ICO 里的标准 DIB（BITMAPINFOHEADER + 32bpp BGRA XOR + 1bpp AND 掩码）
-function Get-IcoDibFrame {
-    param([System.Drawing.Bitmap]$Bitmap)
-
-    $w = $Bitmap.Width
-    $h = $Bitmap.Height
-    $stream = New-Object System.IO.MemoryStream
-    $writer = New-Object System.IO.BinaryWriter($stream)
-    try {
-        $writer.Write([uint32]40)                 # biSize
-        $writer.Write([int32]$w)                  # biWidth
-        $writer.Write([int32]($h * 2))            # biHeight：XOR + AND 两段
-        $writer.Write([uint16]1)                  # biPlanes
-        $writer.Write([uint16]32)                 # biBitCount
-        $writer.Write([uint32]0)                  # biCompression = BI_RGB
-        $writer.Write([uint32]($w * $h * 4))      # biSizeImage
-        $writer.Write([int32]0); $writer.Write([int32]0)   # 分辨率，不用
-        $writer.Write([uint32]0); $writer.Write([uint32]0) # 调色板，不用
-
-        # XOR 段：自下而上、每像素 BGRA
-        for ($y = $h - 1; $y -ge 0; $y--) {
-            for ($x = 0; $x -lt $w; $x++) {
-                $c = $Bitmap.GetPixel($x, $y)
-                $writer.Write([byte]$c.B); $writer.Write([byte]$c.G); $writer.Write([byte]$c.R); $writer.Write([byte]$c.A)
-            }
-        }
-
-        # AND 段：32bpp 走 alpha，掩码全 0；每行按 4 字节对齐
-        $maskStride = [int]([Math]::Floor(($w + 31) / 32) * 4)
-        $mask = New-Object byte[] ($maskStride * $h)
-        $writer.Write($mask)
-    } finally {
-        $writer.Flush()
-    }
-
-    $bytes = $stream.ToArray()
-    $writer.Dispose(); $stream.Dispose()
-    # 逗号前缀：不写 `,` 的话 PowerShell 会把 byte[] 拆成一串对象返回，
-    # 调用方拿到的就不是 byte[]，`BinaryWriter.Write` 只会写进去 1 个字节。
-    return , $bytes
-}
-
-function Write-IcoFile {
-    param([string]$Path, [System.Drawing.Bitmap[]]$Frames)
-
-    $blobs = @()
-    foreach ($frame in $Frames) { $blobs += , (Get-IcoDibFrame -Bitmap $frame) }
-
-    $headerSize = 6 + (16 * $Frames.Count)
-    $stream = New-Object System.IO.MemoryStream
-    $writer = New-Object System.IO.BinaryWriter($stream)
-    try {
-        # ICONDIR：reserved=0、type=1(icon)、count
-        $writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]$Frames.Count)
-
-        $offset = $headerSize
-        for ($i = 0; $i -lt $Frames.Count; $i++) {
-            $w = $Frames[$i].Width
-            $h = $Frames[$i].Height
-            # 宽高字节：256 记 0（宽度为 0 表示 256）
-            $writer.Write([byte]$(if ($w -ge 256) { 0 } else { $w }))
-            $writer.Write([byte]$(if ($h -ge 256) { 0 } else { $h }))
-            $writer.Write([byte]0)      # 调色板色数（32bpp 用 0）
-            $writer.Write([byte]0)      # 保留
-            $writer.Write([uint16]1)    # planes
-            $writer.Write([uint16]32)   # bit count
-            $writer.Write([uint32]$blobs[$i].Length)
-            $writer.Write([uint32]$offset)
-            $offset += $blobs[$i].Length
-        }
-
-        foreach ($blob in $blobs) { $writer.Write($blob) }
-        $writer.Flush()
-        [System.IO.File]::WriteAllBytes($Path, $stream.ToArray())
-    } finally {
-        $writer.Dispose(); $stream.Dispose()
-    }
-}
-
-# 取 ICO 里指定尺寸的帧（PNG 压缩帧直接返回原始 PNG 字节）
-function Get-IcoFramePng {
-    param([string]$Path, [int]$Size)
-
-    $bytes = [System.IO.File]::ReadAllBytes($Path)
-    $count = [BitConverter]::ToUInt16($bytes, 4)
-    for ($i = 0; $i -lt $count; $i++) {
-        $entry = 6 + ($i * 16)
-        $w = $bytes[$entry]; if ($w -eq 0) { $w = 256 }
-        if ($w -ne $Size) { continue }
-
-        $length = [BitConverter]::ToUInt32($bytes, $entry + 8)
-        $start = [BitConverter]::ToUInt32($bytes, $entry + 12)
-        $frame = New-Object byte[] $length
-        [Array]::Copy($bytes, $start, $frame, 0, $length)
-        $signature = ($frame[0..7] | ForEach-Object { $_.ToString('X2') }) -join ''
-        if ($signature -ne '89504E470D0A1A0A') {
-            throw "$Path 的 ${Size}x${Size} 帧不是 PNG 压缩帧，本脚本只处理 PNG 帧。"
-        }
-        return $frame
-    }
-    throw "$Path 里没有 ${Size}x${Size} 帧。"
-}
-
-function Write-ScaledPng {
-    param([System.Drawing.Image]$Source, [string]$Path, [int]$Size)
-
-    $bitmap = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($bitmap)
-    try {
-        $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-        $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-        $g.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
-        $g.Clear([System.Drawing.Color]::Transparent)
-        $g.DrawImage($Source, (New-Object System.Drawing.Rectangle(0, 0, $Size, $Size)))
-    } finally { $g.Dispose() }
-    try { $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png) } finally { $bitmap.Dispose() }
-}
-
 if (-not (Test-Path -LiteralPath $sourceIcon)) { throw "找不到源图标：$sourceIcon" }
 if (-not (Test-Path -LiteralPath $assetDir)) { New-Item -ItemType Directory -Path $assetDir -Force | Out-Null }
 
@@ -223,7 +79,7 @@ if ($ink.A -ne 255) { $ink = [System.Drawing.Color]::FromArgb(255, $ink.R, $ink.
 Write-Host "[1/2] 生成动词图标（$Color，尺寸 $($sizes -join '/')）..."
 foreach ($name in $verbs.Keys) {
     $frames = @()
-    foreach ($size in $sizes) { $frames += New-GlyphBitmap -CodePoint $verbs[$name] -Size $size -Ink $ink }
+    foreach ($size in $sizes) { $frames += New-GlyphBitmap -CodePoint $verbs[$name] -Size $size -Ink $ink -GlyphScale $glyphScale }
     try {
         $target = Join-Path $assetDir $name
         Write-IcoFile -Path $target -Frames $frames

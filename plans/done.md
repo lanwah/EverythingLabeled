@@ -138,3 +138,4 @@
 - 2026-10-19 — 打开管理标签后筛选框自动获焦（Host `library` 与扩展 `library.html`）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-19 — 打标页隐藏底部「取消」「打标」，别名框 Enter 直接提交 → [docs/explorer.md](../docs/explorer.md) · [tag.html](../design/explorer-ui/tag.html)
 - 2026-10-20 — Host 打标/去标/看标签/管理标签：点击窗口外失焦自动关闭（与 Find 失焦 Hide 共用 `HostWindowDeactivateDismiss`）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-20 — Service 专用 exe 图标 `Assets/service.ico`（MDL2 服务器 E968 + 标签角标 E8EC，青绿 #2EC4B6；`ApplicationIcon` + `scripts/make-service-icon.ps1`）→ [docs/service-skeleton.md](../docs/service-skeleton.md)

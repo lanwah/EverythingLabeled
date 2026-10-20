@@ -11,6 +11,7 @@
 ```text
 EverythingLabeled.sln
 ├── src/EverythingLabeled.Service/
+│   ├── Assets/service.ico         # exe 图标（服务器 + 标签角标；`scripts/make-service-icon.ps1`）
 │   ├── Program.cs                 # 启动流水线入口
 │   ├── appsettings.json           # 非密钥（Cache、Serilog 等）
 │   ├── Hosting/                   # 路径、Mutex、config 引导
