@@ -200,12 +200,7 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
 ## 依赖
 
 - **Service**：本机已监听 `127.0.0.1`，Host 经 Bearer 调 `/v1`（health 失败则 UI 提示，业务不可用）。
-- **`%AppData%\EverythingLabeled\config.json`**：Host **只读**、**不写回**；忽略 `EL_*` 环境变量。与 CLI 共用同一文件，至少需 `baseUrl` 与 `token`。Explorer 相关可选字段：
-  - `previewLimit` — find 预览条数，缺省 **16**（有效范围 1–50）
-  - `maxConcurrency` — 批量打标/去标并发，缺省 **4**
-  - `confirmUntag` — 去标前确认，缺省 **true**
-  - `findTagLogic` — Find 多标签查询：`"and"`（缺省）或 `"or"`；不在 Find 界面展示，改后重启 Host
-  - `findHotkey` / `runAtStartup` — Tray 用（Host 可不解析）；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)
+- **`%AppData%\EverythingLabeled\config.json`**：Host **只读**、**不写回**；忽略 `EL_*` 环境变量。与 CLI 共用同一文件。完整键表见 [本机配置](./config.md)。Host 常用：`previewLimit`、`maxConcurrency`、`confirmUntag`、`findTagLogic`（Find 多标签 AND/OR，改后重启 Host）；`findHotkey` / `runAtStartup` 由 Tray 读，见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)。
 
 ### Tray（Find 热键）
 

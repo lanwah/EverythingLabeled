@@ -43,6 +43,8 @@
 
 ### 2.1 `config.json`
 
+实现侧索引（键表、谁读谁写、代码锚点）：[docs/config.md](../docs/config.md)。
+
 ```json
 {
   "baseUrl": "http://127.0.0.1:5123",

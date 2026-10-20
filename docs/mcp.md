@@ -17,7 +17,7 @@
 dotnet run --project src/EverythingLabeled.Mcp -- --help
 ```
 
-配置不写回。覆盖顺序：`--config` / `--base-url` / `--token` > env `EL_CONFIG` / `EL_BASE_URL` / `EL_TOKEN` > `%APPDATA%\EverythingLabeled\config.json`。`--help` / `--version` 不读配置、不进 host。
+配置不写回。键表见 [本机配置](./config.md)。覆盖顺序：`--config` / `--base-url` / `--token` > env `EL_CONFIG` / `EL_BASE_URL` / `EL_TOKEN` > `%APPDATA%\EverythingLabeled\config.json`。`--help` / `--version` 不读配置、不进 host。
 
 业务工具需要 `baseUrl` 与 `token`。`el_health` 只需 `baseUrl`；服务不可达时工具返回 `connection_failed`。两者都缺时会话仍启动；`el_health` 在缺 url 时、其余工具在缺 url 或 token 时返回 `config_missing`。
 

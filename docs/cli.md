@@ -15,7 +15,7 @@
 dotnet run --project src/EverythingLabeled.Cli -- --help
 ```
 
-配置不写回。覆盖顺序：`--config` / `--base-url` / `--token` > env `EL_CONFIG` / `EL_BASE_URL` / `EL_TOKEN` > `%APPDATA%\EverythingLabeled\config.json`。`baseUrl` 与 `token` 必填。
+配置不写回。键表与缺省见 [本机配置](./config.md)。覆盖顺序：`--config` / `--base-url` / `--token` > env `EL_CONFIG` / `EL_BASE_URL` / `EL_TOKEN` > `%APPDATA%\EverythingLabeled\config.json`。`baseUrl` 与 `token` 必填。
 
 ## 测试
 

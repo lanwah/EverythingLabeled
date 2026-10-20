@@ -76,10 +76,10 @@ ext/  …… 独立 Node/Vite 工程，无 .NET ProjectReference
 ### 运行时如何协作
 
 1. **起 Service**  
-   监听回环地址；端口与 token 写入（或读取）`%APPDATA%\EverythingLabeled\config.json`。探活 `GET /v1/health`；业务 API 在 `/v1/...`。
+   监听回环地址；端口与 token 写入（或读取）`%APPDATA%\EverythingLabeled\config.json`。键表与谁读谁写见 [本机配置](./config.md)。探活 `GET /v1/health`；业务 API 在 `/v1/...`。
 
 2. **可读 AppData 的客户端**（CLI、MCP、Explorer Host）  
-   按各自文档的优先级解析 `--config` / 环境变量 / AppData，拿到 `baseUrl` + `token`，经 **Client**（或等价 `fetch`）调 Service。配置默认不写回。
+   按 [本机配置](./config.md) 与各端文档的优先级解析 `--config` / 环境变量 / AppData，拿到 `baseUrl` + `token`，经 **Client**（或等价 `fetch`）调 Service。配置默认不写回。
 
 3. **浏览器扩展**  
    Options 手填与 AppData **同名键**，但不自动同步；需从 `config.json` 手工复制。仅 service worker 发请求。
@@ -115,6 +115,7 @@ build.bat -Configuration Release
 
 | 文档 | 对应实现 | 说明 |
 |---|---|---|
+| [本机配置](./config.md) | AppData `config.json` | 键表、缺省、覆盖优先级、与 `appsettings.json` 分工；规格见 [配置与安装](../plans/2026-09-27-config-and-install.md) |
 | [Service 骨架](./service-skeleton.md) | backlog **#8** | 守护进程工程结构、启动、配置、health/鉴权、测试 |
 | [CRUD 与查询](./crud-and-query.md) | backlog **#9** | 标签/资源/关系/查询落地布局、写路径 bump、缓存桩、如何跑测试 |
 | [查询缓存](./query-cache.md) | backlog **#10** | Memory/Redis/Null、`Cache:*`、opt-in Redis 测 |

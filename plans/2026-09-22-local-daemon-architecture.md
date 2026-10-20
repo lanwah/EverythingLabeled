@@ -93,7 +93,7 @@ v1 以本机守护进程为唯一数据入口，CLI、浏览器扩展、资源�
 - 仅绑定回环地址。
 - 同步阶段再引入用户身份与远程鉴权。
 
-示例配置位置：`%AppData%/EverythingLabeled/config.json`
+示例配置位置：`%AppData%/EverythingLabeled/config.json`（实现索引：[docs/config.md](../docs/config.md)）
 
 ```json
 {

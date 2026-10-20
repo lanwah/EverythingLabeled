@@ -66,7 +66,7 @@ Invoke-RestMethod http://127.0.0.1:5123/v1/health
 
 | 路径 | 用途 |
 |---|---|
-| `{root}/config.json` | `baseUrl` + `token` 等（客户端与 Service 共用） |
+| `{root}/config.json` | `baseUrl` + `token` 等（客户端与 Service 共用）；键表见 [本机配置](./config.md) |
 | `{root}/data/el.db` | SQLite |
 | `{root}/logs/service-*.log` | Serilog 按日滚动，保留 14 天 |
 
