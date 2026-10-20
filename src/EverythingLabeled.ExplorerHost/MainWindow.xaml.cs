@@ -69,15 +69,7 @@ public partial class MainWindow : Window
                 await RunSuggestAsync().ConfigureAwait(true);
         };
 
-        Loaded += (_, _) =>
-        {
-            if (_mode == HostMode.Find)
-                FocusFindQuery();
-            else if (_mode == HostMode.Tag)
-                TagAliasBox.Focus();
-            else if (_mode == HostMode.Untag)
-                UntagTagFilterBox.Focus();
-        };
+        Loaded += (_, _) => FocusModeInput();
 
         ApplyBanner(ctx.Banner);
         ShowMode(_mode);
@@ -169,6 +161,25 @@ public partial class MainWindow : Window
         return hwnd;
     }
 
+    private void FocusModeInput()
+    {
+        if (!IsLoaded)
+            return;
+
+        switch (_mode)
+        {
+            case HostMode.Find:
+                FocusFindQuery();
+                break;
+            case HostMode.Tag:
+                FocusTagAlias();
+                break;
+            case HostMode.Untag:
+                FocusUntagTagFilter();
+                break;
+        }
+    }
+
     private void FocusFindQuery()
     {
         if (_mode != HostMode.Find)
@@ -181,6 +192,38 @@ public partial class MainWindow : Window
                 Keyboard.Focus(FindQueryBox);
                 FindQueryBox.CaretIndex = FindQueryBox.Text.Length;
                 UpdateFindPlaceholder();
+            },
+            DispatcherPriority.Input);
+    }
+
+    private void FocusTagAlias()
+    {
+        if (_mode != HostMode.Tag)
+            return;
+
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                TagAliasBox.Focus();
+                Keyboard.Focus(TagAliasBox);
+                TagAliasBox.CaretIndex = TagAliasBox.Text.Length;
+                UpdateTagAliasPlaceholder();
+            },
+            DispatcherPriority.Input);
+    }
+
+    private void FocusUntagTagFilter()
+    {
+        if (_mode != HostMode.Untag)
+            return;
+
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                UntagTagFilterBox.Focus();
+                Keyboard.Focus(UntagTagFilterBox);
+                UntagTagFilterBox.CaretIndex = UntagTagFilterBox.Text.Length;
+                UpdateUntagFilterPlaceholder();
             },
             DispatcherPriority.Input);
     }
@@ -378,8 +421,7 @@ public partial class MainWindow : Window
             _ => null,
         };
 
-        if (mode == HostMode.Find && IsLoaded)
-            FocusFindQuery();
+        FocusModeInput();
     }
 
     private void UpdateCurrentTagListVisibility()
@@ -525,7 +567,10 @@ public partial class MainWindow : Window
             _untagTagsLoaded = true;
             TagsTagList.ItemsSource = rows;
             if (_mode == HostMode.Untag)
+            {
                 ApplyUntagTagFilter(updateStatus: refreshUntagStatus);
+                FocusUntagTagFilter();
+            }
             else if (UntagClickDelete.ShowsPanel(HostMode.Untag, uris.Count))
                 UntagTagList.ItemsSource = rows;
         }
@@ -855,7 +900,7 @@ public partial class MainWindow : Window
         _tagBatchStatusUntilEdit = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
         SetHostStatus(_tagBatchStatusUntilEdit);
         _tagHadAliasDraft = false;
-        TagAliasBox.Focus();
+        FocusTagAlias();
         if (summary.Success > 0 && UntagClickDelete.ShowsPanel(HostMode.Tag, IncludedUris().Count))
             await LoadResourceTagsAsync().ConfigureAwait(true);
     }
