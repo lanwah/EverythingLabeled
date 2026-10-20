@@ -135,3 +135,4 @@
 - 2026-10-19 — 管理标签列表默认选中首项，↑/↓ 切换选中（筛选与删除后仍保持有选中行）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-19 — 打开管理标签后筛选框自动获焦（Host `library` 与扩展 `library.html`）→ [docs/explorer.md](../docs/explorer.md)
 - 2026-10-19 — 打标页隐藏底部「取消」「打标」，别名框 Enter 直接提交 → [docs/explorer.md](../docs/explorer.md) · [tag.html](../design/explorer-ui/tag.html)
+- 2026-10-20 — Host 打标/去标/看标签/管理标签：点击窗口外失焦自动关闭（与 Find 失焦 Hide 共用 `HostWindowDeactivateDismiss`）→ [docs/explorer.md](../docs/explorer.md)

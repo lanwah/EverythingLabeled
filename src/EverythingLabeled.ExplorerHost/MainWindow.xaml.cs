@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private bool _tagHadAliasDraft;
     private bool _allowFindExit;
     private int _findActivation;
+    private bool _blockDeactivateDismiss;
 
     public MainWindow(HostUiContext ctx)
     {
@@ -45,9 +46,13 @@ public partial class MainWindow : Window
         TagChipList.ItemsSource = _tagAppliedAliases;
 
         EnableHostWindowChrome();
+        HostWindowDeactivateDismiss.Attach(
+            this,
+            () => !_blockDeactivateDismiss,
+            DismissOnDeactivate,
+            () => _findActivation);
         if (ctx.Mode == HostMode.Find)
         {
-            Deactivated += OnFindDeactivated;
             Closing += OnFindClosing;
             var app = System.Windows.Application.Current;
             if (app is not null)
@@ -96,21 +101,12 @@ public partial class MainWindow : Window
             });
     }
 
-    private void OnFindDeactivated(object? sender, EventArgs e)
+    private void DismissOnDeactivate()
     {
-        if (_mode != HostMode.Find)
-            return;
-
-        var activation = _findActivation;
-        Dispatcher.BeginInvoke(
-            () =>
-            {
-                if (activation != _findActivation)
-                    return;
-                if (_mode == HostMode.Find && !IsActive && IsVisible)
-                    HideFind();
-            },
-            DispatcherPriority.Background);
+        if (_mode == HostMode.Find)
+            HideFind();
+        else
+            Close();
     }
 
     private void OnFindClosing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -941,13 +937,21 @@ public partial class MainWindow : Window
 
         if (_ctx.Config.ConfirmUntag)
         {
-            var confirm = MessageBox.Show(
-                Copy.ConfirmUntag(uris.Count),
-                Copy.WindowTitleUntag,
-                MessageBoxButton.OKCancel,
-                MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.OK)
-                return false;
+            _blockDeactivateDismiss = true;
+            try
+            {
+                var confirm = MessageBox.Show(
+                    Copy.ConfirmUntag(uris.Count),
+                    Copy.WindowTitleUntag,
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Question);
+                if (confirm != MessageBoxResult.OK)
+                    return false;
+            }
+            finally
+            {
+                _blockDeactivateDismiss = false;
+            }
         }
 
         var summary = await RunBatchAsync(

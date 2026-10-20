@@ -23,6 +23,7 @@ public partial class LibraryWindow : Window
         _ctx = ctx;
         InitializeComponent();
         EnableHostWindowChrome();
+        HostWindowDeactivateDismiss.Attach(this, () => true, Close);
         TagList.ItemsSource = _rows;
         SearchBox.IsEnabled = ctx.BusinessEnabled && ctx.Api is not null;
         SearchPlaceholder.Text = Copy.LibrarySearchPlaceholder;
