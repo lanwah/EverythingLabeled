@@ -21,13 +21,5 @@
     btn.addEventListener("click", () => apply(btn.dataset.state));
   });
 
-  document.querySelectorAll(".mode-toggle button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      btn.parentElement.querySelectorAll("button").forEach((b) => {
-        b.setAttribute("aria-pressed", b === btn ? "true" : "false");
-      });
-    });
-  });
-
   apply(state);
 })();

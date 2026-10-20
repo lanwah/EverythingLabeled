@@ -432,10 +432,24 @@ a:hover {
   min-height: 40px;
 }
 
-.footer .status {
+.footer-leading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.footer > .status {
   flex: 1;
   color: var(--muted);
   font-size: 13px;
+}
+
+.footer-leading .status {
+  color: var(--muted);
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -505,14 +519,10 @@ a.btn:hover {
 
 /* —— Find —— */
 .find-toolbar {
-  display: flex;
-  gap: 10px;
   margin: 12px 6px 0;
-  align-items: stretch;
 }
 
 .chip-field {
-  flex: 1;
   min-height: 44px;
   background: var(--input-bg);
   border: 1px solid var(--border);
@@ -528,6 +538,27 @@ a.btn:hover {
   font-size: 15px;
   margin-top: 2px;
   flex-shrink: 0;
+}
+
+.chip-field .clear-all-tags {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: "Segoe MDL2 Assets", "Segoe UI Symbol", sans-serif;
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: center;
+}
+
+.chip-field .clear-all-tags:hover {
+  background: var(--row-hover);
+  color: var(--fg);
 }
 
 .chip-wrap {
@@ -591,41 +622,6 @@ a.btn:hover {
 .chip-input.has-value .placeholder,
 .panel[data-state="filled"] .chip-input .placeholder.hide-when-chips {
   display: none;
-}
-
-.mode-toggle {
-  display: flex;
-  align-self: center;
-  background: var(--input-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.mode-toggle button {
-  appearance: none;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.mode-toggle button:hover {
-  background: var(--row-hover);
-  color: var(--fg);
-}
-
-.mode-toggle button[aria-pressed="true"] {
-  background: var(--row-selected);
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 .result-list,

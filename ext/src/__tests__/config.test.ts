@@ -45,6 +45,7 @@ describe("normalizeStoredConfig", () => {
       token: "",
       confirmUntag: true,
       previewLimit: DEFAULT_PREVIEW_LIMIT,
+      findTagLogic: "and",
     });
     expect(DEFAULT_BASE_URL).toBe("http://127.0.0.1:5123");
     expect(DEFAULT_PREVIEW_LIMIT).toBe(8);
@@ -58,7 +59,13 @@ describe("normalizeStoredConfig", () => {
       token: "",
       confirmUntag: false,
       previewLimit: 16,
+      findTagLogic: "and",
     });
+  });
+
+  it("parses findTagLogic or", () => {
+    expect(normalizeStoredConfig({ findTagLogic: "or" }).findTagLogic).toBe("or");
+    expect(normalizeStoredConfig({ findTagLogic: "AND" }).findTagLogic).toBe("and");
   });
 
   it("coerces illegal previewLimit to 8", () => {

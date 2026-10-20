@@ -8,7 +8,13 @@ import { handleRequest, type ElRequest, type ElResponse } from "./messages";
 import { openOrFocusExtensionPage } from "./open-extension-page";
 import { isHttpPage } from "./uri";
 
-const STORED_KEYS = ["baseUrl", "token", "confirmUntag", "previewLimit"] as const;
+const STORED_KEYS = [
+  "baseUrl",
+  "token",
+  "confirmUntag",
+  "previewLimit",
+  "findTagLogic",
+] as const;
 const MENU_MANAGE_PAGE = "el-manage-page";
 const MENU_LIBRARY = "el-library";
 const APP_PAGE = "app.html";
@@ -26,6 +32,7 @@ async function saveStored(cfg: ElExtensionConfig): Promise<void> {
     token: cfg.token,
     confirmUntag: cfg.confirmUntag,
     previewLimit: cfg.previewLimit,
+    findTagLogic: cfg.findTagLogic,
   });
 }
 

@@ -136,45 +136,12 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="FindModeRadioStyle" TargetType="RadioButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="12,8" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource HostAccentBrush}" />
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="1" />
-                                <Setter Property="Foreground" Value="{StaticResource HostAccentBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <Style x:Key="FindFieldClearTagsStyle" TargetType="Button" BasedOn="{StaticResource FindChromeButtonStyle}">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="4,0,0,0" />
         </Style>
 
         <Style x:Key="FindClearButtonStyle" TargetType="Button">
@@ -477,6 +444,7 @@
                     MinWidth="72"
                     Margin="8,0,0,0"
                     Visibility="Collapsed"
+                    IsTabStop="False"
                     Content="{x:Static local:Copy.Open}"
                     Click="OnFindOpen" />
             <Button x:Name="FindClearButton"
@@ -484,6 +452,7 @@
                     Style="{StaticResource FindClearButtonStyle}"
                     MinWidth="88"
                     Visibility="Collapsed"
+                    IsTabStop="False"
                     Content="{x:Static local:Copy.ClearTags}"
                     Click="OnFindClearTags" />
             <Button x:Name="SwitchToUntagButton"
@@ -829,11 +798,7 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="16,12,16,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0"
+                <Border
                         Background="{StaticResource HostInputBgBrush}"
                         BorderBrush="{StaticResource HostBorderBrush}"
                         BorderThickness="1"
@@ -844,6 +809,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="&#xE721;"
@@ -897,29 +863,15 @@
                                 </Grid>
                             </WrapPanel>
                         </Grid>
+                        <Button Grid.Column="2"
+                                x:Name="FindClearTagsButton"
+                                Style="{StaticResource FindFieldClearTagsStyle}"
+                                Visibility="Collapsed"
+                                FontFamily="Segoe MDL2 Assets"
+                                Content="&#xE894;"
+                                ToolTip="{x:Static local:Copy.ClearTags}"
+                                Click="OnFindClearTags" />
                     </Grid>
-                </Border>
-                <Border Grid.Column="1"
-                        Background="{StaticResource HostInputBgBrush}"
-                        BorderBrush="{StaticResource HostBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center"
-                        Padding="3">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="FindAndRadio"
-                                     GroupName="FindMode"
-                                     Style="{StaticResource FindModeRadioStyle}"
-                                     Content="{x:Static local:Copy.FindAnd}"
-                                     IsChecked="True"
-                                     Checked="OnFindModeChanged" />
-                        <RadioButton x:Name="FindOrRadio"
-                                     GroupName="FindMode"
-                                     Style="{StaticResource FindModeRadioStyle}"
-                                     Content="{x:Static local:Copy.FindOr}"
-                                     Checked="OnFindModeChanged" />
-                    </StackPanel>
                 </Border>
             </Grid>
 

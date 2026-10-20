@@ -204,6 +204,7 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
   - `previewLimit` — find 预览条数，缺省 **16**（有效范围 1–50）
   - `maxConcurrency` — 批量打标/去标并发，缺省 **4**
   - `confirmUntag` — 去标前确认，缺省 **true**
+  - `findTagLogic` — Find 多标签查询：`"and"`（缺省）或 `"or"`；不在 Find 界面展示，改后重启 Host
   - `findHotkey` / `runAtStartup` — Tray 用（Host 可不解析）；见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)
 
 ### Tray（Find 热键）

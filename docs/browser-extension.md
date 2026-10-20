@@ -34,6 +34,8 @@ npm run build
 
 Options 页填写 `baseUrl` 与 `token`。可从 CLI / AppData 的 `config.json` **手工复制**这两项；扩展不会自动读 AppData。
 
+多标签预览的 AND/OR **不在界面切换**：在 `chrome.storage.local` 写入 `findTagLogic`（`"and"` 缺省，`"or"` 为任一匹配），与 `baseUrl` 等键同级；Options 页暂无表单项，可借开发者工具或同步脚本设置。改后重新打开扩展页生效。
+
 探测（health）与打标等业务请求依赖本机 Service 已监听 `127.0.0.1`（`baseUrl` 指向该地址）。Service 未启动时连接态为失败，业务操作不可用。
 
 ## 打标

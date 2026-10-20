@@ -148,20 +148,8 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   chipInputWrap.append(qInput);
   chipWrap.append(chipInputWrap);
   chipField.append(chipWrap, previewSuggest);
-  const andBtn = document.createElement("button");
-  andBtn.type = "button";
-  andBtn.textContent = "AND";
-  andBtn.setAttribute("aria-pressed", "true");
-  const orBtn = document.createElement("button");
-  orBtn.type = "button";
-  orBtn.textContent = "OR";
-  orBtn.setAttribute("aria-pressed", "false");
-  const modeToggle = el("div", "mode-toggle");
-  modeToggle.setAttribute("role", "group");
-  modeToggle.setAttribute("aria-label", "匹配模式");
-  modeToggle.append(andBtn, orBtn);
   const queryRow = el("div", "find-toolbar");
-  queryRow.append(chipField, modeToggle);
+  queryRow.append(chipField);
   const hitsList = el("ul", "result-list surface");
   const previewHint = el("p", "empty-hint");
   previewHint.textContent = copy.previewIdle;
@@ -206,7 +194,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let tagActionsEnabled = false;
   let previewCount = 0;
   let previewTags: string[] = [];
-  let previewUseOr = false;
   let previewRequestId = 0;
   let tagSuggestRequestId = 0;
   let tagSuggest: SuggestNavState = emptySuggestNav();
@@ -215,6 +202,10 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   function previewStatusText(): string {
     return `预览 ${previewCount} 条`;
+  }
+
+  function previewUseOr(): boolean {
+    return config?.findTagLogic === "or";
   }
 
   function setStatus(text: string, kind: "ok" | "err" | "" = ""): void {
@@ -558,7 +549,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   async function runPreview(): Promise<void> {
     const requestId = ++previewRequestId;
-    const q = composePreviewQuery(previewTags, previewUseOr);
+    const q = composePreviewQuery(previewTags, previewUseOr());
     if (q == null) {
       showIdlePreview();
       return;
@@ -597,14 +588,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     })();
   }, SUGGEST_MS);
 
-  function setPreviewUseOr(useOr: boolean): void {
-    if (useOr === previewUseOr) return;
-    previewUseOr = useOr;
-    andBtn.setAttribute("aria-pressed", useOr ? "false" : "true");
-    orBtn.setAttribute("aria-pressed", useOr ? "true" : "false");
-    void runPreview();
-  }
-
   qInput.addEventListener("input", () => {
     runPreviewSuggest();
   });
@@ -632,12 +615,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     const draft = normalizeQueryToken(qInput.value);
     if (draft != null) commitPreviewTag(draft);
-  });
-  andBtn.addEventListener("click", () => {
-    setPreviewUseOr(false);
-  });
-  orBtn.addEventListener("click", () => {
-    setPreviewUseOr(true);
   });
   clearBtn.addEventListener("click", () => {
     previewTags = [];

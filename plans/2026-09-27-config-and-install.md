@@ -51,13 +51,15 @@
   "previewLimit": 16,
   "maxConcurrency": 4,
   "findHotkey": "Alt+L",
-  "runAtStartup": true
+  "runAtStartup": true,
+  "findTagLogic": "and"
 }
 ```
 
 - `baseUrl` / `token`：必填（安装器或首次引导生成）。
 - 可选键缺省与 [架构 §6](./2026-09-22-local-daemon-architecture.md)、[CLI §2](./2026-09-26-cli.md) 一致。
 - Tray 相关可选键（见 [Tray Find 热键](./2026-10-07-tray-find-hotkey.md)）：`findHotkey`（缺省 `Alt+L`；空串/`none` 表示不注册热键）、`runAtStartup`（缺省 `true`）。Service **不必**在引导时主动写出这两键；**任何重写 config 须保留**已有值及未知键。
+- Explorer Find 多标签匹配：`findTagLogic` — `"and"`（缺省，空格 AND）或 `"or"`（`OR` 关键字）；Host 只读，**不在 Find UI 展示**；改后需重启 Host 窗口生效。
 - 未知键：客户端忽略（CLI 已确认）；写回方须保留。
 - **原子写入**：写临时文件再 replace，避免半截 JSON。
 

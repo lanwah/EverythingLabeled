@@ -154,6 +154,7 @@ describe("handleRequest config", () => {
         token: "",
         confirmUntag: true,
         previewLimit: DEFAULT_PREVIEW_LIMIT,
+        findTagLogic: "and",
       },
       message: null,
     });

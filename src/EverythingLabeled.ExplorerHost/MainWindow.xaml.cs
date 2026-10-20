@@ -44,6 +44,7 @@ public partial class MainWindow : Window
 
         FindChipList.ItemsSource = _findTags;
         TagChipList.ItemsSource = _tagAppliedAliases;
+        _findUseOr = ctx.Config?.FindUseOr ?? false;
 
         EnableHostWindowChrome();
         HostWindowDeactivateDismiss.Attach(
@@ -233,6 +234,9 @@ public partial class MainWindow : Window
         FindQueryPlaceholder.Visibility = string.IsNullOrEmpty(FindQueryBox.Text)
             ? Visibility.Visible
             : Visibility.Collapsed;
+        FindClearTagsButton.Visibility = _findTags.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void UpdateTagAliasPlaceholder()
@@ -288,10 +292,7 @@ public partial class MainWindow : Window
 
     private void ApplyHostChrome(HostMode mode)
     {
-        var findMode = mode == HostMode.Find;
         var tagsMode = mode == HostMode.Tags;
-        FindOpenButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
-        FindClearButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
         SwitchToTagButton.Visibility = tagsMode ? Visibility.Visible : Visibility.Collapsed;
         SwitchToUntagButton.Visibility = tagsMode ? Visibility.Visible : Visibility.Collapsed;
         FindCaptionBar.Visibility = Visibility.Visible;
@@ -329,10 +330,8 @@ public partial class MainWindow : Window
             StatusText.TextTrimming = TextTrimming.None;
         }
 
-        if (findMode)
+        if (mode == HostMode.Find)
         {
-            FindAndRadio.IsChecked = !_findUseOr;
-            FindOrRadio.IsChecked = _findUseOr;
             SetHostStatus(Copy.PreviewCount(0));
             ApplyFindListLayout();
         }
@@ -473,10 +472,7 @@ public partial class MainWindow : Window
         FindQueryBox.IsEnabled = on;
         FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
-        FindOpenButton.IsEnabled = on;
-        FindClearButton.IsEnabled = on;
-        FindAndRadio.IsEnabled = on;
-        FindOrRadio.IsEnabled = on;
+        FindClearTagsButton.IsEnabled = on;
         UpdateUntagFilterEnabled();
     }
 
@@ -495,10 +491,7 @@ public partial class MainWindow : Window
         FindQueryBox.IsEnabled = on;
         FindSuggestList.IsEnabled = on;
         FindResultList.IsEnabled = on;
-        FindOpenButton.IsEnabled = on;
-        FindClearButton.IsEnabled = on;
-        FindAndRadio.IsEnabled = on;
-        FindOrRadio.IsEnabled = on;
+        FindClearTagsButton.IsEnabled = on;
         UpdateUntagFilterEnabled();
 
         TagCancelButton.IsEnabled = busy && _mode == HostMode.Tag;
@@ -822,6 +815,8 @@ public partial class MainWindow : Window
             return;
 
         _findTags.Remove(alias);
+        UpdateFindPlaceholder();
+        ApplyFindListLayout();
         _ = RunFindPreviewAsync();
         FocusFindQuery();
     }
@@ -844,19 +839,6 @@ public partial class MainWindow : Window
         ApplyFindListLayout();
         _ = RunFindPreviewAsync();
         FocusFindQuery();
-    }
-
-    private void OnFindModeChanged(object sender, RoutedEventArgs e)
-    {
-        if (!IsLoaded || _mode != HostMode.Find)
-            return;
-
-        var useOr = FindOrRadio.IsChecked == true;
-        if (useOr == _findUseOr)
-            return;
-
-        _findUseOr = useOr;
-        _ = RunFindPreviewAsync();
     }
 
     private async void OnTagSubmit(object sender, RoutedEventArgs e) =>
@@ -1283,6 +1265,8 @@ public partial class MainWindow : Window
             && _findTags.Count > 0)
         {
             _findTags.RemoveAt(_findTags.Count - 1);
+            UpdateFindPlaceholder();
+            ApplyFindListLayout();
             _ = RunFindPreviewAsync();
             e.Handled = true;
             return;

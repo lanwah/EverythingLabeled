@@ -23,6 +23,60 @@ public sealed class ExplorerConfigTests
         Assert.True(r.Data.ConfirmUntag);
         Assert.Equal(8, r.Data.PreviewLimit);
         Assert.Equal(2, r.Data.MaxConcurrency);
+        Assert.False(r.Data.FindUseOr);
+    }
+
+    [Fact]
+    public void LoadFrom_maps_findUseOr_when_requested()
+    {
+        var loaded = ElResult<ElConfig>.Ok(new ElConfig(
+            "http://127.0.0.1:5123/",
+            "secret",
+            true,
+            16,
+            4));
+
+        var r = ExplorerConfigLoader.LoadFrom(loaded, @"C:\el\config.json", findUseOr: true);
+
+        Assert.True(r.IsSuccess);
+        Assert.True(r.Data!.FindUseOr);
+    }
+
+    [Theory]
+    [InlineData("or", true)]
+    [InlineData("OR", true)]
+    [InlineData("and", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void ParseUseOr_recognizes_or_only(string? raw, bool expected)
+    {
+        Assert.Equal(expected, FindTagLogicConfig.ParseUseOr(raw));
+    }
+
+    [Fact]
+    public void ReadFindUseOr_reads_or_from_config_file()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "el-explorer-config-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "config.json");
+        File.WriteAllText(
+            path,
+            """
+            {
+              "baseUrl": "http://127.0.0.1:5123",
+              "token": "secret",
+              "findTagLogic": "or"
+            }
+            """);
+
+        try
+        {
+            Assert.True(ExplorerConfigLoader.ReadFindUseOr(path));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
     }
 
     [Fact]

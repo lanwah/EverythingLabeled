@@ -5,11 +5,14 @@ export const DEFAULT_PREVIEW_LIMIT = 8;
 export const MIN_PREVIEW_LIMIT = 1;
 export const MAX_PREVIEW_LIMIT = 16;
 
+export type FindTagLogic = "and" | "or";
+
 export type ElExtensionConfig = {
   baseUrl: string;
   token: string;
   confirmUntag: boolean;
   previewLimit: number;
+  findTagLogic: FindTagLogic;
 };
 
 export type ConfigParse =
@@ -59,6 +62,12 @@ export function parsePreviewLimit(raw: unknown): number {
   return parseIntegerInRange(raw) ?? DEFAULT_PREVIEW_LIMIT;
 }
 
+export function parseFindTagLogic(raw: unknown): FindTagLogic {
+  if (typeof raw !== "string") return "and";
+  const v = raw.trim().toLowerCase();
+  return v === "or" ? "or" : "and";
+}
+
 export function normalizeStoredConfig(
   stored: Record<string, unknown> | undefined,
 ): ElExtensionConfig {
@@ -71,6 +80,7 @@ export function normalizeStoredConfig(
     token,
     confirmUntag,
     previewLimit: parsePreviewLimit(stored?.previewLimit),
+    findTagLogic: parseFindTagLogic(stored?.findTagLogic),
   };
 }
 
