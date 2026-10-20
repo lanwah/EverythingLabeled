@@ -426,9 +426,10 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
   flex-shrink: 0;
-  min-height: 32px;
+  height: 40px;
+  min-height: 40px;
 }
 
 .footer .status {
@@ -1092,6 +1093,15 @@ a.btn:hover {
   flex-direction: column;
   gap: 10px;
   margin-top: 4px;
+}
+
+.split-body > .footer {
+  justify-content: flex-start;
+}
+
+.split-body > .footer .status {
+  flex: 1;
+  text-align: left;
 }
 
 .path-compact {

@@ -470,7 +470,7 @@
         <DockPanel x:Name="FooterDock"
                    DockPanel.Dock="Bottom"
                    LastChildFill="True"
-                   Margin="0,8,0,0">
+                   Margin="0,12,0,0">
             <Button x:Name="FindOpenButton"
                     DockPanel.Dock="Right"
                     Style="{StaticResource FindOpenButtonStyle}"
@@ -486,6 +486,21 @@
                     Visibility="Collapsed"
                     Content="{x:Static local:Copy.ClearTags}"
                     Click="OnFindClearTags" />
+            <Button x:Name="SwitchToUntagButton"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource FindOpenButtonStyle}"
+                    MinWidth="100"
+                    Visibility="Collapsed"
+                    Content="{x:Static local:Copy.SwitchToUntag}"
+                    Click="OnSwitchToUntag" />
+            <Button x:Name="SwitchToTagButton"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource FindClearButtonStyle}"
+                    MinWidth="100"
+                    Margin="0,0,8,0"
+                    Visibility="Collapsed"
+                    Content="{x:Static local:Copy.SwitchToTag}"
+                    Click="OnSwitchToTag" />
             <TextBlock x:Name="StatusText"
                        TextWrapping="Wrap"
                        VerticalAlignment="Center"
@@ -681,7 +696,8 @@
                      ItemContainerStyle="{StaticResource HostPathItemStyle}" />
             <DockPanel x:Name="UntagTagListPanel"
                        Grid.Row="2"
-                       Margin="0,10,0,0">
+                       Margin="0,10,0,0"
+                       VerticalAlignment="Stretch">
                 <TextBlock DockPanel.Dock="Top"
                            Style="{StaticResource HostSectionLabelStyle}"
                            Text="{x:Static local:Copy.CurrentTagsLabel}" />
@@ -721,7 +737,8 @@
                         BorderBrush="{StaticResource HostBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
-                        Padding="12">
+                        Padding="12"
+                        MinHeight="120">
                     <Grid>
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
@@ -761,7 +778,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0"
                        Style="{StaticResource HostSectionLabelStyle}"
@@ -802,22 +818,6 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            <StackPanel Grid.Row="4"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Margin="0,10,0,0">
-                <Button x:Name="SwitchToTagButton"
-                        Style="{StaticResource FindClearButtonStyle}"
-                        MinWidth="100"
-                        Margin="0,0,8,0"
-                        Content="{x:Static local:Copy.SwitchToTag}"
-                        Click="OnSwitchToTag" />
-                <Button x:Name="SwitchToUntagButton"
-                        Style="{StaticResource FindOpenButtonStyle}"
-                        MinWidth="100"
-                        Content="{x:Static local:Copy.SwitchToUntag}"
-                        Click="OnSwitchToUntag" />
-            </StackPanel>
         </Grid>
 
         <!-- find -->

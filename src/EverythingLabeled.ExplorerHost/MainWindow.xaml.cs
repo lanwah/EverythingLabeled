@@ -220,7 +220,7 @@ public partial class MainWindow : Window
                     _tagBatchStatusUntilEdit = null;
                 else
                 {
-                    StatusText.Text = _tagBatchStatusUntilEdit;
+                    SetHostStatus(_tagBatchStatusUntilEdit);
                     _tagHadAliasDraft = false;
                     return;
                 }
@@ -235,21 +235,26 @@ public partial class MainWindow : Window
 
         if (alias is null)
         {
-            StatusText.Text = Copy.TagReady;
+            SetHostStatus(Copy.TagReady);
             return;
         }
 
         var count = IncludedTagTargets().Count;
-        StatusText.Text = count == 0
+        SetHostStatus(count == 0
             ? Copy.NoIncludedPaths
-            : Copy.TagWillApply(count, alias);
+            : Copy.TagWillApply(count, alias));
     }
+
+    private void SetHostStatus(string text) => StatusText.Text = text;
 
     private void ApplyHostChrome(HostMode mode)
     {
         var findMode = mode == HostMode.Find;
+        var tagsMode = mode == HostMode.Tags;
         FindOpenButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
         FindClearButton.Visibility = findMode ? Visibility.Visible : Visibility.Collapsed;
+        SwitchToTagButton.Visibility = tagsMode ? Visibility.Visible : Visibility.Collapsed;
+        SwitchToUntagButton.Visibility = tagsMode ? Visibility.Visible : Visibility.Collapsed;
         FindCaptionBar.Visibility = Visibility.Visible;
         FindCaptionTitle.Text = Title;
         HostCaptionIcon.Text = mode switch
@@ -265,14 +270,31 @@ public partial class MainWindow : Window
         Background = bg;
         RootDock.Background = bg;
         RootDock.Margin = new Thickness(0);
-        FooterDock.Margin = new Thickness(16, 0, 16, 12);
+        FooterDock.Margin = new Thickness(16, 12, 16, 12);
         StatusText.Foreground = muted;
+        StatusText.Visibility = Visibility.Visible;
+        FooterDock.Visibility = Visibility.Visible;
+        var untagFooter = mode == HostMode.Untag;
+        if (untagFooter)
+        {
+            FooterDock.Height = 40;
+            FooterDock.MinHeight = 40;
+            StatusText.TextWrapping = TextWrapping.NoWrap;
+            StatusText.TextTrimming = TextTrimming.CharacterEllipsis;
+        }
+        else
+        {
+            FooterDock.ClearValue(FrameworkElement.HeightProperty);
+            FooterDock.ClearValue(FrameworkElement.MinHeightProperty);
+            StatusText.TextWrapping = TextWrapping.Wrap;
+            StatusText.TextTrimming = TextTrimming.None;
+        }
 
         if (findMode)
         {
             FindAndRadio.IsChecked = !_findUseOr;
             FindOrRadio.IsChecked = _findUseOr;
-            StatusText.Text = Copy.PreviewCount(0);
+            SetHostStatus(Copy.PreviewCount(0));
         }
         else if (mode == HostMode.Tag)
             RefreshTagAliasStatus();
@@ -495,7 +517,7 @@ public partial class MainWindow : Window
             var result = await ResourceTags.GetTagsOrEmptyAsync(_ctx.Api, uris[0]).ConfigureAwait(true);
             if (!result.IsSuccess)
             {
-                StatusText.Text = result.Error?.Message ?? Copy.TagsLoadFailed;
+                SetHostStatus(result.Error?.Message ?? Copy.TagsLoadFailed);
                 ApplyUntagTagFilter(updateStatus: false);
                 return;
             }
@@ -513,7 +535,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            StatusText.Text = Copy.TagsLoadFailed + "：" + ex.Message;
+            SetHostStatus(Copy.TagsLoadFailed + "：" + ex.Message);
             ApplyUntagTagFilter(updateStatus: false);
         }
     }
@@ -562,10 +584,10 @@ public partial class MainWindow : Window
         {
             ApplyUntagTagFilter(updateStatus: false);
             if (included == 0)
-                StatusText.Text = Copy.TagReady;
+                SetHostStatus(Copy.TagReady);
             else
             {
-                StatusText.Text = Copy.UntagNeedsOnePath;
+                SetHostStatus(Copy.UntagNeedsOnePath);
                 UntagTagsEmpty.Text = Copy.UntagNeedsOnePath;
                 UntagTagsEmpty.Visibility = Visibility.Visible;
             }
@@ -575,7 +597,7 @@ public partial class MainWindow : Window
 
         if (!_untagTagsLoaded)
         {
-            StatusText.Text = Copy.TagReady;
+            SetHostStatus(Copy.TagReady);
             ApplyUntagTagFilter(updateStatus: false);
             return;
         }
@@ -616,7 +638,7 @@ public partial class MainWindow : Window
         UpdateUntagFilterPlaceholder();
         UpdateUntagFilterEnabled();
         if (updateStatus && _mode == HostMode.Untag && _batchCts is null)
-            StatusText.Text = view.Status;
+            SetHostStatus(view.Status);
     }
 
     private void OnSuggestAliasChanged(object sender, TextChangedEventArgs e)
@@ -802,14 +824,14 @@ public partial class MainWindow : Window
         var alias = ResolveTagAliasForSubmit();
         if (alias is null)
         {
-            StatusText.Text = Copy.EmptyAlias;
+            SetHostStatus(Copy.EmptyAlias);
             return;
         }
 
         var targets = IncludedTagTargets();
         if (targets.Count == 0)
         {
-            StatusText.Text = Copy.NoIncludedPaths;
+            SetHostStatus(Copy.NoIncludedPaths);
             return;
         }
 
@@ -835,7 +857,7 @@ public partial class MainWindow : Window
         CloseAliasSuggestPopups();
         UpdateTagAliasPlaceholder();
         _tagBatchStatusUntilEdit = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
-        StatusText.Text = _tagBatchStatusUntilEdit;
+        SetHostStatus(_tagBatchStatusUntilEdit);
         _tagHadAliasDraft = false;
         TagAliasBox.Focus();
         if (summary.Success > 0 && UntagClickDelete.ShowsPanel(HostMode.Tag, IncludedUris().Count))
@@ -903,14 +925,14 @@ public partial class MainWindow : Window
     {
         if (alias is null)
         {
-            StatusText.Text = Copy.EmptyAlias;
+            SetHostStatus(Copy.EmptyAlias);
             return false;
         }
 
         var uris = IncludedUris();
         if (uris.Count == 0)
         {
-            StatusText.Text = Copy.NoIncludedPaths;
+            SetHostStatus(Copy.NoIncludedPaths);
             return false;
         }
 
@@ -947,20 +969,20 @@ public partial class MainWindow : Window
         _batchCts?.Cancel();
         _batchCts = new CancellationTokenSource();
         SetBusy(true);
-        StatusText.Text = Copy.BatchRunning;
+        SetHostStatus(Copy.BatchRunning);
 
         try
         {
             var summary = await run(_batchCts.Token).ConfigureAwait(true);
             if (_mode != HostMode.Tag)
-                StatusText.Text = Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent);
+                SetHostStatus(Copy.BatchSummary(summary.Success, summary.Failed, summary.CancelledNotSent));
             return summary;
         }
         catch (OperationCanceledException)
         {
             var cancelled = new BatchSummary(0, 0, IncludedUris().Count, Array.Empty<BatchItemResult>());
             if (_mode != HostMode.Tag)
-                StatusText.Text = Copy.BatchSummary(0, 0, cancelled.CancelledNotSent);
+                SetHostStatus(Copy.BatchSummary(0, 0, cancelled.CancelledNotSent));
             return cancelled;
         }
         finally
@@ -1032,7 +1054,7 @@ public partial class MainWindow : Window
         {
             FindSuggestList.ItemsSource = null;
             if (_findTags.Count == 0)
-                StatusText.Text = FindStatusText.IdleOrSuggest(null, 0);
+                SetHostStatus(FindStatusText.IdleOrSuggest(null, 0));
             return;
         }
 
@@ -1050,7 +1072,7 @@ public partial class MainWindow : Window
             {
                 FindSuggestList.ItemsSource = null;
                 if (_findTags.Count == 0)
-                    StatusText.Text = FindStatusText.IdleOrSuggest(token, 0);
+                    SetHostStatus(FindStatusText.IdleOrSuggest(token, 0));
                 return;
             }
 
@@ -1061,7 +1083,7 @@ public partial class MainWindow : Window
             if (rows.Count > 0)
                 FindSuggestList.SelectedIndex = 0;
             if (_findTags.Count == 0)
-                StatusText.Text = FindStatusText.IdleOrSuggest(token, rows.Count);
+                SetHostStatus(FindStatusText.IdleOrSuggest(token, rows.Count));
         }
         catch (OperationCanceledException)
         {
@@ -1071,7 +1093,7 @@ public partial class MainWindow : Window
         {
             FindSuggestList.ItemsSource = null;
             if (_findTags.Count == 0)
-                StatusText.Text = FindStatusText.IdleOrSuggest(token, 0);
+                SetHostStatus(FindStatusText.IdleOrSuggest(token, 0));
         }
     }
 
@@ -1085,9 +1107,9 @@ public partial class MainWindow : Window
         {
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
-            StatusText.Text = FindStatusText.IdleOrSuggest(
+            SetHostStatus(FindStatusText.IdleOrSuggest(
                 SuggestQuery.Normalize(FindQueryBox.Text),
-                FindSuggestList.Items.Count);
+                FindSuggestList.Items.Count));
             return;
         }
 
@@ -1110,7 +1132,7 @@ public partial class MainWindow : Window
 
             if (!result.IsSuccess)
             {
-                StatusText.Text = result.Error?.Message ?? Copy.PreviewFailed;
+                SetHostStatus(result.Error?.Message ?? Copy.PreviewFailed);
                 _previewRows = Array.Empty<PreviewRow>();
                 FindResultList.ItemsSource = null;
                 return;
@@ -1135,9 +1157,9 @@ public partial class MainWindow : Window
             if (_previewRows.Count > 0)
                 FindResultList.SelectedIndex = 0;
 
-            StatusText.Text = _previewRows.Count == 0
+            SetHostStatus(_previewRows.Count == 0
                 ? Copy.PreviewEmpty
-                : Copy.PreviewCount(_previewRows.Count);
+                : Copy.PreviewCount(_previewRows.Count));
         }
         catch (OperationCanceledException)
         {
@@ -1145,7 +1167,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            StatusText.Text = Copy.PreviewFailed + "：" + ex.Message;
+            SetHostStatus(Copy.PreviewFailed + "：" + ex.Message);
             _previewRows = Array.Empty<PreviewRow>();
             FindResultList.ItemsSource = null;
         }
@@ -1272,7 +1294,7 @@ public partial class MainWindow : Window
         var row = _previewRows[index];
         if (row.Action.Kind == OpenKind.Unsupported)
         {
-            StatusText.Text = Copy.CannotOpen;
+            SetHostStatus(Copy.CannotOpen);
             return;
         }
 
