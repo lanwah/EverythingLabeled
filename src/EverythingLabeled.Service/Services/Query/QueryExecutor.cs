@@ -39,6 +39,38 @@ public sealed class QueryExecutor(ElDbContext db)
         };
     }
 
+    public async Task<IReadOnlyList<QueryHitDto>> AttachResourceTagsAsync(
+        IReadOnlyList<QueryHitDto> hits,
+        CancellationToken ct)
+    {
+        if (hits.Count == 0)
+            return hits;
+
+        var ids = hits.Select(h => h.Id).ToArray();
+        var bindings = await db.ResourceTags.AsNoTracking()
+            .Where(rt => ids.Contains(rt.ResourceId))
+            .Include(rt => rt.Tag)
+            .ThenInclude(t => t.Aliases)
+            .ToListAsync(ct);
+
+        bindings = bindings
+            .OrderBy(rt => rt.CreatedAt)
+            .ThenBy(rt => rt.TagId)
+            .ToList();
+
+        var labelsByResource = bindings
+            .GroupBy(rt => rt.ResourceId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<string>)g.Select(rt => QueryHitTagLabels.PrimaryAlias(rt.Tag)).ToList());
+
+        return hits
+            .Select(h => labelsByResource.TryGetValue(h.Id, out var labels)
+                ? h with { Tags = labels }
+                : h)
+            .ToList();
+    }
+
     private IQueryable<Resource> FilterInSql(IReadOnlyList<ExpandedClause> clauses)
     {
         IQueryable<Resource>? combined = null;

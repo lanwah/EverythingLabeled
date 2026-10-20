@@ -1231,6 +1231,7 @@ public partial class MainWindow : Window
                         h.Kind,
                         FindResultPresentation.Title(h.Uri, h.DisplayName),
                         FindResultPresentation.Subtitle(h.Uri, h.Kind, canOpen),
+                        FindResultPresentation.TagLabels(h.Tags),
                         action);
                 })
                 .ToList();
@@ -1397,5 +1398,6 @@ public partial class MainWindow : Window
         string Kind,
         string Title,
         string Subtitle,
+        IReadOnlyList<string> TagLabels,
         OpenAction Action);
 }

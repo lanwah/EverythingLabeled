@@ -130,7 +130,7 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 
 几何在 `ExplorerHost/Themes/KindIcons.xaml`；行用 `OpacityMask` + `HostMutedBrush` 着色，选中行改 `HostAccentBrush`。映射单一来源：`FindResultPresentation.IconKey`。
 
-预览列表主行在资源名称后展示该对象已绑定的标签（浅色描边胶囊，与顶部查询芯片区分；过长时名称与标签各自省略）。见 [find.html 填充态](../design/explorer-ui/find.html?state=filled)。
+预览列表主行在资源名称后展示该对象已绑定的标签（浅色描边胶囊，与顶部查询芯片区分；过长时名称与标签各自省略）。标签文案来自 `GET /v1/query/preview` 每条 hit 的 `tags`（按资源绑定顺序；每个标签取字典序首个别名）。`GET /v1/query` 仍不返回 `tags`。见 [find.html 填充态](../design/explorer-ui/find.html?state=filled)。
 
 ### 菜单图标
 

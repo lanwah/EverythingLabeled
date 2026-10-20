@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using EverythingLabeled.Service.Services.Abstractions;
 
 namespace EverythingLabeled.Service.Services.Query;
@@ -30,7 +31,11 @@ public sealed class ExpandedClause
     public required IReadOnlySet<Guid> Negatives { get; init; }
 }
 
-public sealed record QueryHitDto(Guid Id, string Uri, string Kind, string? DisplayName);
+public sealed record QueryHitDto(Guid Id, string Uri, string Kind, string? DisplayName)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? Tags { get; init; }
+}
 
 public sealed record QueryResultDto(IReadOnlyList<QueryHitDto> Items, int Offset, int Limit, int Total);
 

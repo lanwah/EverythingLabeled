@@ -107,6 +107,7 @@
 - 2026-10-17 — 去标 WPF：当前标签改为带 × 芯片，点叉号去除（对齐效果图；规格 §5.3 / docs 同步）→ [untag.html](../design/explorer-ui/untag.html)
 - 2026-10-17 — 以公有仓库发布到 GitHub：https://github.com/lanwah/EverythingLabeled
 - 2026-10-17 — 按标签查找结果行对象图标设计稿：文件 / 文件夹 / 网页三枚 SVG，入口可预览 → [icons.html](../design/explorer-ui/icons.html)
+- 2026-10-20 — Find 预览结果行名称后展示资源标签胶囊（设计稿 + Host；`preview` 返回 `tags`）→ [find.html](../design/explorer-ui/find.html)
 - 2026-10-20 — Find：底部「清空标签」「打开」隐藏；有芯片时输入框内清除图标；打开仍用回车/双击结果行
 - 2026-10-17 — 网页图标改为整枚地球（去掉窗口框和十字经纬），仍用 `icons/webpage.svg`
 - 2026-10-17 — 对象图标预览改为内嵌 SVG mask：`file://` 下浏览器会拦截 CSS mask 加载旁边的 `.svg`，双击 HTML 也能看到图标

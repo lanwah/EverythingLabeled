@@ -316,6 +316,30 @@
             </Setter>
         </Style>
 
+        <DataTemplate x:Key="FindResultTagTemplate">
+            <Border x:Name="TagBd"
+                    CornerRadius="3"
+                    Padding="6,1"
+                    Margin="0,0,4,0"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource HostResultTagBorderBrush}"
+                    Background="{StaticResource HostResultTagFillBrush}"
+                    MaxWidth="120">
+                <TextBlock Text="{Binding}"
+                           Foreground="{StaticResource HostTealBrush}"
+                           FontSize="11"
+                           FontWeight="Medium"
+                           TextTrimming="CharacterEllipsis" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                             Value="True">
+                    <Setter TargetName="TagBd" Property="Background" Value="{StaticResource HostResultTagFillSelectedBrush}" />
+                    <Setter TargetName="TagBd" Property="BorderBrush" Value="{StaticResource HostResultTagBorderSelectedBrush}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
         <DataTemplate x:Key="RemovableAliasChipTemplate">
             <Border Background="{StaticResource HostChipBrush}"
                     CornerRadius="4"
@@ -923,11 +947,29 @@
                                 </Rectangle.Style>
                             </Rectangle>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Title}"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource HostFgBrush}"
-                                           TextTrimming="CharacterEllipsis" />
+                                <Grid ClipToBounds="True">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" MaxWidth="200" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Title}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource HostFgBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,0,8,0" />
+                                    <ItemsControl Grid.Column="1"
+                                                  ItemsSource="{Binding TagLabels}"
+                                                  ItemTemplate="{StaticResource FindResultTagTemplate}"
+                                                  VerticalAlignment="Center">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                </Grid>
                                 <TextBlock Text="{Binding Subtitle}"
                                            FontSize="12"
                                            Foreground="{StaticResource HostMutedBrush}"

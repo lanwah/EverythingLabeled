@@ -32,11 +32,20 @@ public static class CacheEntrySizer
         };
     }
 
-    private static long EstimateQueryHit(QueryHitDto hit) =>
-        GuidSize
-        + EstimateString(hit.Uri)
-        + EstimateString(hit.Kind)
-        + EstimateString(hit.DisplayName);
+    private static long EstimateQueryHit(QueryHitDto hit)
+    {
+        long size = GuidSize
+            + EstimateString(hit.Uri)
+            + EstimateString(hit.Kind)
+            + EstimateString(hit.DisplayName);
+        if (hit.Tags is not null)
+        {
+            foreach (var tag in hit.Tags)
+                size += EstimateString(tag);
+        }
+
+        return size;
+    }
 
     private static long EstimateSuggestItem(SuggestItemDto item) =>
         GuidSize

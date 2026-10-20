@@ -66,4 +66,18 @@ public sealed class FindResultPresentationTests
     {
         Assert.Equal(expected, FindResultPresentation.IconKey(kind));
     }
+
+    [Fact]
+    public void TagLabels_returns_empty_when_null_or_empty()
+    {
+        Assert.Empty(FindResultPresentation.TagLabels(null));
+        Assert.Empty(FindResultPresentation.TagLabels(Array.Empty<string>()));
+    }
+
+    [Fact]
+    public void TagLabels_preserves_order()
+    {
+        var labels = FindResultPresentation.TagLabels(["标签", "项目"]);
+        Assert.Equal(["标签", "项目"], labels);
+    }
 }

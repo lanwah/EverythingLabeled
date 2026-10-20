@@ -6,7 +6,7 @@
 ## 当前状态
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。打标/去标/看标签/管理标签与 Find 一致：点击窗口外失焦自动关闭（Find 仍为 Hide）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
-- Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [docs/explorer.md](docs/explorer.md)
+- Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标 + 名称后资源标签胶囊（preview API `tags`）；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [设计稿](design/explorer-ui/find.html) · [docs/explorer.md](docs/explorer.md)
 - 浏览器扩展 0.1.2：预览芯片；`findTagLogic` 存 `chrome.storage.local`（界面无切换）；打标 suggest 默认首项 + ↑/↓/Enter 打标；管理标签等 → [docs/browser-extension.md](docs/browser-extension.md)
 - 管理标签：Explorer 右键 + Host `library`；打开后筛选框获焦；列表加载/筛选后默认选中首项，↑/↓ 切换（选中行左侧强调条；悬停略提亮且保留强调条，行内按钮深色悬停）；Service `POST /v1/tags/rename`；列表每页 50 → [docs/explorer.md](docs/explorer.md) · [docs/browser-extension.md](docs/browser-extension.md)
 

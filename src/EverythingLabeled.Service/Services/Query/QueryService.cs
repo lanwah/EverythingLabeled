@@ -33,8 +33,12 @@ public sealed class QueryService(
         var r = await RunAsync(req, op: "preview", includeTotal: false, ct);
         if (!r.IsSuccess)
             return ServiceResult<PreviewResultDto>.Fail(r.Code!, r.Message!, r.Details);
+        var page = r.Data!;
+        var items = page.Items.Count == 0
+            ? page.Items
+            : await executor.AttachResourceTagsAsync(page.Items, ct);
         return ServiceResult<PreviewResultDto>.Ok(
-            new PreviewResultDto(r.Data!.Items, r.Data.Offset, r.Data.Limit),
+            new PreviewResultDto(items, page.Offset, page.Limit),
             r.Message);
     }
 

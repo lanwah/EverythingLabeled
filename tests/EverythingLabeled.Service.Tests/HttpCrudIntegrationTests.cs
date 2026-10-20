@@ -224,9 +224,11 @@ public sealed class HttpCrudIntegrationTests
         Assert.Equal(HttpStatusCode.OK, andResponse.StatusCode);
         var andJson = await ReadJsonAsync(andResponse);
         Assert.Equal("ok", andJson.GetProperty("status").GetString());
+        var andItems = andJson.GetProperty("data").GetProperty("items").EnumerateArray().ToList();
         Assert.Contains(
             "file:///C:/q-and.txt",
-            andJson.GetProperty("data").GetProperty("items").EnumerateArray().Select(e => e.GetProperty("uri").GetString()));
+            andItems.Select(e => e.GetProperty("uri").GetString()));
+        Assert.All(andItems, e => Assert.False(e.TryGetProperty("tags", out _)));
         Assert.True(andJson.GetProperty("data").TryGetProperty("total", out _));
 
         using var orResponse = await client.GetAsync("/v1/query?q=" + Uri.EscapeDataString("work or home"));
@@ -256,7 +258,12 @@ public sealed class HttpCrudIntegrationTests
         var previewJson = await ReadJsonAsync(preview);
         Assert.Equal("ok", previewJson.GetProperty("status").GetString());
         Assert.False(previewJson.GetProperty("data").TryGetProperty("total", out _));
-        Assert.NotEmpty(previewJson.GetProperty("data").GetProperty("items").EnumerateArray());
+        var previewItems = previewJson.GetProperty("data").GetProperty("items").EnumerateArray().ToList();
+        Assert.NotEmpty(previewItems);
+        var andPreview = previewItems.Single(e => e.GetProperty("uri").GetString() == "file:///C:/q-and.txt");
+        var previewTags = andPreview.GetProperty("tags").EnumerateArray().Select(e => e.GetString()).ToHashSet();
+        Assert.Contains("work", previewTags);
+        Assert.Contains("home", previewTags);
     }
 
     [Fact]

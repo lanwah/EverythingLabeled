@@ -29,6 +29,10 @@
     <SolidColorBrush x:Key="HostTealBrush" Color="{StaticResource HostTealColor}" />
     <SolidColorBrush x:Key="HostTealDarkBrush" Color="{StaticResource HostTealDarkColor}" />
     <SolidColorBrush x:Key="HostChipBrush" Color="{StaticResource HostChipColor}" />
+    <SolidColorBrush x:Key="HostResultTagFillBrush" Color="#242EC4B6" />
+    <SolidColorBrush x:Key="HostResultTagBorderBrush" Color="#522EC4B6" />
+    <SolidColorBrush x:Key="HostResultTagFillSelectedBrush" Color="#382EC4B6" />
+    <SolidColorBrush x:Key="HostResultTagBorderSelectedBrush" Color="#732EC4B6" />
     <SolidColorBrush x:Key="HostBorderBrush" Color="{StaticResource HostBorderColor}" />
     <SolidColorBrush x:Key="HostDangerBrush" Color="{StaticResource HostDangerColor}" />
     <SolidColorBrush x:Key="HostDangerDarkBrush" Color="{StaticResource HostDangerDarkColor}" />

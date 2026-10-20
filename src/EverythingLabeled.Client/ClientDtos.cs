@@ -30,7 +30,12 @@ public sealed record TagApplyData(
 
 public sealed record TagsPage(IReadOnlyList<TagInfo> Items, int Offset, int Limit, int Total);
 
-public sealed record QueryHit(Guid Id, string Uri, string Kind, string? DisplayName);
+public sealed record QueryHit(
+    Guid Id,
+    string Uri,
+    string Kind,
+    string? DisplayName,
+    IReadOnlyList<string>? Tags = null);
 
 public sealed record QueryPage(IReadOnlyList<QueryHit> Items, int Offset, int Limit, int Total);
 

@@ -49,4 +49,7 @@ public static class FindResultPresentation
             "url" => IconKeyUrl,
             _ => IconKeyFile,
         };
+
+    public static IReadOnlyList<string> TagLabels(IReadOnlyList<string>? tags) =>
+        tags is { Count: > 0 } ? tags : Array.Empty<string>();
 }
