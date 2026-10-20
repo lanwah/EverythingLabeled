@@ -9,7 +9,7 @@
 | 默认路径 | `%AppData%\EverythingLabeled\config.json`（Windows 示例：`C:\Users\<你>\AppData\Roaming\EverythingLabeled\config.json`） |
 | 覆盖根目录 | 环境变量 **`EL_APPDATA`** → 其下仍为 `config.json`、`data/`、`logs/`（与 Service `AppPaths`、Tray `TrayConfigStore` 一致） |
 | 仓库内 | **无**随仓模板；首次由 Service **引导**生成（见 [Service 骨架](./service-skeleton.md)） |
-| 同目录其它文件 | `data/el.db`、`logs/`（见 [Service 骨架 §3](./service-skeleton.md)） |
+| 同目录其它文件 | `data/`（`el.db`；WAL 模式下还有 `el.db-wal`、`el.db-shm`）、`logs/`（见 [Service 骨架 §3](./service-skeleton.md)） |
 
 程序目录内的 **`appsettings.json`** 只放 Service 非密钥项（如 `Cache:Provider`），**不含** `token`；与 `config.json` 职责分离 → [配置与安装 §1](../plans/2026-09-27-config-and-install.md)、[Service 骨架](./service-skeleton.md)。
 

@@ -67,8 +67,12 @@ Invoke-RestMethod http://127.0.0.1:5123/v1/health
 | 路径 | 用途 |
 |---|---|
 | `{root}/config.json` | `baseUrl` + `token` 等（客户端与 Service 共用）；键表见 [本机配置](./config.md) |
-| `{root}/data/el.db` | SQLite |
+| `{root}/data/el.db` | SQLite 主库 |
+| `{root}/data/el.db-wal` | WAL 预写日志（启用 WAL 时出现；可能为 0 字节） |
+| `{root}/data/el.db-shm` | WAL 共享内存索引（启用 WAL 时出现） |
 | `{root}/logs/service-*.log` | Serilog 按日滚动，保留 14 天 |
+
+`data/` 下 **`el.db` 与 `-wal` / `-shm` 是一套库**，不是重复备份。Service 在迁库前会设 `journal_mode=WAL`（见 §4 第 6 步）。备份或迁移时请**先停 Service**，再整目录复制 `data/`；勿在 Service 写入时单独删除 `-wal` / `-shm`。
 
 ## 4. 启动行为摘要
 

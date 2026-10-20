@@ -763,12 +763,52 @@ a.btn:hover {
   min-width: 0;
 }
 
-.result-text .title {
+.result-text .title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.result-text .title-row .name {
+  flex-shrink: 0;
+  max-width: 42%;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.result-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.result-tag {
+  flex-shrink: 0;
+  max-width: 9em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--teal);
+  background: rgba(46, 196, 182, 0.14);
+  border: 1px solid rgba(46, 196, 182, 0.32);
+}
+
+.result-list li.selected .result-tag {
+  background: rgba(46, 196, 182, 0.22);
+  border-color: rgba(46, 196, 182, 0.45);
 }
 
 .result-text .sub {
