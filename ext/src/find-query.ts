@@ -1,5 +1,7 @@
 /** Chip tags → preview `q`, matching Host `FindQueryCompose` (AND spaces / OR keyword). */
 
+export const SUGGEST_DEBOUNCE_MS = 250;
+
 export function normalizeQueryToken(raw: string | null | undefined): string | null {
   if (raw == null) return null;
   const trimmed = raw.trim();

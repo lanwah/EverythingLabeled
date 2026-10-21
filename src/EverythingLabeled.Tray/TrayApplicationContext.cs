@@ -10,8 +10,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly string _trayExePath;
     private readonly string _configPath;
     private readonly string _pipeName;
+    private readonly ContextMenuStrip _menu;
     private HotkeyRegistration? _hotkey;
     private bool _exiting;
+    private int _restarting;
     private long _lastActivateTicks;
 
     public TrayApplicationContext()
@@ -24,23 +26,24 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _configPath = TrayConfigStore.DefaultConfigPath();
         _pipeName = FindHostIpc.ResolvePipeName();
 
-        var menu = new ContextMenuStrip();
-        menu.Items.Add(Copy.MenuOpenFind, null, (_, _) => RequestActivateFind());
+        _menu = new ContextMenuStrip();
+        _menu.Items.Add(Copy.MenuOpenFind, null, (_, _) => RequestActivateFind());
+        _menu.Items.Add(Copy.MenuRestartFind, null, (_, _) => RequestRestartFind());
         _startupItem = new ToolStripMenuItem(Copy.MenuRunAtStartup)
         {
             CheckOnClick = false,
         };
         _startupItem.Click += (_, _) => ToggleStartup();
-        menu.Items.Add(_startupItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Copy.MenuExit, null, (_, _) => ExitTray());
+        _menu.Items.Add(_startupItem);
+        _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(Copy.MenuExit, null, (_, _) => ExitTray());
 
         _notifyIcon = new NotifyIcon
         {
             Icon = LoadTrayIcon(),
             Text = Copy.BalloonTitle,
             Visible = true,
-            ContextMenuStrip = menu,
+            ContextMenuStrip = _menu,
         };
         _notifyIcon.MouseClick += OnNotifyMouseClick;
 
@@ -78,9 +81,56 @@ internal sealed class TrayApplicationContext : ApplicationContext
         ActivateFind();
     }
 
-    private void ActivateFind()
+    private void RequestRestartFind()
     {
         if (_exiting)
+            return;
+        if (Interlocked.CompareExchange(ref _restarting, 1, 0) != 0)
+            return;
+
+        Task.Run(() =>
+        {
+            FindRestartResult result;
+            try
+            {
+                result = FindLauncher.TryRestart(_trayDirectory, TimeSpan.FromSeconds(5));
+            }
+            catch
+            {
+                result = FindRestartResult.StartFailed;
+            }
+
+            PostToUi(() =>
+            {
+                try
+                {
+                    if (_exiting || result == FindRestartResult.Started)
+                        return;
+
+                    var message = result == FindRestartResult.HostMissing
+                        ? Copy.HostMissing
+                        : Copy.RestartFailed;
+                    _notifyIcon.ShowBalloonTip(4000, Copy.BalloonTitle, message, ToolTipIcon.Error);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _restarting, 0);
+                }
+            });
+        });
+    }
+
+    private void PostToUi(Action action)
+    {
+        if (_menu.IsHandleCreated)
+            _menu.BeginInvoke(action);
+        else
+            action();
+    }
+
+    private void ActivateFind()
+    {
+        if (_exiting || Volatile.Read(ref _restarting) != 0)
             return;
 
         if (FindLauncher.TryActivateOrStart(_trayDirectory, _pipeName, TimeSpan.FromSeconds(1)))

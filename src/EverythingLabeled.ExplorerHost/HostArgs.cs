@@ -7,6 +7,7 @@ public enum HostMode
     Tags,
     Find,
     Library,
+    Resources,
 }
 
 public sealed record HostLaunchArgs(HostMode Mode, string? PathsFilePath);
@@ -99,6 +100,12 @@ public static class HostArgsParser
         if (string.Equals(value, "library", StringComparison.OrdinalIgnoreCase))
         {
             mode = HostMode.Library;
+            return true;
+        }
+
+        if (string.Equals(value, "resources", StringComparison.OrdinalIgnoreCase))
+        {
+            mode = HostMode.Resources;
             return true;
         }
 

@@ -79,7 +79,8 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 
 - Tray **单实例**：Mutex 默认 `Local\EverythingLabeled.Tray`；第二实例 **静默退出**。测试可用环境变量覆盖（如 `EL_TRAY_MUTEX_NAME`）。
 - 图标常驻；左键/双击 = 打开/前置 Find（与热键同路径）。
-- 菜单最少：**打开查找**、**开机自启**（勾选）、**退出**（注销热键；**不**杀已开 Host）。
+- 菜单最少：**打开查找**、**重新启动**、**开机自启**（勾选）、**退出**（注销热键；**不**杀已开 Host）。
+- **重新启动**：结束全部 `EverythingLabeled.ExplorerHost` 进程（含打标/去标/管理标签等短命窗口；Find 关窗只 Hide，启动时的 health 探测会留在该进程里），等进程退出后冷启动同目录 Host `--mode find`，从而重新探测服务。进行中忽略热键/「打开查找」。Host 缺失或结束/启动失败时气泡提示。退出托盘仍不杀 Host。
 - 自启：**HKCU Run** 值名 **`EverythingLabeled.Tray`** → Tray 绝对路径（与 Service 的 Run 值 `EverythingLabeled` **并存**；日后卸载须两项都清）。启动时若 `runAtStartup==true` 则幂等写入；勾选关闭则删除该 Run 值。
 - **首次**：无安装器自动拉 Tray；文档/脚本要求用户手动启动一次；之后靠 Run。
 - 本切片 = #16 的 Find 热键子集。
@@ -103,6 +104,7 @@ Windows 全局快捷键（默认 `Alt+L`）快速打开「按标签查找」；�
 | 热键注册失败（占用等） | 气泡提示一次；Tray 继续；热键失效至改配置并重启 Tray |
 | `findHotkey` 非法（非空且非 none） | 回退 `Alt+L`；回退仍失败则同上 |
 | Host.exe 找不到 | 气泡「无法启动查找」；Tray 不崩 |
+| 重新启动时结束或拉起 Host 失败 | 气泡「无法重新启动查找」；Tray 不崩 |
 | config 缺失 | 热键/自启用默认；Tray 可跑 |
 | 自启写注册表失败 | 勾选回滚 + 短提示 |
 | 前置窗口失败 | Tray+Host 双端尽力抢前台；仍失败时可能任务栏闪烁（少见） |

@@ -140,6 +140,14 @@ public sealed class HttpElApi : IElApi
             authorize: true,
             ct);
 
+    public Task<ElResult<MetaData>> DeleteResourceAsync(Guid id, CancellationToken ct = default) =>
+        SendAsync<MetaData>(
+            HttpMethod.Delete,
+            "v1/resources/" + id.ToString("D", CultureInfo.InvariantCulture),
+            body: null,
+            authorize: true,
+            ct);
+
     public Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default) =>
         SendAsync<HealthData>(HttpMethod.Get, "v1/health", body: null, authorize: false, ct);
 

@@ -675,3 +675,137 @@ a.btn:hover {
 .library-dialog-card .footer {
   margin-top: 14px;
 }
+
+.library-dialog-card.is-wide {
+  width: min(440px, 100%);
+}
+
+.resource-results {
+  margin-top: 8px;
+}
+
+.resource-results .empty-hint {
+  min-height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.resource-results .empty-hint[hidden] {
+  display: none !important;
+  min-height: 0;
+  margin: 0;
+}
+
+.resource-results.resource-show-hits .empty-hint {
+  display: none !important;
+}
+
+.resource-results.resource-show-hits .result-list {
+  margin-top: 0;
+}
+
+/* No chips yet: suggest fills the list area (align Host Find Main). */
+.ext-shell.resource-suggest-mode .resource-results .empty-hint {
+  display: none !important;
+}
+
+.ext-shell.resource-suggest-mode .chip-field > .suggest-list {
+  max-height: 260px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.resource-query .clear-all-tags {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: "Segoe MDL2 Assets", "Segoe Fluent Icons", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.title-row .name {
+  max-width: 42%;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-tags,
+.replace-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.replace-tags {
+  flex-wrap: wrap;
+}
+
+.result-tag {
+  max-width: 9em;
+  padding: 1px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(46, 196, 182, 0.32);
+  border-radius: 3px;
+  background: rgba(46, 196, 182, 0.14);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-row .result-text {
+  flex: 1;
+}
+
+.resource-row .actions-right {
+  flex-shrink: 0;
+}
+
+.replace-label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kind-choice {
+  display: flex;
+  gap: 6px;
+}
+
+.kind-choice button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+}
+
+.kind-choice button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--row-selected);
+  color: var(--fg);
+}
+
+.library-dialog-card .library-hint {
+  margin-top: 8px;
+}

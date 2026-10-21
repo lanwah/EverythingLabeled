@@ -24,6 +24,19 @@
     <None Include="Package\Assets\**\*" CopyToOutputDirectory="PreserveNewest" Link="Assets\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- CreateComHost 把 clsidmap 嵌进中间目录的 comhost.dll，但嵌入不改时间戳；
+       CopyFilesToOutputDirectory 的 SkipUnchanged 会把这次新增的 COM 类丢掉，
+       壳层 CoCreate 新 CLSID 得到 CLASS_E_CLASSNOTAVAILABLE 并静默丢菜单。 -->
+  <Target Name="CopyEmbeddedComHostToOutput" AfterTargets="CopyFilesToOutputDirectory">
+    <PropertyGroup>
+      <_EmbeddedComHost>$(IntermediateOutputPath)$(TargetName).comhost.dll</_EmbeddedComHost>
+    </PropertyGroup>
+    <Copy Condition="Exists('$(_EmbeddedComHost)')"
+          SourceFiles="$(_EmbeddedComHost)"
+          DestinationFiles="$(TargetDir)$(TargetName).comhost.dll"
+          SkipUnchangedFiles="false" />
+  </Target>
+
   <Target Name="CopyExplorerHostOutput" AfterTargets="Build">
     <PropertyGroup>
       <_HostOutDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\EverythingLabeled.ExplorerHost\bin\$(Configuration)\net8.0-windows\'))</_HostOutDir>

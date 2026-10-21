@@ -17,6 +17,7 @@ public static class ExplorerIcons
         "tags" => "ElTags.ico",
         "find" => "ElFind.ico",
         "library" => "ElLibrary.ico",
+        "resources" => "ElResources.ico",
         _ => null,
     };
 

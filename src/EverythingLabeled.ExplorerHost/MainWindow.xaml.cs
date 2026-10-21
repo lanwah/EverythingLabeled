@@ -582,21 +582,15 @@ public partial class MainWindow : Window
         {
             if (tag.Aliases.Count == 0)
             {
-                rows.Add(new AliasRow(tag.Name, FormatTagLabel(tag.Name, tag.Namespace, tag.Name), tag.NameInitials));
+                rows.Add(new AliasRow(tag.Name, TagLabelFormat.Format(tag.Name, tag.Namespace, tag.Name), tag.NameInitials));
                 continue;
             }
 
             foreach (var alias in tag.Aliases)
-                rows.Add(new AliasRow(alias, FormatTagLabel(alias, tag.Namespace, tag.Name), tag.NameInitials));
+                rows.Add(new AliasRow(alias, TagLabelFormat.Format(alias, tag.Namespace, tag.Name), tag.NameInitials));
         }
 
         return rows;
-    }
-
-    private static string FormatTagLabel(string alias, string? ns, string name)
-    {
-        var head = string.IsNullOrEmpty(ns) ? name : ns + "/" + name;
-        return alias == name ? head : $"{alias}  ({head})";
     }
 
     private void OnUntagTagFilterChanged(object sender, TextChangedEventArgs e)
@@ -724,7 +718,7 @@ public partial class MainWindow : Window
 
             var items = result.Data!.Items;
             var rows = items
-                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name), i.NameInitials))
+                .Select(TagLabelFormat.FromSuggest)
                 .ToList();
             _activeSuggestList.ItemsSource = rows;
             if (rows.Count > 0)
@@ -1155,7 +1149,7 @@ public partial class MainWindow : Window
             }
 
             var rows = result.Data!.Items
-                .Select(i => new AliasRow(i.Alias, FormatTagLabel(i.Alias, i.Namespace, i.Name), i.NameInitials))
+                .Select(TagLabelFormat.FromSuggest)
                 .ToList();
             FindSuggestList.ItemsSource = rows;
             if (rows.Count > 0)
@@ -1386,11 +1380,6 @@ public partial class MainWindow : Window
         }
 
         FindOpen.Execute(row.Action);
-    }
-
-    private sealed record AliasRow(string Alias, string Display, string NameInitials)
-    {
-        public override string ToString() => Display;
     }
 
     private sealed record PreviewRow(

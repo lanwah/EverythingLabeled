@@ -17,8 +17,10 @@ const STORED_KEYS = [
 ] as const;
 const MENU_MANAGE_PAGE = "el-manage-page";
 const MENU_LIBRARY = "el-library";
+const MENU_RESOURCES = "el-resources";
 const APP_PAGE = "app.html";
 const LIBRARY_PAGE = "library.html";
+const RESOURCES_PAGE = "resources.html";
 
 const api = createElApi({ fetch });
 
@@ -131,6 +133,11 @@ async function ensureContextMenu(): Promise<void> {
     title: "EverythingLabeled：管理标签",
     contexts: ["page"],
   });
+  chrome.contextMenus.create({
+    id: MENU_RESOURCES,
+    title: "EverythingLabeled：管理资源",
+    contexts: ["page"],
+  });
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -153,9 +160,17 @@ function openLibrary(): Promise<void> {
   return openOrFocusExtensionPage(LIBRARY_PAGE);
 }
 
+function openResources(): Promise<void> {
+  return openOrFocusExtensionPage(RESOURCES_PAGE);
+}
+
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === MENU_LIBRARY) {
     void openLibrary();
+    return;
+  }
+  if (info.menuItemId === MENU_RESOURCES) {
+    void openResources();
     return;
   }
   void openAppForTab(tab);

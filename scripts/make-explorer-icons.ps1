@@ -62,8 +62,9 @@ $verbs = [ordered]@{
     'ElTag.ico'     = 0xE8EC   # 打标
     'ElUntag.ico'   = 0xE74D   # 去标
     'ElTags.ico'    = 0xE8FD   # 看标签
-    'ElLibrary.ico' = 0xE8F1   # 管理标签（词库）
-    'ElFind.ico'    = 0xE721   # 按标签查找（放大镜）
+    'ElLibrary.ico'   = 0xE8F1   # 管理标签（词库）
+    'ElResources.ico' = 0xE8A5   # 管理资源
+    'ElFind.ico'      = 0xE721   # 按标签查找（放大镜）
 }
 
 $sizes = @(16, 20, 24, 32, 48)

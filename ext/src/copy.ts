@@ -42,4 +42,25 @@ export const copy = {
   },
   libraryDeleteConfirm: (name: string) =>
     `将删除标签「${name}」。所有文件和网页上的这个标签都会去掉，且不能撤销。`,
+  resourcesTitle: "管理资源",
+  resourcesLead: "按标签找出资源，删除旧记录，或把同样的标签打到新地址上再删掉原来的。",
+  resourcesEmpty: "添加标签后，这里会列出匹配的资源",
+  resourcesNoMatch: "没有匹配的资源",
+  resourcesNeedTags: "先添加标签",
+  resourcesDeleteTitle: "删除资源",
+  resourcesReplaceTitle: "替换到新地址",
+  resourcesReplace: "替换",
+  resourcesReplaceTags: "将打上的标签",
+  resourcesAddress: "新地址",
+  resourcesKind: "类型",
+  resourcesAddressRequired: "请填写新地址",
+  resourcesKindMismatch: "类型与地址不匹配",
+  resourcesSame: "新地址与原资源相同",
+  resourcesDeleteFailed: "标签已复制到新地址，但删除原资源失败：",
+  previewCount: (n: number) => `预览 ${n} 条`,
+  suggestCount: (n: number) => `建议 ${n} 条`,
+  resourceDeleteConfirm: (name: string, uri: string) =>
+    `将删除「${name}」（${uri}）。它上面的标签绑定会去掉，标签本身保留，且不能撤销。`,
+  resourceReplaceLead: (name: string) =>
+    `原资源「${name}」。新地址会打上同样的标签，然后删除原资源。标签本身保留。`,
 } as const;

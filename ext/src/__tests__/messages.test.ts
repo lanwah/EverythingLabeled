@@ -35,6 +35,8 @@ function apiStub() {
     listTags: vi.fn(),
     renameTag: vi.fn(),
     deleteTag: vi.fn(),
+    applyTags: vi.fn(),
+    deleteResource: vi.fn(),
   };
 }
 

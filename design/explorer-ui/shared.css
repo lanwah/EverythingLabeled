@@ -1171,6 +1171,10 @@ a.btn:hover {
   display: none !important;
 }
 
+.panel:not([data-state="replace"]) .only-replace {
+  display: none !important;
+}
+
 /* —— Tag library (Host + extension) —— */
 .preview-note {
   width: 100%;
@@ -1310,6 +1314,10 @@ a.btn:hover {
   font-size: 12px;
 }
 
+.library-dialog-card .library-hint {
+  margin-top: 8px;
+}
+
 .window,
 .ext-frame {
   position: relative;
@@ -1357,6 +1365,52 @@ a.btn:hover {
 
 .library-dialog-card .footer {
   margin-top: 14px;
+}
+
+.library-dialog-card.is-wide {
+  width: min(440px, 100%);
+}
+
+.resource-row .result-text {
+  flex: 1;
+}
+
+.resource-row .actions-right {
+  flex-shrink: 0;
+}
+
+.replace-label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.replace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kind-choice {
+  display: flex;
+  gap: 6px;
+}
+
+.kind-choice button {
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--muted);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.kind-choice button[aria-pressed="true"] {
+  color: var(--fg);
+  border-color: var(--accent);
+  background: var(--row-selected);
 }
 
 @media (prefers-reduced-motion: reduce) {

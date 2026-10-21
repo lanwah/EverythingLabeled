@@ -51,6 +51,7 @@ export default defineConfig({
         options: resolve(root, "src/options.html"),
         app: resolve(root, "src/app.html"),
         library: resolve(root, "src/library.html"),
+        resources: resolve(root, "src/resources.html"),
       },
     },
   },

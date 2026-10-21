@@ -6,6 +6,7 @@ import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
 import {
   composePreviewQuery,
   normalizeQueryToken,
+  SUGGEST_DEBOUNCE_MS,
   tryAddPreviewTag,
 } from "./find-query";
 import { suggestRowLabel, tagChipLabel } from "./labels";
@@ -34,7 +35,6 @@ type PageSnapshot = {
   title?: string;
 };
 
-const SUGGEST_MS = 250;
 const TRUNCATE = 80;
 
 function truncate(text: string): string {
@@ -76,7 +76,14 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     event.preventDefault();
     void openOrFocusExtensionPage("library.html");
   });
-  headActions.append(libraryLink);
+  const resourcesLink = el("a", "btn");
+  resourcesLink.href = chrome.runtime.getURL("resources.html");
+  resourcesLink.textContent = copy.resourcesTitle;
+  resourcesLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    void openOrFocusExtensionPage("resources.html");
+  });
+  headActions.append(libraryLink, resourcesLink);
   const followBtn = document.createElement("button");
   followBtn.type = "button";
   followBtn.className = "btn";
@@ -462,7 +469,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       );
       paintTagSuggest();
     })();
-  }, SUGGEST_MS);
+  }, SUGGEST_DEBOUNCE_MS);
 
   aliasInput.addEventListener("input", () => {
     runSuggest();
@@ -586,7 +593,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       );
       paintPreviewSuggest();
     })();
-  }, SUGGEST_MS);
+  }, SUGGEST_DEBOUNCE_MS);
 
   qInput.addEventListener("input", () => {
     runPreviewSuggest();

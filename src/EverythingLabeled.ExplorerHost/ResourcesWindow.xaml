@@ -1,0 +1,413 @@
+<Window x:Class="EverythingLabeled.ExplorerHost.ResourcesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:EverythingLabeled.ExplorerHost"
+        Title="管理资源 — EverythingLabeled"
+        PreviewKeyDown="OnPreviewKeyDown"
+        Height="520"
+        Width="720"
+        MinHeight="360"
+        MinWidth="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource HostBgBrush}">
+    <Window.Resources>
+        <Style x:Key="ResCaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource HostMutedBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ResCloseButton" TargetType="Button" BasedOn="{StaticResource ResCaptionButton}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource HostDangerBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ResRowButton" TargetType="Button">
+            <Setter Property="MinWidth" Value="56" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource HostFgBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HostBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ResPrimaryButton" TargetType="Button" BasedOn="{StaticResource ResRowButton}">
+            <Setter Property="Background" Value="{StaticResource HostTealBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="ResDangerButton" TargetType="Button" BasedOn="{StaticResource ResRowButton}">
+            <Setter Property="Background" Value="{StaticResource HostDangerBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource HostOnAccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <DataTemplate x:Key="ResultTagTemplate">
+            <Border CornerRadius="3"
+                    Padding="6,1"
+                    Margin="0,0,4,0"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource HostResultTagBorderBrush}"
+                    Background="{StaticResource HostResultTagFillBrush}"
+                    MaxWidth="120">
+                <TextBlock Text="{Binding}"
+                           Foreground="{StaticResource HostTealBrush}"
+                           FontSize="11"
+                           FontWeight="Medium"
+                           TextTrimming="CharacterEllipsis" />
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <DockPanel>
+            <Border DockPanel.Dock="Top" Height="36" Background="{StaticResource HostBgBrush}" MouseLeftButtonDown="OnCaptionMouseDown">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="&#xE8A5;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=Title}"
+                                   Foreground="{StaticResource HostFgBrush}"
+                                   FontSize="13"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource ResCaptionButton}" Content="─" Click="OnMinimize" />
+                        <Button Style="{StaticResource ResCaptionButton}" Content="□" Click="OnMaximize" />
+                        <Button Style="{StaticResource ResCloseButton}" Content="✕" Click="OnClose" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="BannerText"
+                       DockPanel.Dock="Top"
+                       Margin="16,8,16,0"
+                       Foreground="{StaticResource HostDangerBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="16,8,16,12">
+                <TextBlock x:Name="StatusText"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           FontSize="13"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+
+            <Grid Margin="10,12,10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0"
+                        Background="{StaticResource HostInputBgBrush}"
+                        BorderBrush="{StaticResource HostBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="8,6"
+                        MinHeight="44">
+                    <DockPanel>
+                        <Button x:Name="ClearTagsButton"
+                                DockPanel.Dock="Right"
+                                Content="&#xE894;"
+                                FontFamily="Segoe MDL2 Assets"
+                                Style="{StaticResource ResRowButton}"
+                                ToolTip="清空标签"
+                                Visibility="Collapsed"
+                                Click="OnClearTags" />
+                        <TextBlock Text="&#xE721;"
+                                   DockPanel.Dock="Left"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="4,0,8,0" />
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal">
+                                <ItemsControl x:Name="ChipList" VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource HostChipBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="8,2"
+                                                    Margin="0,0,6,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding}"
+                                                               Foreground="{StaticResource HostOnAccentBrush}"
+                                                               VerticalAlignment="Center" />
+                                                    <Button Content="×"
+                                                            Tag="{Binding}"
+                                                            Margin="6,0,0,0"
+                                                            Padding="0"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Foreground="{StaticResource HostMutedBrush}"
+                                                            Cursor="Hand"
+                                                            Click="OnChipRemove" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid MinWidth="140" VerticalAlignment="Center">
+                                    <TextBlock x:Name="QueryPlaceholder"
+                                               Text="输入标签后按回车键..."
+                                               IsHitTestVisible="False"
+                                               Foreground="{StaticResource HostMutedBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="2,0,0,0" />
+                                    <TextBox x:Name="QueryBox"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{StaticResource HostFgBrush}"
+                                             CaretBrush="{StaticResource HostFgBrush}"
+                                             MinWidth="120"
+                                             TextChanged="OnQueryChanged"
+                                             PreviewKeyDown="OnQueryKeyDown" />
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+
+                <ListBox x:Name="SuggestList"
+                         Grid.Row="1"
+                         VerticalAlignment="Top"
+                         Style="{StaticResource FindListBoxStyle}"
+                         ItemContainerStyle="{StaticResource FindSuggestItemStyle}"
+                         DisplayMemberPath="Display"
+                         Margin="8,6,8,0"
+                         Visibility="Collapsed"
+                         MouseDoubleClick="OnSuggestActivate"
+                         KeyDown="OnSuggestKeyDown" />
+
+                <TextBlock x:Name="EmptyHint"
+                           Grid.Row="2"
+                           Text="添加标签后，这里会列出匹配的资源"
+                           Foreground="{StaticResource HostMutedBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="13" />
+
+                <ListBox x:Name="ResultList"
+                         Grid.Row="2"
+                         Margin="0,8,0,0"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         HorizontalContentAlignment="Stretch"
+                         Visibility="Collapsed">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Margin="0,2">
+                                            <Grid>
+                                                <Border x:Name="Accent"
+                                                        Width="3"
+                                                        HorizontalAlignment="Left"
+                                                        Background="{StaticResource HostAccentBrush}"
+                                                        Margin="0,8"
+                                                        Visibility="Collapsed" />
+                                                <ContentPresenter Margin="8,8" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowHoverBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HostRowSelectedBrush}" />
+                                                <Setter TargetName="Accent" Property="Visibility" Value="Visible" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Width="18" Height="18" VerticalAlignment="Center" Margin="4,0,10,0">
+                                    <Rectangle.OpacityMask>
+                                        <ImageBrush Stretch="Uniform"
+                                                    ImageSource="{Binding Kind, Converter={x:Static local:KindIconConverter.Instance}}" />
+                                    </Rectangle.OpacityMask>
+                                    <Rectangle.Style>
+                                        <Style TargetType="Rectangle">
+                                            <Setter Property="Fill" Value="{StaticResource HostMutedBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                    <Setter Property="Fill" Value="{StaticResource HostAccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Grid ClipToBounds="True">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" MaxWidth="220" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Title}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource HostFgBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,8,0" />
+                                        <ItemsControl Grid.Column="1"
+                                                      ItemsSource="{Binding TagLabels}"
+                                                      ItemTemplate="{StaticResource ResultTagTemplate}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Subtitle}"
+                                               FontSize="12"
+                                               Foreground="{StaticResource HostMutedBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="替换" Style="{StaticResource ResRowButton}" Tag="{Binding}" Click="OnReplaceClick" />
+                                    <Button Content="删除" Style="{StaticResource ResRowButton}" Tag="{Binding}" Click="OnDeleteClick" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </DockPanel>
+
+        <Grid x:Name="DeleteOverlay" Visibility="Collapsed" Background="#9E080A0E">
+            <Border Width="380" Margin="24" Padding="16" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Background="{StaticResource HostBgBrush}"
+                    BorderBrush="{StaticResource HostBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="删除资源" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource HostFgBrush}" Margin="0,0,0,8" />
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                        <Button Content="取消" Style="{StaticResource ResRowButton}" Click="OnDeleteCancel" />
+                        <Button Content="删除" Style="{StaticResource ResDangerButton}" Click="OnDeleteConfirm" />
+                    </StackPanel>
+                    <TextBlock x:Name="DeleteMessage" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource HostMutedBrush}" />
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="ReplaceOverlay" Visibility="Collapsed" Background="#9E080A0E">
+            <Border Width="440" Margin="24" Padding="16" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Background="{StaticResource HostBgBrush}"
+                    BorderBrush="{StaticResource HostBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="替换到新地址" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource HostFgBrush}" Margin="0,0,0,8" />
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                        <Button Content="取消" Style="{StaticResource ResRowButton}" Click="OnReplaceCancel" />
+                        <Button Content="替换" Style="{StaticResource ResPrimaryButton}" Click="OnReplaceConfirm" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock x:Name="ReplaceLead" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource HostMutedBrush}" />
+                        <TextBlock Text="将打上的标签" Margin="0,12,0,6" FontSize="12" Foreground="{StaticResource HostMutedBrush}" />
+                        <ItemsControl x:Name="ReplaceTags" ItemTemplate="{StaticResource ResultTagTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <TextBlock Text="新地址" Margin="0,12,0,6" FontSize="12" Foreground="{StaticResource HostMutedBrush}" />
+                        <TextBox x:Name="AddressBox"
+                                 Padding="10,6"
+                                 FontSize="14"
+                                 Background="{StaticResource HostInputBgBrush}"
+                                 Foreground="{StaticResource HostFgBrush}"
+                                 CaretBrush="{StaticResource HostFgBrush}"
+                                 BorderBrush="{StaticResource HostBorderBrush}"
+                                 TextChanged="OnAddressChanged" />
+                        <TextBlock Text="类型" Margin="0,12,0,6" FontSize="12" Foreground="{StaticResource HostMutedBrush}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="KindFile" Content="文件" Tag="file" Style="{StaticResource ResRowButton}" Click="OnKindClick" />
+                            <Button x:Name="KindFolder" Content="文件夹" Tag="folder" Style="{StaticResource ResRowButton}" Click="OnKindClick" />
+                            <Button x:Name="KindUrl" Content="网页" Tag="url" Style="{StaticResource ResRowButton}" Click="OnKindClick" />
+                        </StackPanel>
+                        <TextBlock x:Name="KindHint" Margin="0,8,0,0" FontSize="12" Foreground="{StaticResource HostMutedBrush}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="ReplaceError" Margin="0,8,0,0" FontSize="12" Foreground="{StaticResource HostDangerBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

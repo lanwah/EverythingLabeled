@@ -5,6 +5,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/HostDark.xaml" />
+                <ResourceDictionary Source="Themes/HostFindLists.xaml" />
                 <ResourceDictionary Source="Themes/HostScrollBar.xaml" />
                 <ResourceDictionary Source="Themes/KindIcons.xaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -53,6 +53,16 @@ public static class Copy
     public const string WindowTitleTags = "看标签 — EverythingLabeled";
     public const string WindowTitleFind = "按标签查找 — EverythingLabeled";
     public const string WindowTitleLibrary = "管理标签 — EverythingLabeled";
+    public const string WindowTitleResources = "管理资源 — EverythingLabeled";
+    public const string ResourcesEmpty = "添加标签后，这里会列出匹配的资源";
+    public const string ResourcesNoMatch = "没有匹配的资源";
+    public const string ResourcesNeedTags = "先添加标签";
+    public const string ResourcesQueryPlaceholder = "输入标签后按回车键...";
+    public const string ResourcesQueryMore = "继续输入…";
+    public const string ReplaceAddressRequired = "请填写新地址";
+    public const string ReplaceKindMismatch = "类型与地址不匹配";
+    public const string ReplaceSameResource = "新地址与原资源相同";
+    public const string ReplaceDeleteFailed = "标签已复制到新地址，但删除原资源失败：";
     public const string LibrarySearchPlaceholder = "按名称前缀或拼首筛选…";
     public const string LibraryEmpty = "还没有标签";
     public const string LibraryNoMatch = "没有匹配的标签";
@@ -78,6 +88,12 @@ public static class Copy
 
     public static string LibraryDeleteConfirm(string name) =>
         $"将删除标签「{name}」。所有文件和网页上的这个标签都会去掉，且不能撤销。";
+
+    public static string ResourceDeleteConfirm(string name, string uri) =>
+        $"将删除「{name}」（{uri}）。它上面的标签绑定会去掉，标签本身保留，且不能撤销。";
+
+    public static string ResourceReplaceLead(string name) =>
+        $"原资源「{name}」。新地址会打上同样的标签，然后删除原资源。标签本身保留。";
 
     public static string ConfigInvalid(string configPath) =>
         $"配置无效或缺失。请检查：{configPath}（baseUrl 须为 http://127.0.0.1，且需配置 token）";

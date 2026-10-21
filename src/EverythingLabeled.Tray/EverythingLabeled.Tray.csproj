@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="EverythingLabeled.Tray.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EverythingLabeled.ExplorerShared\EverythingLabeled.ExplorerShared.csproj" />
     <ProjectReference Include="..\EverythingLabeled.ExplorerHost\EverythingLabeled.ExplorerHost.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

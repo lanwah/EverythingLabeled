@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>管理资源 — 设计稿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <div class="preview-bar">
+      <a class="back" href="index.html">← 入口</a>
+      <h1>管理资源</h1>
+      <div class="state-toggle" role="group" aria-label="状态">
+        <button type="button" data-state="empty">空状态</button>
+        <button type="button" data-state="filled">列表</button>
+        <button type="button" data-state="delete">删除确认</button>
+        <button type="button" data-state="replace">替换</button>
+      </div>
+      <p class="preview-note">入口：资源管理器右键 → EverythingLabeled → 管理资源。不读取选中路径。查询方式与「按标签查找」相同（芯片、配置里的 AND/OR）。查找页仍只打开结果，不在那里删除或替换。替换时按新地址预选类型：http(s) 为网页，路径有扩展名为文件，无扩展名为文件夹；预选可以改。</p>
+    </div>
+
+    <div class="preview-stage library-stage">
+      <aside class="menu-mock" aria-label="右键子菜单示意">
+        <p>EverythingLabeled</p>
+        <button type="button">打标</button>
+        <button type="button">去标</button>
+        <button type="button">看标签</button>
+        <button type="button">管理标签</button>
+        <button type="button" aria-current="true">管理资源</button>
+        <button type="button">按标签查找</button>
+      </aside>
+
+      <div class="window" role="dialog" aria-label="管理资源">
+        <div class="caption">
+          <div class="caption-left">
+            <span class="caption-icon" aria-hidden="true">&#xE8A5;</span>
+            <span>管理资源 — EverythingLabeled</span>
+          </div>
+          <div class="caption-controls">
+            <button type="button" aria-label="最小化">─</button>
+            <button type="button" aria-label="最大化">□</button>
+            <button type="button" class="close" aria-label="关闭">✕</button>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="panel is-active" data-state="filled">
+            <div class="find-toolbar">
+              <div class="chip-field">
+                <span class="search-icon" aria-hidden="true">&#xE721;</span>
+                <div class="chip-wrap">
+                  <span class="chip only-filled">标签 <button type="button" aria-label="移除">×</button></span>
+                  <div class="chip-input">
+                    <span class="placeholder only-empty">输入标签后按回车键...</span>
+                    <span class="placeholder only-filled">继续输入…</span>
+                    <input type="text" aria-label="标签查询" readonly />
+                  </div>
+                </div>
+                <button type="button" class="clear-all-tags only-filled" aria-label="清空标签" title="清空标签">&#xE894;</button>
+              </div>
+            </div>
+
+            <p class="empty-hint only-empty">添加标签后，这里会列出匹配的资源</p>
+
+            <ul class="result-list only-filled">
+              <li class="resource-row selected">
+                <span class="kind-icon folder" role="img" aria-label="文件夹"></span>
+                <div class="result-text">
+                  <div class="title-row">
+                    <span class="name">EverythingLabeled</span>
+                    <span class="result-tags" aria-label="标签">
+                      <span class="result-tag">标签</span>
+                      <span class="result-tag">项目</span>
+                    </span>
+                  </div>
+                  <div class="sub">文件夹 · file:///D:/Projects/Other/EverythingLabeled</div>
+                </div>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">替换</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+              <li class="resource-row">
+                <span class="kind-icon file" role="img" aria-label="文件"></span>
+                <div class="result-text">
+                  <div class="title-row">
+                    <span class="name">project.md</span>
+                    <span class="result-tags" aria-label="标签">
+                      <span class="result-tag">标签</span>
+                      <span class="result-tag">看板</span>
+                    </span>
+                  </div>
+                  <div class="sub">文件 · file:///D:/Projects/Other/EverythingLabeled/project.md</div>
+                </div>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">替换</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+              <li class="resource-row">
+                <span class="kind-icon webpage" role="img" aria-label="网页"></span>
+                <div class="result-text">
+                  <div class="title-row">
+                    <span class="name">EverythingLabeled</span>
+                    <span class="result-tags" aria-label="标签">
+                      <span class="result-tag">标签</span>
+                    </span>
+                  </div>
+                  <div class="sub">网页 · https://github.com/lanwah/EverythingLabeled</div>
+                </div>
+                <div class="actions-right">
+                  <button type="button" class="btn btn-row">替换</button>
+                  <button type="button" class="btn btn-row">删除</button>
+                </div>
+              </li>
+            </ul>
+
+            <div class="footer">
+              <span class="status only-empty">先添加标签</span>
+              <span class="status only-filled">预览 3 条</span>
+            </div>
+
+            <div class="library-dialog only-delete" role="alertdialog" aria-labelledby="delete-resource-title">
+              <div class="library-dialog-card">
+                <h2 id="delete-resource-title">删除资源</h2>
+                <p>将删除「EverythingLabeled」（file:///D:/Projects/Other/EverythingLabeled）。它上面的标签绑定会去掉，标签本身保留，且不能撤销。</p>
+                <div class="footer">
+                  <span class="status"></span>
+                  <button type="button" class="btn">取消</button>
+                  <button type="button" class="btn btn-danger">删除</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="library-dialog only-replace" role="dialog" aria-labelledby="replace-resource-title">
+              <div class="library-dialog-card is-wide">
+                <h2 id="replace-resource-title">替换到新地址</h2>
+                <p>原资源「EverythingLabeled」。新地址会打上同样的标签，然后删除原资源。标签本身保留。</p>
+                <span class="replace-label">将打上的标签</span>
+                <div class="replace-tags" aria-label="同样的标签">
+                  <span class="result-tag">标签</span>
+                  <span class="result-tag">项目</span>
+                </div>
+                <label class="field">
+                  新地址
+                  <input type="text" value="D:\Projects\Other\EverythingLabeled-v2" aria-label="新地址" />
+                </label>
+                <span class="replace-label">类型</span>
+                <div class="kind-choice" role="group" aria-label="类型">
+                  <button type="button" aria-pressed="false">文件</button>
+                  <button type="button" aria-pressed="true">文件夹</button>
+                  <button type="button" aria-pressed="false">网页</button>
+                </div>
+                <p class="library-hint">无扩展名，已预选文件夹。识别不对可以改。</p>
+                <div class="footer">
+                  <span class="status"></span>
+                  <button type="button" class="btn">取消</button>
+                  <button type="button" class="btn btn-primary">替换</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="preview.js"></script>
+</body>
+</html>

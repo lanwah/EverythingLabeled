@@ -45,6 +45,9 @@ public interface IElApi
 
     Task<ElResult<MetaData>> DeleteTagAsync(Guid id, CancellationToken ct = default);
 
+    Task<ElResult<MetaData>> DeleteResourceAsync(Guid id, CancellationToken ct = default) =>
+        Task.FromException<ElResult<MetaData>>(new NotImplementedException());
+
     Task<ElResult<HealthData>> HealthAsync(CancellationToken ct = default);
 
     Task<ElResult<MetaData>> MetaAsync(CancellationToken ct = default);

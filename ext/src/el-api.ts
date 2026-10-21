@@ -10,7 +10,15 @@ export type TagInfo = {
   aliases: string[];
 };
 
-export type QueryHit = { id: string; uri: string; kind: string; displayName: string | null };
+export type QueryHit = {
+  id: string;
+  uri: string;
+  kind: string;
+  displayName: string | null;
+  tags?: string[] | null;
+};
+
+export type AppliedResource = { resource?: { id?: string } };
 
 export type SuggestItem = {
   tagId: string;
@@ -138,6 +146,18 @@ export function createElApi(deps: { fetch: typeof fetch }): {
     token: string,
     id: string,
   ): Promise<ElResult<{ dataVersion: number }>>;
+  applyTags(
+    baseUrl: string,
+    token: string,
+    uri: string,
+    kind: string,
+    aliases: readonly string[],
+  ): Promise<ElResult<AppliedResource>>;
+  deleteResource(
+    baseUrl: string,
+    token: string,
+    id: string,
+  ): Promise<ElResult<{ dataVersion: number }>>;
 } {
   const send = <T>(relative: string, baseUrl: string, init: RequestInit) =>
     request<T>(deps.fetch, joinUrl(baseUrl, relative), init);
@@ -243,6 +263,17 @@ export function createElApi(deps: { fetch: typeof fetch }): {
     },
     deleteTag(baseUrl, token, id) {
       return authDelete(`v1/tags/${encodeURIComponent(id)}`, baseUrl, token);
+    },
+    applyTags(baseUrl, token, uri, kind, aliases) {
+      return authPost("v1/resources/tags", baseUrl, token, {
+        uri,
+        kind,
+        add: aliases,
+        createMissing: false,
+      });
+    },
+    deleteResource(baseUrl, token, id) {
+      return authDelete(`v1/resources/${encodeURIComponent(id)}`, baseUrl, token);
     },
   };
 }

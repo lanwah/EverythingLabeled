@@ -35,7 +35,9 @@ export type ElRequest =
   | { type: "preview"; q: string }
   | { type: "listTags"; q: string | null }
   | { type: "renameTag"; from: string; to: string }
-  | { type: "deleteTag"; id: string };
+  | { type: "deleteTag"; id: string }
+  | { type: "applyTags"; uri: string; kind: string; aliases: string[] }
+  | { type: "deleteResource"; id: string };
 
 export type ElResponse<T = unknown> =
   | { ok: true; data: T; message: string | null }
@@ -204,6 +206,21 @@ export async function handleRequest(req: ElRequest, deps: Deps): Promise<ElRespo
         return { ok: false, code: "bad_request", message: "id is required" };
       }
       return toElResponse(await api.deleteTag(cfg.baseUrl, cfg.token, req.id));
+    }
+    case "applyTags": {
+      const uri = req.uri.trim();
+      if (uri === "" || (req.kind !== "file" && req.kind !== "folder" && req.kind !== "url")) {
+        return { ok: false, code: "bad_request", message: "uri and kind are required" };
+      }
+      return toElResponse(
+        await api.applyTags(cfg.baseUrl, cfg.token, uri, req.kind, req.aliases),
+      );
+    }
+    case "deleteResource": {
+      if (req.id.trim() === "") {
+        return { ok: false, code: "bad_request", message: "id is required" };
+      }
+      return toElResponse(await api.deleteResource(cfg.baseUrl, cfg.token, req.id));
     }
     default: {
       const type = (req as { type?: unknown }).type;

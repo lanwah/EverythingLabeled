@@ -58,7 +58,7 @@ dotnet test tests/EverythingLabeled.Tray.Tests
 
 Command / Tray 的 csproj 会先编 Host，并把 Host **整输出目录**拷到各自输出旁（含 `EverythingLabeled.ExplorerHost.exe` 与依赖）。
 
-## 命令行启动 Host（五 mode）
+## 命令行启动 Host（六 mode）
 
 Service 已起、`%AppData%\EverythingLabeled\config.json` 已填时，可在不注册稀疏包的情况下自测 Host：
 
@@ -68,6 +68,9 @@ dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode find
 
 # 管理标签（词库改名 / 删除；不读选中路径；打开后筛选框获焦）
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode library
+
+# 管理资源（按标签查找后删除，或替换到新地址；不读选中路径）
+dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode resources
 
 # 看标签（单选；paths-file 一行一个绝对路径）
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tags --paths-file <paths.txt>
@@ -79,7 +82,7 @@ dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode tag --paths-fi
 dotnet run --project src/EverythingLabeled.ExplorerHost -- --mode untag --paths-file <paths.txt>
 ```
 
-`find` / `library` 可省略 `--paths-file`；若传入，Host **忽略**其内容（`library` 仍会删除误传的 paths-file）。
+`find` / `library` / `resources` 可省略 `--paths-file`；若传入，Host **忽略**其内容（仍会删除误传的 paths-file）。
 
 ## 开发 Identity（钉死）
 
@@ -132,9 +135,13 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 
 预览列表主行在资源名称后展示该对象已绑定的标签（浅色描边胶囊，与顶部查询芯片区分；过长时名称与标签各自省略）。标签文案来自 `GET /v1/query/preview` 每条 hit 的 `tags`（按资源绑定顺序；每个标签取字典序首个别名）。`GET /v1/query` 仍不返回 `tags`。见 [find.html 填充态](../design/explorer-ui/find.html?state=filled)。
 
+### 管理资源查询
+
+芯片查询与 Find 相同：`findTagLogic` 决定 AND/OR；末词防抖 suggest（含简拼 `NameInitials`）；Enter 落下高亮联想（无联想才把草稿当别名）。preview 引擎仍不认简拼，不能靠把拼首当芯片去查资源。空状态提示在结果区水平垂直居中，底栏「先添加标签」；有草稿时底栏为「建议 N 条」。设计稿 → [resources.html](../design/explorer-ui/resources.html)。
+
 ### 菜单图标
 
-五项各有一个青绿 `#2EC4B6` 字形图标，由 `ExplorerCommandBase.GetIcon` 返回**绝对路径**：
+六项各有一个青绿 `#2EC4B6` 字形图标，由 `ExplorerCommandBase.GetIcon` 返回**绝对路径**：
 
 | 菜单项 | mode | Glyph | 文件 |
 |---|---|---|---|
@@ -142,6 +149,7 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 | 去标 | `untag` | `E74D` | `Assets\ElUntag.ico` |
 | 看标签 | `tags` | `E8FD` | `Assets\ElTags.ico` |
 | 管理标签 | `library` | `E8F1` | `Assets\ElLibrary.ico` |
+| 管理资源 | `resources` | `E8A5` | `Assets\ElResources.ico` |
 | 按标签查找 | `find` | `E721` | `Assets\ElFind.ico` |
 
 - 图标资源在 `src\EverythingLabeled.ExplorerCommand\Package\Assets\`，由 [scripts/make-explorer-icons.ps1](../scripts/make-explorer-icons.ps1) 生成（16/20/24/32/48 多尺寸、DIB 帧、透明底），该脚本同时用 `el.ico` 缩放生成清单要的三个 Logo（**不要**把它们留成纯黑占位图 —— 命令若拿不到图标，壳层会回落到包 Logo，黑图就显示成黑方块）。
@@ -164,7 +172,7 @@ Import-Certificate -FilePath "$env:TEMP\el-dev.cer" -CertStoreLocation Cert:\Loc
 powershell -ExecutionPolicy Bypass -File scripts\register-explorer.ps1
 ```
 
-流程：构建 → 校验输出清单与源码一致（不一致则覆盖并告警）→ 校验清单声明的 `Executable` 与 `com:Class Path` 在输出目录里真的存在 → 比版本 → `makeappx pack` + `signtool sign` → `Add-AppxPackage -ExternalLocation` → 回读 `PackagedCom` 打印每个 CLSID 实际解析到的 DLL。
+流程：构建 → 校验输出清单与源码一致（不一致则覆盖并告警）→ 校验清单声明的 `Executable` 与 `com:Class Path` 在输出目录里真的存在 → **对每个 CLSID `CoCreate`**（失败含 `0x80040111` 则中止）→ 比版本 → `makeappx pack` + `signtool sign` → `Add-AppxPackage -ExternalLocation` → 回读 `PackagedCom` 打印每个 CLSID 实际解析到的 DLL。
 
 ### 手工步骤（与脚本等价）
 
@@ -181,15 +189,16 @@ $msix = Join-Path $env:TEMP "EverythingLabeled.ExplorerDev.msix"
 Add-AppxPackage -Path $msix -ExternalLocation $out
 ```
 
-注册后：资源管理器右键文件/文件夹应见应用名 **EverythingLabeled** 下的「打标 / 去标 / 看标签 / 按标签查找」；文件夹空白处仅「按标签查找」。菜单 Invoke **不**等待 Host 退出。
+注册后：资源管理器右键文件/文件夹应见应用名 **EverythingLabeled** 下的「打标 / 去标 / 看标签 / 管理标签 / 管理资源 / 按标签查找」；文件夹空白处为「管理标签」「管理资源」「按标签查找」。菜单 Invoke **不**等待 Host 退出。
 
 若菜单未出现：结束并重启 `explorer.exe`，或注销再登录。
 
-排查时先看三处：
+排查时按「全没有」和「只少新增的一项」分开。注销、重启 Explorer **修不好**第二种。
 
 - `Get-AppxPackage -Name EverythingLabeled.ExplorerDev` 的 `Version` 是否等于刚打的清单版本（对不上 = 打到过期产物）。
 - `HKLM\SOFTWARE\Classes\PackagedCom\Package\<PackageFullName>\Class\{CLSID}` 的 `DllPath` 指向的 DLL 是否存在于 ExternalLocation（不存在 = Explorer 创建 COM 失败，会**静默丢弃**该菜单项）。
-- 两处都对却仍不显示时，看**壳层**：若用 HKCU 空 `InprocServer32` 覆盖了 `{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}`（经典右键菜单 hack），packed 项会被**全部丢弃**；删掉该键并重启 `explorer.exe` 即恢复（2026-10-16 本机实测确认）→ [排查存档与恢复](../plans/2026-10-16-explorer-menu-missing.md)。
+- **一项都没有**：看壳层是否用 HKCU 空 `InprocServer32` 覆盖了 `{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}`（经典右键菜单 hack）。packed 项会被**全部丢弃**；删掉该键并重启 `explorer.exe` 即恢复（2026-10-16 本机实测确认）→ [排查存档与恢复](../plans/2026-10-16-explorer-menu-missing.md)。
+- **旧项都在、只有刚加的那一项没有**（管理标签、管理资源都遇过）：清单、包版本、`DllPath` 文件存在都对，仍会这样。对本机 `CoCreate` 缺失项的 CLSID。`0x80040111`（`CLASS_E_CLASSNOTAVAILABLE`）= `bin\…\EverythingLabeled.ExplorerCommand.comhost.dll` 是旧宿主。`CreateComHost` 把 clsidmap 嵌进 `obj` 里的 comhost **不改时间戳**，增量拷贝按时间跳过，壳层 `ExternalLocation` 一直加载少一个类的那份。对照两边文件大小（2026-10-20：bin 195072、obj 195584），或在 bin 里搜新类名。工程已用 `CopyEmbeddedComHostToOutput` 强制覆盖；注册脚本打包前会 `CoCreate` 每个 CLSID。步骤与当次证据 → [comhost 过期存档](../plans/2026-10-20-explorer-comhost-stale.md)。
 
 ## 卸载
 
@@ -207,10 +216,10 @@ Get-AppxPackage -Name EverythingLabeled.ExplorerDev | Remove-AppxPackage
 ### Tray（Find 热键）
 
 - 工程：`src/EverythingLabeled.Tray`。输出目录须有同目录 `EverythingLabeled.ExplorerHost.exe`（构建已自动拷贝）。
-- 默认热键 `Alt+L`（config `findHotkey`；空串/`none` 关热键；改 JSON 后重启 Tray）；菜单仍可「打开查找」。
+- 默认热键 `Alt+L`（config `findHotkey`；空串/`none` 关热键；改 JSON 后重启 Tray）；菜单可「打开查找」。右键「重新启动」结束全部 `EverythingLabeled.ExplorerHost` 后冷启动 Find（重新做启动探测；也会关掉当时开着的打标/管理窗口）。
 - HKCU Run 值名 `EverythingLabeled.Tray`（与 Service 的 `EverythingLabeled` 并存）；`runAtStartup` 默认 true，托盘可勾选切换。
 - 首次需手动启动一次 Tray（本切片无安装器自动拉起）。
-- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`（服务端回写 HWND；Tray 在热键上下文 `AllowSetForegroundWindow` + `SetForegroundWindow`）；关窗/失焦 **Hide** 保活，再按热键毫秒级 Activate；退出 Tray **不**杀已开 Host。
+- Find **全入口单实例**（热键 / 托盘 / 右键 / CLI）：Mutex + 管道 `Activate\n`（服务端回写 HWND；Tray 在热键上下文 `AllowSetForegroundWindow` + `SetForegroundWindow`）；关窗/失焦 **Hide** 保活，再按热键毫秒级 Activate；退出 Tray **不**杀已开 Host。服务晚于 Find 进程起来时，横幅会停在「服务未运行或地址错误」，用托盘「重新启动」清掉。
 
 ```powershell
 dotnet run --project src/EverythingLabeled.Tray
@@ -228,6 +237,7 @@ dotnet run --project src/EverythingLabeled.Tray
 - [ ] 启动必做 health（+ meta）；`baseUrl` 仅 127.0.0.1
 - [ ] 打标/去标每次一别名；批量并发=`maxConcurrency`（缺省 4）；可取消；401 中止、其它按项继续
 - [ ] find：防抖末词 suggest（含简拼）+ 实时 preview；Enter 填联想或打开选中项；无「预览」按钮；Host 屏幕居中；打开后窗口保持；无 expand
+- [ ] resources：空状态居中；拼首/前缀联想后 Enter 成芯片再 preview；行内删除/替换
 - [ ] find UI：深色无边框标题栏；芯片标签 + AND/OR（默认 AND）+ 清空；结果行按 kind 显示文件/文件夹/网页图标（`Themes/KindIcons.xaml`，对齐 [design/explorer-ui/icons](../design/explorer-ui/icons.html)）；打开/再激活自动聚焦；输入框 ↓ 一次进下一项；失焦或关窗只隐藏（进程保活，再按热键毫秒唤起）
 - [ ] 打标/去标/看标签/管理标签 UI：深色无边框与 Find 同主题（`Themes/HostDark.xaml`）；点击窗口外失焦自动关闭（Find 为 Hide 保活）；别名联想浮动下拉不撑布局；打标时无精确匹配则自动勾选「创建缺失标签」；打标页底部不显示「取消」「打标」，别名框 Enter 直接提交（有联想时用当前高亮项）；打标在单选时于目标路径和别名之间显示当前标签（带 × 芯片，点叉号去除），多选打标不显示该区；去标页不显示别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除，多选提示只选一个路径 → [design/explorer-ui/](../design/explorer-ui/index.html)
 - [ ] paths-file 私有 tmp + 读完删除；只读 AppData config（含 `previewLimit` / `maxConcurrency`）

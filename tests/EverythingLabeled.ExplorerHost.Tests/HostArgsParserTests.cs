@@ -53,6 +53,7 @@ public sealed class HostArgsParserTests
     [InlineData("untag", HostMode.Untag)]
     [InlineData("tags", HostMode.Tags)]
     [InlineData("library", HostMode.Library)]
+    [InlineData("resources", HostMode.Resources)]
     [InlineData("TAG", HostMode.Tag)]
     public void TryParse_mode_case_insensitive(string mode, HostMode expected)
     {

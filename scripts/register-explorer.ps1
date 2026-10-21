@@ -104,6 +104,33 @@ foreach ($class in @($com.ComServer.SurrogateServer.Class)) {
 }
 $clsidCount = @($com.ComServer.SurrogateServer.Class).Count
 
+# 文件在还不够：comhost 若没嵌进新 CLSID，Explorer 创建失败会静默丢那一项
+if (-not ('ElComProbe' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class ElComProbe {
+  [DllImport("ole32.dll")]
+  public static extern int CoCreateInstance(ref Guid clsid, IntPtr unk, uint ctx, ref Guid iid, out IntPtr ppv);
+}
+'@
+}
+$iidUnknown = [guid]'00000000-0000-0000-C000-000000000046'
+$clsctxAll = 23
+foreach ($class in @($com.ComServer.SurrogateServer.Class)) {
+    $clsid = [guid]$class.Id
+    $iid = $iidUnknown
+    $ppv = [IntPtr]::Zero
+    $hr = [ElComProbe]::CoCreateInstance([ref]$clsid, [IntPtr]::Zero, $clsctxAll, [ref]$iid, [ref]$ppv)
+    if ($ppv -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::Release($ppv) | Out-Null
+    }
+    if ($hr -ne 0) {
+        throw ("清单 CLSID {0} CoCreate 失败 hr=0x{1:X8}（0x80040111=comhost 未嵌入该类，常见于增量构建跳过拷贝）。删掉输出目录的 *.comhost.dll 后重建，或直接跑本脚本（会先 build）。" -f $class.Id, ($hr -band 0xFFFFFFFF))
+    }
+}
+Write-Host "      CoCreate $clsidCount 个 CLSID 均成功。"
+
 $verbCount = 0
 foreach ($type in @($doc.Package.Applications.Application.Extensions.Extension | Where-Object { $_.Category -eq 'windows.fileExplorerContextMenus' }).FileExplorerContextMenus.ItemType) {
     $verbCount += @($type.Verb).Count

@@ -143,7 +143,7 @@ powershell -ExecutionPolicy Bypass -File scripts\register-explorer.ps1        # 
 
 - [ ] **取舍**：经典菜单与 packed 右键项不可兼得 —— 当前选新式菜单。若要经典菜单，需改走 legacy `IContextMenu`（另开切片/规格）
 - [ ] 本机手工验收 Explorer Host：打标 / 去标 / 看标签深色皮肤（[design/explorer-ui/](../design/explorer-ui/index.html)；联想浮动；缺失别名自动勾选创建缺失）
-- [ ] 下次再遇"菜单不见"，先跑 [scripts/register-explorer.ps1](../scripts/register-explorer.ps1) 看注册侧，再查 §2.3 那个键在不在
+- [ ] 下次再遇"菜单不见"，先分两种：全部没有 → 跑 [scripts/register-explorer.ps1](../scripts/register-explorer.ps1)，再查 §2.3 那个键在不在；只有新增的一项没有 → [comhost 时间戳被跳过](./2026-10-20-explorer-comhost-stale.md)（`CoCreate` = `0x80040111`）
 
 ## 6. 参考
 

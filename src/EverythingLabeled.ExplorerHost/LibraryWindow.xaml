@@ -180,7 +180,8 @@
                                FontSize="14" />
                 </Grid>
 
-                <TextBlock x:Name="EmptyHint"
+                <Grid>
+                    <TextBlock x:Name="EmptyHint"
                            Text="还没有标签"
                            Foreground="{StaticResource HostMutedBrush}"
                            HorizontalAlignment="Center"
@@ -309,6 +310,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                </Grid>
             </DockPanel>
         </DockPanel>
 
