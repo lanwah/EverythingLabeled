@@ -142,3 +142,4 @@
 - 2026-10-20 — 管理资源：Explorer 右键 + Host `resources`，扩展 `resources.html`；按标签查找后删除，或替换到新地址并打上同样标签；类型按地址预选可改；稀疏包 `0.1.10.0` → [docs/explorer.md](../docs/explorer.md) · [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-20 — 修复「管理资源」右键缺失：增量构建跳过未改时间戳的 `comhost.dll`，新 CLSID `CoCreate` 为 `0x80040111`；强制覆盖输出并在注册脚本里探测全部 CLSID → [docs/explorer.md](../docs/explorer.md) · [存档](./2026-10-20-explorer-comhost-stale.md)
 - 2026-10-20 — 管理资源空状态居中；芯片查询接 Find 末词 suggest（含简拼），Enter 落联想后再 preview → [docs/explorer.md](../docs/explorer.md)
+- 2026-10-21 — 管理资源本机验收截图归档 → [design/explorer/](../design/explorer/)
