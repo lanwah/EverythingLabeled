@@ -75,6 +75,27 @@ body.options .ext-shell {
   margin-bottom: 14px;
 }
 
+.ext-head-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.ext-head-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ext-head-toolbar .mode-switch {
+  margin: 0;
+}
+
+.ext-head-toolbar .actions-right {
+  flex-shrink: 0;
+}
+
 .ext-head h1 {
   margin: 0;
   font-size: 1.25rem;
@@ -440,37 +461,62 @@ body.options .ext-shell {
   outline: none;
 }
 
-.mode-toggle {
+.mode-switch {
   display: flex;
   flex-shrink: 0;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--input-bg);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-.mode-toggle button {
-  padding: 8px 12px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
+.mode-switch-control {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--input-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mode-switch-control::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.mode-switch-control:hover {
+  border-color: var(--accent);
+}
+
+.mode-switch-control[aria-checked="true"] {
+  border-color: var(--accent);
+  background: rgba(78, 161, 255, 0.2);
+}
+
+.mode-switch-control[aria-checked="true"]::after {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+
+.mode-switch-label {
   font-size: 13px;
   font-weight: 600;
+  color: var(--fg);
+  user-select: none;
   cursor: pointer;
 }
 
-.mode-toggle button:hover {
-  background: var(--row-hover);
-  color: var(--fg);
-}
-
-.mode-toggle button[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--row-selected);
-  color: var(--accent);
+.view-panel[hidden] {
+  display: none !important;
 }
 
 .result-list {

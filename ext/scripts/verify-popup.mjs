@@ -138,17 +138,22 @@ try {
       const buttons = [...document.querySelectorAll("button")].map((b) =>
         (b.textContent ?? "").trim(),
       );
+      const modeBtn = document.querySelector(".mode-switch-control");
+      const modeLabel = document.querySelector(".mode-switch-label");
       return {
-        hasTagBtn: buttons.includes("打标"),
+        hasModeSwitch: !!modeBtn && modeBtn.getAttribute("role") === "switch",
+        defaultTagMode:
+          modeBtn?.getAttribute("aria-checked") === "false" &&
+          (modeLabel?.textContent ?? "").trim() === "打标模式",
+        hasTagActionBtn: buttons.includes("打标"),
         hasUntagBtn: buttons.includes("去标"),
         hasOpenSelected: buttons.includes("打开所选"),
         hasClearTagsLabelBtn: buttons.includes("清空标签"),
         hasClearIcon: !!document.querySelector(".clear-all-tags"),
         hasPreviewBlock: !!document.querySelector(".ext-preview-block"),
         hasCreateMissing: document.body.innerText.includes("创建缺失标签"),
-        hasPreviewIdle: document.body.innerText.includes(
-          "添加标签后，这里显示匹配结果",
-        ),
+        findPanelHidden:
+          document.querySelector('[data-view-panel="find"]')?.hidden === true,
         buttonLabels: buttons,
         status: document.querySelector(".status")?.textContent ?? "",
       };
@@ -159,7 +164,20 @@ try {
       fullPage: true,
     });
 
-    // Functional: add a preview chip via Enter and see floating results / clear icon
+    // Switch to find mode, then add a chip via Enter
+    await page.click(".mode-switch-control");
+    await new Promise((r) => setTimeout(r, 400));
+    const afterFindTab = await page.evaluate(() => {
+      const findPanel = document.querySelector('[data-view-panel="find"]');
+      return {
+        findVisible: findPanel != null && !findPanel.hidden,
+        hasPreviewIdle: document.body.innerText.includes(
+          "添加标签后，这里显示匹配结果",
+        ),
+      };
+    });
+    console.log("afterFindTab=", JSON.stringify(afterFindTab, null, 2));
+
     const previewInput = await page.$('.chip-field input[aria-label="标签查询"]');
     let previewFlow = { ok: false };
     if (previewInput) {
@@ -172,13 +190,11 @@ try {
         const chips = [...document.querySelectorAll(".chip-field .chip")].map(
           (c) => c.textContent?.replace("×", "").trim(),
         );
-        const float = document.querySelector(".ext-preview-float");
-        const rows = [...document.querySelectorAll(".ext-preview-float .result-list li")];
+        const rows = [...document.querySelectorAll(".ext-preview-hits .result-list li")];
         const clearHidden = document.querySelector(".clear-all-tags")?.hidden ?? true;
         return {
           ok: true,
           chips,
-          floatHidden: float?.hidden ?? true,
           rowCount: rows.length,
           clearHidden,
           hasResultTags: !!document.querySelector(".result-tag"),
@@ -194,13 +210,17 @@ try {
     console.log("previewFlow=", JSON.stringify(previewFlow, null, 2));
 
     const failed =
-      checks.hasTagBtn ||
+      !checks.hasModeSwitch ||
+      !checks.defaultTagMode ||
+      checks.hasTagActionBtn ||
       checks.hasUntagBtn ||
       checks.hasOpenSelected ||
       checks.hasClearTagsLabelBtn ||
       !checks.hasPreviewBlock ||
       !checks.hasCreateMissing ||
-      !checks.hasPreviewIdle;
+      !checks.findPanelHidden ||
+      !afterFindTab.findVisible ||
+      !afterFindTab.hasPreviewIdle;
     if (failed) {
       console.error("VERIFY_FAILED_UI");
       process.exitCode = 3;

@@ -162,3 +162,7 @@
 - 2026-10-22 — 扩展 Popup 预览列表支持 ↑/↓ 切换与空输入 Enter 打开（对齐 Find）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 扩展 Popup 高度固定 600px、命中区吃满剩余、禁用外层滚动条 → [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 管理资源芯片区清空图标改用无边框样式，对齐 Find（`ResFieldClearTagsStyle`）
+- 2026-10-22 — 扩展 Popup 打标/查找拆成双选项卡（默认打标；查找页结果区更高、按预览条数显示）→ [ext-page](../design/explorer-ui/ext-page.html) · [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-22 — 扩展 Popup「打标 / 查找」改为 switch +「打标模式 / 查找模式」说明 → [ext-page](../design/explorer-ui/ext-page.html) · [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-22 — 扩展 Popup 标题单独一行，第二行放模式开关与管理按钮 → [ext-page](../design/explorer-ui/ext-page.html)
+- 2026-10-22 — 扩展 Popup 打开与切换模式后焦点落到对应文本框（打标别名 / 查找查询）→ [docs/browser-extension.md](../docs/browser-extension.md)

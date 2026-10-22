@@ -7,8 +7,8 @@
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。托盘右键「重新启动」结束全部 ExplorerHost 后冷启动 Find，避免服务晚于查找进程起来时横幅停在「服务未运行」。打标/去标/看标签/管理标签与 Find 一致：点击窗口外失焦自动关闭（Find 仍为 Hide）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
 - Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标 + 名称后资源标签胶囊（preview API `tags`）；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [设计稿](design/explorer-ui/find.html) · [docs/explorer.md](docs/explorer.md)
-- 浏览器扩展 0.1.3：Popup 固定 600px、无外层滚动条（命中区吃满剩余高度）；拼首联想跟下方可用空间；打标 suggest 默认首项 + ↑/↓/Enter；预览 ↑/↓/空输入 Enter 对齐 Find → [docs/browser-extension.md](docs/browser-extension.md)
-- 扩展 Popup 设计稿已调：无打标/去标与清空/打开所选；Enter 打标、芯片 × 去标；预览结果占位 + 拼首联想浮动、无勾选、双击打开；清除图标；设置「预览资源类型」存 `chrome.storage.local`（默认仅链接；修深色 select 与保存后被晚到 load 盖回 links）→ [ext-page](design/explorer-ui/ext-page.html) · [ext-options](design/explorer-ui/ext-options.html)
+- 浏览器扩展 0.1.3：Popup 固定 600px、无外层滚动条；标题单独一行，第二行 switch +「打标模式 / 查找模式」与管理按钮（默认打标）；查找页命中区吃满剩余高度并可按预览条数显示；拼首联想跟下方可用空间；打标 suggest 默认首项 + ↑/↓/Enter；查找 ↑/↓/空输入 Enter 对齐 Find → [docs/browser-extension.md](docs/browser-extension.md)
+- 扩展 Popup 设计稿：标题一行 + 第二行 switch/按钮；无打标/去标与清空/打开所选；Enter 打标、芯片 × 去标；查找结果占位 + 拼首联想浮动、无勾选、双击打开；清除图标；设置「预览资源类型」存 `chrome.storage.local`（默认仅链接）→ [ext-page](design/explorer-ui/ext-page.html) · [ext-options](design/explorer-ui/ext-options.html)
 - 管理标签已落地（Host `library`，列表每页 50）。管理资源：按标签查找后删除或替换；类型按新地址预选可改；芯片查询与 Find 相同（末词 suggest 含简拼，Enter 落联想）；芯片区清空图标对齐 Find（无边框）；空状态提示居中。稀疏包 `0.1.10.0`。右键只少新增项时查 comhost 是否过期（`CoCreate` `0x80040111`）→ [存档](plans/2026-10-20-explorer-comhost-stale.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 关键决策
@@ -33,7 +33,7 @@
 ## 待办
 - 总览与编号约定见 [roadmap backlog](plans/2026-09-23-roadmap-backlog.md)
 - v1 安装器：规格已确认（[配置与安装](plans/2026-09-27-config-and-install.md)），实现计划尚未起草
-- 本机验收：扩展重新 `npm run build` 并「重新加载」后，Popup 打标联想默认高亮第一项，↑/↓ 切换，Enter 直接打标 → [docs/browser-extension.md](docs/browser-extension.md)
+- 本机验收：扩展重新 `npm run build` 并「重新加载」后，Popup 打开/切换模式后焦点在对应文本框；打标联想默认高亮第一项，↑/↓ 切换，Enter 直接打标 → [docs/browser-extension.md](docs/browser-extension.md)
 - 本机验收 Host 去标：单选点叉号去除；检索只缩小当前标签；窗口无别名、取消、去标按钮 → [docs/explorer.md](docs/explorer.md)
 
 已完成记录 → [plans/done.md](plans/done.md)
@@ -44,4 +44,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机验收扩展 Popup：重新加载后窗高 600px、无外层滚动条；有结果时 ↑/↓ 切换、空输入 Enter 打开 → [docs/browser-extension.md](docs/browser-extension.md)
+本机验收扩展 Popup：重新 `npm run build` 并「重新加载」后，打开默认「打标模式」且别名框获焦，切「查找模式」后查询框获焦；查找结果区更高；↑/↓ 与空输入 Enter 打开仍可用 → [docs/browser-extension.md](docs/browser-extension.md)

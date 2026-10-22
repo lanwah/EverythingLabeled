@@ -11,6 +11,9 @@ export const copy = {
   reloadExtensionForConfig:
     "配置未完整写入（后台可能仍是旧版）。请到 chrome://extensions 对本扩展点「重新加载」后再保存",
   previewIdle: "添加标签后，这里显示匹配结果",
+  viewTagMode: "打标模式",
+  viewFindMode: "查找模式",
+  viewModeSwitch: "切换模式",
   findQueryPlaceholder: "输入标签后按回车键…",
   findQueryContinue: "继续输入…",
   clearTags: "清空标签",

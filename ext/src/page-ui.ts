@@ -41,6 +41,9 @@ import { formatUiError } from "./ui-error";
 
 export type PageUiMode = "popup" | "app";
 
+/** Popup / 打标页主界面：打标与查找分模式（switch 切换）。 */
+export type PageView = "tag" | "find";
+
 type PageTags = { items: TagInfo[]; resourceExists: boolean };
 
 type PageSnapshot = {
@@ -50,6 +53,7 @@ type PageSnapshot = {
 };
 
 const TRUNCATE = 80;
+const DEFAULT_PAGE_VIEW: PageView = "tag";
 
 function truncate(text: string): string {
   return text.length <= TRUNCATE ? text : `${text.slice(0, TRUNCATE - 1)}…`;
@@ -81,9 +85,20 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   /** Popup: suggest stays fixed so it does not enlarge .ext-shell scrollHeight. */
   const useFixedSuggest = mode === "popup";
 
-  const head = el("header", "ext-head");
+  const head = el("header", "ext-head ext-head-stacked");
   const heading = el("h1");
   heading.textContent = "EverythingLabeled";
+  const headToolbar = el("div", "ext-head-toolbar");
+  const modeSwitch = el("div", "mode-switch");
+  modeSwitch.setAttribute("role", "group");
+  modeSwitch.setAttribute("aria-label", "功能模式");
+  const modeSwitchBtn = document.createElement("button");
+  modeSwitchBtn.type = "button";
+  modeSwitchBtn.className = "mode-switch-control";
+  modeSwitchBtn.setAttribute("role", "switch");
+  modeSwitchBtn.setAttribute("aria-label", copy.viewModeSwitch);
+  const modeLabel = el("span", "mode-switch-label");
+  modeSwitch.append(modeSwitchBtn, modeLabel);
   const headActions = el("div", "actions-right");
   const libraryLink = el("a", "btn");
   libraryLink.href = chrome.runtime.getURL("library.html");
@@ -105,10 +120,14 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   followBtn.className = "btn";
   followBtn.textContent = "跟随当前网页";
   if (mode === "app") headActions.append(followBtn);
-  head.append(heading, headActions);
+  headToolbar.append(modeSwitch, headActions);
+  head.append(heading, headToolbar);
 
   const banner = el("p", "banner");
   banner.hidden = true;
+
+  const tagPanel = el("div", "view-panel");
+  tagPanel.dataset.viewPanel = "tag";
   const pageCard = el("section", "page-card surface");
   const pageTitleEl = el("div", "title");
   const pageUriEl = el("div", "sub");
@@ -145,9 +164,19 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   createLabel.append(createMissing, createText);
   const tagFooter = el("div", "footer");
   tagFooter.append(createLabel);
+  tagPanel.append(
+    pageCard,
+    pageHint,
+    tagsLabel,
+    tagWell,
+    tagLabel,
+    aliasField,
+    tagFooter,
+  );
 
-  const previewLabel = el("p", "section-label");
-  previewLabel.textContent = "预览";
+  const findPanel = el("div", "view-panel");
+  findPanel.dataset.viewPanel = "find";
+  findPanel.hidden = true;
   const previewBlock = el("div", "ext-preview-block");
   const chipField = el("div", "chip-field");
   const chipWrap = el("div", "chip-wrap");
@@ -173,30 +202,19 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   queryRow.append(chipField);
   const previewHits = el("div", "ext-preview-hits");
   previewHits.setAttribute("role", "listbox");
-  previewHits.setAttribute("aria-label", "预览结果");
+  previewHits.setAttribute("aria-label", "查找结果");
   const previewHint = el("p", "empty-hint ext-preview-empty");
   previewHint.textContent = copy.previewIdle;
   const hitsList = el("ul", "result-list");
   previewHits.append(previewHint, hitsList);
   previewBlock.append(queryRow, previewHits);
-  const status = el("span", "status");
-  const previewFooter = el("div", "footer");
-  previewFooter.append(status);
+  findPanel.append(previewBlock);
 
-  root.append(
-    head,
-    banner,
-    pageCard,
-    pageHint,
-    tagsLabel,
-    tagWell,
-    tagLabel,
-    aliasField,
-    tagFooter,
-    previewLabel,
-    previewBlock,
-    previewFooter,
-  );
+  const status = el("span", "status");
+  const statusFooter = el("div", "footer");
+  statusFooter.append(status);
+
+  root.append(head, banner, tagPanel, findPanel, statusFooter);
 
   let config: ElExtensionConfig | undefined;
   let pageUrl = "";
@@ -213,9 +231,10 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let tagSuggest: SuggestNavState = emptySuggestNav();
   let previewSuggestRequestId = 0;
   let previewSuggestNav: SuggestNavState = emptySuggestNav();
+  let activeView: PageView = DEFAULT_PAGE_VIEW;
 
   function previewStatusText(): string {
-    return `预览 ${previewCount} 条`;
+    return copy.previewCount(previewCount);
   }
 
   function previewUseOr(): boolean {
@@ -227,7 +246,63 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     status.textContent = text;
   }
 
-  setStatus(previewStatusText());
+  function paintModeSwitch(): void {
+    const findOn = activeView === "find";
+    modeSwitchBtn.setAttribute("aria-checked", findOn ? "true" : "false");
+    modeSwitchBtn.dataset.view = activeView;
+    modeLabel.textContent = findOn ? copy.viewFindMode : copy.viewTagMode;
+    tagPanel.hidden = activeView !== "tag";
+    findPanel.hidden = activeView !== "find";
+  }
+
+  function syncStatusForView(): void {
+    if (activeView === "find") {
+      if (!status.classList.contains("err")) setStatus(previewStatusText());
+      statusFooter.hidden = false;
+      return;
+    }
+    if (!status.classList.contains("err")) {
+      setStatus("");
+      statusFooter.hidden = true;
+      return;
+    }
+    statusFooter.hidden = false;
+  }
+
+  /** 当前模式对应文本框获焦，便于打开后立刻录入 / 查找。 */
+  function focusActiveInput(): void {
+    const target = activeView === "find" ? qInput : aliasInput;
+    const run = (): void => {
+      if (target.disabled) return;
+      target.focus({ preventScroll: true });
+    };
+    // Popup 打开时焦点常落在首个按钮（模式开关）；点开关切换后也会留在开关上。
+    // rAF 让获焦发生在当前点击与布局之后。
+    requestAnimationFrame(run);
+  }
+
+  function setView(next: PageView): void {
+    if (activeView === next) return;
+    if (activeView === "tag") clearTagSuggest();
+    if (activeView === "find") clearPreviewSuggest();
+    activeView = next;
+    paintModeSwitch();
+    applyPopupLayout();
+    syncStatusForView();
+    focusActiveInput();
+  }
+
+  paintModeSwitch();
+  syncStatusForView();
+  const toggleMode = (): void => {
+    setView(activeView === "tag" ? "find" : "tag");
+  };
+  // 避免指针切换时焦点粘在开关上，随后由 focusActiveInput 落到文本框。
+  modeSwitchBtn.addEventListener("mousedown", (ev) => {
+    if (ev.button === 0) ev.preventDefault();
+  });
+  modeSwitchBtn.addEventListener("click", toggleMode);
+  modeLabel.addEventListener("click", toggleMode);
 
   function showConfigMissingBanner(): void {
     banner.replaceChildren();
@@ -246,6 +321,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   function showFailure(err: { code: string; message: string; httpStatus?: number }): void {
     if (err.code === "config_missing") showConfigMissingBanner();
     setStatus(formatUiError(err), "err");
+    statusFooter.hidden = false;
   }
 
   function setTagEnabled(enabled: boolean): void {
@@ -442,7 +518,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showFailure(result);
       return;
     }
-    setStatus(previewStatusText());
+    syncStatusForView();
     await refreshTags();
   }
 
@@ -464,7 +540,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     aliasInput.value = "";
     clearTagSuggest();
     createMissing.checked = false;
-    setStatus(previewStatusText());
+    syncStatusForView();
     await refreshTags();
   }
 
@@ -489,7 +565,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
   /**
    * 按标签检索列表：先按 previewLimit 预留，再把命中区拉满到 Popup 固定 600px，
-   * 整窗 overflow:hidden，避免浏览器外层滚动条。
+   * 整窗 overflow:hidden，避免浏览器外层滚动条。打标模式不测命中区。
    */
   function applyPopupLayout(): void {
     const limit = config?.previewLimit ?? 8;
@@ -508,16 +584,18 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     document.body.style.setProperty("--preview-hits-height", `${idealHitsH}px`);
     void root.offsetHeight;
 
-    const contentWithIdeal = Math.max(
-      root.scrollHeight,
-      Math.ceil(root.getBoundingClientRect().height),
-    );
-    const hitsH = hitsHeightForPopupCap({
-      idealHitsHeightPx: idealHitsH,
-      contentHeightWithIdealPx: contentWithIdeal,
-    });
-    document.body.style.setProperty("--preview-hits-height", `${hitsH}px`);
-    void root.offsetHeight;
+    if (activeView === "find") {
+      const contentWithIdeal = Math.max(
+        root.scrollHeight,
+        Math.ceil(root.getBoundingClientRect().height),
+      );
+      const hitsH = hitsHeightForPopupCap({
+        idealHitsHeightPx: idealHitsH,
+        contentHeightWithIdealPx: contentWithIdeal,
+      });
+      document.body.style.setProperty("--preview-hits-height", `${hitsH}px`);
+      void root.offsetHeight;
+    }
 
     const height = popupHeightPx();
     document.body.style.height = `${height}px`;
@@ -783,7 +861,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showFailure(result);
       return;
     }
-    setStatus(previewStatusText());
+    syncStatusForView();
   }
 
   followBtn.addEventListener("click", () => {
@@ -794,7 +872,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
         setStatus(copy.followNoHttpPage, "err");
         return;
       }
-      setStatus(previewStatusText());
+      syncStatusForView();
       await chrome.storage.session.set({
         pageSnapshot: { tabId: tab.id, url: tab.url, title: tab.title },
       });
@@ -814,6 +892,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     const cfg = await sendToBackground<ElExtensionConfig>({ type: "getConfig" });
     if (!cfg.ok) {
       showFailure(cfg);
+      focusActiveInput();
       return;
     }
     config = cfg.data;
@@ -823,14 +902,18 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     if (mode === "popup") {
       await loadPopupPage();
       applyPopupLayout();
+      focusActiveInput();
       return;
     }
 
     applyPopupLayout();
     await loadAppPage();
+    focusActiveInput();
     chrome.storage.session.onChanged.addListener((changes) => {
       if (!("pageSnapshot" in changes)) return;
-      void loadAppPage();
+      void loadAppPage().then(() => {
+        focusActiveInput();
+      });
     });
   }
 
