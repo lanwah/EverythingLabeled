@@ -18,6 +18,7 @@ export type ElRequest =
         token: string;
         confirmUntag: boolean;
         previewLimit: unknown;
+        previewResourceType?: unknown;
       };
     }
   | { type: "getTags"; uri: string }
@@ -135,8 +136,13 @@ export async function handleRequest(req: ElRequest, deps: Deps): Promise<ElRespo
       if (!parsed.ok) {
         return { ok: false, code: "bad_request", message: parsed.message };
       }
-      await deps.saveStored(parsed.value);
-      return { ok: true, data: parsed.value, message: null };
+      const prev = normalizeStoredConfig(await deps.loadStored());
+      const next = {
+        ...parsed.value,
+        findTagLogic: prev.findTagLogic,
+      };
+      await deps.saveStored(next);
+      return { ok: true, data: next, message: null };
     }
     default:
       break;

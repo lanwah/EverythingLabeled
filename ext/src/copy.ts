@@ -8,6 +8,8 @@ export const copy = {
   tokenInvalid: "token 无效",
   tokenMissing: "未配置 token",
   backgroundNoResponse: "扩展后台无响应，请到扩展管理页点「重新加载」",
+  reloadExtensionForConfig:
+    "配置未完整写入（后台可能仍是旧版）。请到 chrome://extensions 对本扩展点「重新加载」后再保存",
   previewIdle: "添加标签后，这里显示匹配结果",
   findQueryPlaceholder: "输入标签后按回车键…",
   findQueryContinue: "继续输入…",

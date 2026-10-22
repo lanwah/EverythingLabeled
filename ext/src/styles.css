@@ -29,6 +29,8 @@ body {
 }
 
 body.ext {
+  /* 深色页必须声明，否则 Windows 上原生 <select> 关闭态沿用系统浅色文字色，看起来像空 */
+  color-scheme: dark;
   font-family: var(--font);
   background: var(--page-bg);
   color: var(--fg);
@@ -37,13 +39,17 @@ body.ext {
 
 body.popup {
   width: 420px;
-  /* Chrome popup 上限约 600px；预留预览联想 / 命中约 3–5 行 */
-  min-height: 580px;
+  /* 先 auto 让内容（含预留命中区）撑开；page-ui 再写入精确 --popup-height（上限 600） */
+  min-height: 0;
+  height: var(--popup-height, auto);
+  max-height: 600px;
+  overflow: hidden;
 }
 
 body.popup .ext-shell {
-  max-height: 600px;
-  overflow: auto;
+  /* 勿用 height:100%，否则 body 定高前测 scrollHeight 会偏短，底部被裁 */
+  height: auto;
+  overflow: hidden;
 }
 
 .ext-shell {
@@ -173,7 +179,8 @@ body.options .ext-shell {
 }
 
 .alias-field input,
-.field input {
+.field input,
+.field select {
   width: 100%;
   height: 36px;
   padding: 0 10px;
@@ -186,18 +193,31 @@ body.options .ext-shell {
   outline: none;
 }
 
+.field select {
+  cursor: pointer;
+  /* 强制控件按深色方案绘制关闭态文案；仅设 color 在 Win Chromium 上不够 */
+  color-scheme: dark;
+}
+
+.field select option {
+  background: var(--input-bg);
+  color: var(--fg);
+}
+
 .alias-field input:focus,
-.field input:focus {
+.field input:focus,
+.field select:focus {
   border-color: var(--accent);
 }
 
 .suggest-list {
   position: absolute;
   z-index: 30;
-  top: calc(100% + 4px);
+  top: calc(100% + 2px);
   right: 0;
   left: 0;
-  max-height: 220px;
+  /* 拼首联想：max-height 为下方可用高度（Popup 由 placeFixedNear 内联；app 用命中区高度） */
+  max-height: var(--suggest-max-height, 220px);
   margin: 0;
   padding: 4px 0;
   overflow: auto;
@@ -206,16 +226,6 @@ body.options .ext-shell {
   border-radius: 8px;
   background: var(--input-bg);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
-}
-
-/* 预览区联想进文档流，避免被 popup 底边裁切；约 5 行 */
-.chip-field > .suggest-list {
-  position: static;
-  z-index: auto;
-  top: auto;
-  margin-top: 6px;
-  max-height: 200px;
-  box-shadow: none;
 }
 
 .suggest-list:empty {
@@ -321,6 +331,79 @@ body.options .ext-shell {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--input-bg);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.chip-field > .chip-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.chip-field > .clear-all-tags {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-family: "Segoe MDL2 Assets", "Segoe Fluent Icons", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chip-field > .clear-all-tags:hover {
+  background: var(--row-hover);
+  color: var(--fg);
+}
+
+.chip-field > .clear-all-tags[hidden] {
+  display: none;
+}
+
+/* 预览：芯片下方按 previewLimit 预留命中区高度（文档流，不浮动） */
+.ext-preview-block {
+  position: relative;
+  margin: 0 0 4px;
+}
+
+.ext-preview-block .find-toolbar {
+  margin: 0;
+}
+
+.ext-preview-hits {
+  margin: 8px 0 0;
+  height: var(--preview-hits-height, 314px);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+}
+
+/* 须压过后面的 `.empty-hint { margin: 0 }`，保留与芯片框约 12px 间隙 */
+.ext-preview-hits .empty-hint.ext-preview-empty {
+  margin: 12px 4px;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ext-preview-hits .empty-hint.ext-preview-empty[hidden] {
+  display: none;
+}
+
+.ext-preview-hits .result-list {
+  max-height: none;
+  margin: 0;
+}
+
+.ext-preview-hits .result-list li {
+  cursor: pointer;
 }
 
 .chip-field:focus-within {
@@ -712,6 +795,11 @@ a.btn:hover {
 }
 
 .ext-shell.resource-suggest-mode .chip-field > .suggest-list {
+  position: static;
+  z-index: auto;
+  top: auto;
+  flex: 1 1 100%;
+  width: 100%;
   max-height: 260px;
   margin-top: 8px;
   border: 1px solid var(--border);

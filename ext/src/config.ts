@@ -7,12 +7,16 @@ export const MAX_PREVIEW_LIMIT = 16;
 
 export type FindTagLogic = "and" | "or";
 
+/** Popup / 打标页预览列表过滤：默认仅链接。 */
+export type PreviewResourceType = "links" | "all";
+
 export type ElExtensionConfig = {
   baseUrl: string;
   token: string;
   confirmUntag: boolean;
   previewLimit: number;
   findTagLogic: FindTagLogic;
+  previewResourceType: PreviewResourceType;
 };
 
 export type ConfigParse =
@@ -68,6 +72,21 @@ export function parseFindTagLogic(raw: unknown): FindTagLogic {
   return v === "or" ? "or" : "and";
 }
 
+export function parsePreviewResourceType(raw: unknown): PreviewResourceType {
+  if (typeof raw !== "string") return "links";
+  const v = raw.trim().toLowerCase();
+  return v === "all" ? "all" : "links";
+}
+
+/** Client-side filter after preview API; `links` keeps only `kind === "url"`. */
+export function filterPreviewByResourceType<T extends { kind: string }>(
+  hits: readonly T[],
+  type: PreviewResourceType,
+): T[] {
+  if (type === "all") return [...hits];
+  return hits.filter((hit) => hit.kind === "url");
+}
+
 export function normalizeStoredConfig(
   stored: Record<string, unknown> | undefined,
 ): ElExtensionConfig {
@@ -81,6 +100,7 @@ export function normalizeStoredConfig(
     confirmUntag,
     previewLimit: parsePreviewLimit(stored?.previewLimit),
     findTagLogic: parseFindTagLogic(stored?.findTagLogic),
+    previewResourceType: parsePreviewResourceType(stored?.previewResourceType),
   };
 }
 
@@ -89,6 +109,7 @@ export function validateDraft(draft: {
   token: string;
   confirmUntag: boolean;
   previewLimit: unknown;
+  previewResourceType?: unknown;
 }): ConfigParse {
   const base = canonicalizeBaseUrl(draft.baseUrl);
   if (!base.ok) return base;
@@ -103,6 +124,8 @@ export function validateDraft(draft: {
       token: draft.token,
       confirmUntag: draft.confirmUntag,
       previewLimit,
+      findTagLogic: "and",
+      previewResourceType: parsePreviewResourceType(draft.previewResourceType),
     },
   };
 }

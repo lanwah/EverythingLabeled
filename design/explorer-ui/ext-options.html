@@ -49,6 +49,13 @@
               <span>预览条数</span>
               <input type="number" value="8" readonly />
             </label>
+            <label class="field">
+              <span>预览资源类型</span>
+              <select aria-label="预览资源类型" disabled>
+                <option selected>仅链接（默认）</option>
+                <option>全部（文件 / 文件夹 / 链接）</option>
+              </select>
+            </label>
             <div class="footer">
               <span class="status only-empty"></span>
               <span class="status ok only-filled">服务可达，token 有效</span>
@@ -60,6 +67,13 @@
           </form>
         </div>
       </div>
+
+      <aside class="design-notes" aria-label="交互说明（设计稿文字）">
+        <h2>交互说明</h2>
+        <ol>
+          <li><strong>预览资源类型</strong>：控制打标页 / Popup「预览」列表过滤。默认「仅链接」；可选「全部」以同时显示文件、文件夹与链接。存 <code>chrome.storage.local</code> 键 <code>previewResourceType</code>（<code>links</code> / <code>all</code>）；改后重新打开扩展页生效。</li>
+        </ol>
+      </aside>
     </div>
   </div>
   <script src="preview.js"></script>

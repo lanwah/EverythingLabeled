@@ -1,5 +1,9 @@
 import { copy } from "./copy";
-import { DEFAULT_BASE_URL, type ElExtensionConfig } from "./config";
+import {
+  DEFAULT_BASE_URL,
+  type ElExtensionConfig,
+  type PreviewResourceType,
+} from "./config";
 import { sendToBackground } from "./runtime-message";
 import { formatUiError } from "./ui-error";
 
@@ -40,6 +44,16 @@ previewLimit.min = "1";
 previewLimit.max = "16";
 previewLimit.step = "1";
 
+const previewResourceType = document.createElement("select");
+previewResourceType.setAttribute("aria-label", "预览资源类型");
+const optLinks = document.createElement("option");
+optLinks.value = "links";
+optLinks.textContent = "仅链接（默认）";
+const optAll = document.createElement("option");
+optAll.value = "all";
+optAll.textContent = "全部（文件 / 文件夹 / 链接）";
+previewResourceType.append(optLinks, optAll);
+
 function field(text: string, control: HTMLElement): HTMLLabelElement {
   const label = document.createElement("label");
   label.className = "field";
@@ -62,6 +76,7 @@ form.append(
   field("Token", token),
   confirmLabel,
   field("预览条数", previewLimit),
+  field("预览资源类型", previewResourceType),
 );
 
 const saveBtn = document.createElement("button");
@@ -106,33 +121,48 @@ function fill(cfg: ElExtensionConfig): void {
   token.value = cfg.token;
   confirmUntag.checked = cfg.confirmUntag;
   previewLimit.value = String(cfg.previewLimit);
+  previewResourceType.value = cfg.previewResourceType ?? "links";
+}
+
+/** 丢弃过期的 getConfig 回填，避免保存后被晚到的初次 load 盖成默认 links。 */
+let fillEpoch = 0;
+
+function applyConfig(cfg: ElExtensionConfig, epoch: number): void {
+  if (epoch !== fillEpoch) return;
+  fill(cfg);
 }
 
 async function load(): Promise<void> {
+  const epoch = ++fillEpoch;
   const result = await sendToBackground<ElExtensionConfig>({ type: "getConfig" });
+  if (epoch !== fillEpoch) return;
   if (!result.ok) {
     showErr(formatUiError(result));
     return;
   }
-  fill(result.data);
+  applyConfig(result.data, epoch);
 }
 
 form.addEventListener("submit", (ev) => {
   ev.preventDefault();
   void (async () => {
-    const result = await sendToBackground({
+    const epoch = ++fillEpoch;
+    const result = await sendToBackground<ElExtensionConfig>({
       type: "saveConfig",
       draft: {
         baseUrl: baseUrl.value,
         token: token.value,
         confirmUntag: confirmUntag.checked,
         previewLimit: previewLimit.value,
+        previewResourceType: previewResourceType.value as PreviewResourceType,
       },
     });
+    if (epoch !== fillEpoch) return;
     if (!result.ok) {
       showErr(formatUiError(result));
       return;
     }
+    applyConfig(result.data, epoch);
     showOk(copy.saved);
   })();
 });

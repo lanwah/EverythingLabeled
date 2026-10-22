@@ -1,5 +1,8 @@
 import { copy } from "./copy";
-import type { ElExtensionConfig } from "./config";
+import {
+  filterPreviewByResourceType,
+  type ElExtensionConfig,
+} from "./config";
 import { shouldCheckCreateMissing } from "./create-missing-suggest";
 import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
@@ -9,11 +12,19 @@ import {
   SUGGEST_DEBOUNCE_MS,
   tryAddPreviewTag,
 } from "./find-query";
+import { clearFixedPlacement, placeFixedNear } from "./floating-anchor";
 import { suggestRowLabel, tagChipLabel } from "./labels";
+import {
+  hitsHeightForPopupCap,
+  popupHeightPx,
+  previewHitsHeightPx,
+  spaceBelowPx,
+  SUGGEST_GAP_PX,
+} from "./popup-layout";
 import { sendToBackground } from "./runtime-message";
 import { pickFollowTab } from "./follow-tab";
 import { openOrFocusExtensionPage } from "./open-extension-page";
-import { decideOpen, defaultSelectedIds } from "./open-rules";
+import { decideOpen } from "./open-rules";
 import {
   emptySuggestNav,
   moveSuggestNav,
@@ -64,6 +75,8 @@ function displayTitle(hit: QueryHit): string {
 export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   root.replaceChildren();
   root.className = "ext-shell";
+  /** Popup: suggest stays fixed so it does not enlarge .ext-shell scrollHeight. */
+  const useFixedSuggest = mode === "popup";
 
   const head = el("header", "ext-head");
   const heading = el("h1");
@@ -119,14 +132,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   const suggestList = el("ul", "suggest-list");
   aliasField.append(aliasInput, suggestList);
 
-  const tagBtn = document.createElement("button");
-  tagBtn.type = "button";
-  tagBtn.className = "btn btn-primary";
-  tagBtn.textContent = "打标";
-  const untagBtn = document.createElement("button");
-  untagBtn.type = "button";
-  untagBtn.className = "btn";
-  untagBtn.textContent = "去标";
   const createMissing = document.createElement("input");
   createMissing.type = "checkbox";
   createMissing.checked = false;
@@ -135,13 +140,12 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   const createText = document.createElement("span");
   createText.textContent = "创建缺失标签";
   createLabel.append(createMissing, createText);
-  const tagActions = el("div", "actions-right");
-  tagActions.append(untagBtn, tagBtn);
   const tagFooter = el("div", "footer");
-  tagFooter.append(createLabel, tagActions);
+  tagFooter.append(createLabel);
 
   const previewLabel = el("p", "section-label");
   previewLabel.textContent = "预览";
+  const previewBlock = el("div", "ext-preview-block");
   const chipField = el("div", "chip-field");
   const chipWrap = el("div", "chip-wrap");
   const chipInputWrap = el("div", "chip-input");
@@ -154,25 +158,27 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   const previewSuggest = el("ul", "suggest-list");
   chipInputWrap.append(qInput);
   chipWrap.append(chipInputWrap);
-  chipField.append(chipWrap, previewSuggest);
-  const queryRow = el("div", "find-toolbar");
-  queryRow.append(chipField);
-  const hitsList = el("ul", "result-list surface");
-  const previewHint = el("p", "empty-hint");
-  previewHint.textContent = copy.previewIdle;
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
-  clearBtn.className = "btn";
-  clearBtn.textContent = copy.clearTags;
-  const openBtn = document.createElement("button");
-  openBtn.type = "button";
-  openBtn.className = "btn btn-primary";
-  openBtn.textContent = "打开所选";
+  clearBtn.className = "clear-all-tags";
+  clearBtn.textContent = "\uE894";
+  clearBtn.title = copy.clearTags;
+  clearBtn.setAttribute("aria-label", copy.clearTags);
+  clearBtn.hidden = true;
+  chipField.append(chipWrap, clearBtn, previewSuggest);
+  const queryRow = el("div", "find-toolbar");
+  queryRow.append(chipField);
+  const previewHits = el("div", "ext-preview-hits");
+  previewHits.setAttribute("role", "listbox");
+  previewHits.setAttribute("aria-label", "预览结果");
+  const previewHint = el("p", "empty-hint ext-preview-empty");
+  previewHint.textContent = copy.previewIdle;
+  const hitsList = el("ul", "result-list");
+  previewHits.append(previewHint, hitsList);
+  previewBlock.append(queryRow, previewHits);
   const status = el("span", "status");
-  const previewActions = el("div", "actions-right");
-  previewActions.append(clearBtn, openBtn);
   const previewFooter = el("div", "footer");
-  previewFooter.append(status, previewActions);
+  previewFooter.append(status);
 
   root.append(
     head,
@@ -185,9 +191,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     aliasField,
     tagFooter,
     previewLabel,
-    queryRow,
-    previewHint,
-    hitsList,
+    previewBlock,
     previewFooter,
   );
 
@@ -197,7 +201,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   let resourceExists = false;
   let tagsRequestId = 0;
   let hits: QueryHit[] = [];
-  let selected = new Set<string>();
+  let selectedId: string | null = null;
   let tagActionsEnabled = false;
   let previewCount = 0;
   let previewTags: string[] = [];
@@ -244,8 +248,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   function setTagEnabled(enabled: boolean): void {
     tagActionsEnabled = enabled;
     aliasInput.disabled = !enabled;
-    tagBtn.disabled = !enabled;
-    untagBtn.disabled = !enabled;
     createMissing.disabled = !enabled;
   }
 
@@ -291,44 +293,61 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
   }
 
+  function paintHitSelection(): void {
+    for (const li of hitsList.querySelectorAll("li")) {
+      const id = li.dataset.hitId;
+      li.classList.toggle("selected", id !== undefined && id === selectedId);
+    }
+  }
+
   function renderHits(next: QueryHit[]): void {
     hits = next;
     previewCount = hits.length;
-    selected = defaultSelectedIds(hits);
+    selectedId = hits[0]?.id ?? null;
     hitsList.replaceChildren();
     setStatus(previewStatusText());
     if (hits.length === 0) {
       previewHint.hidden = false;
-      previewHint.textContent = copy.previewEmpty;
+      previewHint.textContent =
+        previewTags.length === 0 ? copy.previewIdle : copy.previewEmpty;
       return;
     }
     previewHint.hidden = true;
     previewHint.textContent = "";
     for (const hit of hits) {
       const li = document.createElement("li");
-      const box = document.createElement("input");
-      box.type = "checkbox";
-      box.value = hit.id;
+      li.dataset.hitId = hit.id;
+      li.title = "双击打开";
+      if (hit.id === selectedId) li.classList.add("selected");
       const openable = isOpenableUrl(hit.kind, hit.uri);
-      box.disabled = !openable;
-      box.checked = selected.has(hit.id);
-      if (box.checked) li.classList.add("selected");
-      box.addEventListener("change", () => {
-        if (box.checked) selected.add(hit.id);
-        else selected.delete(hit.id);
-        li.classList.toggle("selected", box.checked);
-      });
       const icon = el("span", `kind-icon ${kindIconClass(hit.kind)}`);
       icon.setAttribute("aria-hidden", "true");
       const text = el("div", "result-text");
-      const title = el("div", "title");
-      title.textContent = truncate(displayTitle(hit));
+      const titleRow = el("div", "title-row");
+      const name = el("span", "name");
+      name.textContent = truncate(displayTitle(hit));
+      const tags = el("span", "result-tags");
+      tags.setAttribute("aria-label", "标签");
+      for (const tag of hit.tags ?? []) {
+        const capsule = el("span", "result-tag");
+        capsule.textContent = tag;
+        tags.append(capsule);
+      }
+      titleRow.append(name, tags);
       const sub = el("div", "sub");
       sub.textContent = openable ? hit.uri : `${hit.uri} · ${copy.cannotOpen}`;
-      text.append(title, sub);
-      li.append(box, icon, text);
+      text.append(titleRow, sub);
+      li.append(icon, text);
+      li.addEventListener("click", () => {
+        selectedId = hit.id;
+        paintHitSelection();
+      });
+      li.addEventListener("dblclick", () => {
+        void openHit(hit);
+      });
       hitsList.append(li);
     }
+    syncPopupFloats();
   }
 
   async function confirmUntagIfNeeded(): Promise<boolean> {
@@ -355,6 +374,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     resourceExists = result.data.resourceExists;
     renderChips(result.data.items);
+    applyPopupLayout();
   }
 
   async function applyPage(url: string | undefined, title: string | undefined): Promise<void> {
@@ -390,21 +410,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     await refreshTags();
   }
 
-  async function untagByAlias(): Promise<void> {
-    const alias = aliasInput.value.trim();
-    if (!tagActionsEnabled || alias === "") return;
-    if (!(await confirmUntagIfNeeded())) return;
-    const result = await sendToBackground({ type: "untagByAlias", uri: pageUrl, alias });
-    if (!result.ok) {
-      showFailure(result);
-      return;
-    }
-    aliasInput.value = "";
-    clearTagSuggest();
-    setStatus(previewStatusText());
-    await refreshTags();
-  }
-
   async function tagCurrent(): Promise<void> {
     const alias = aliasInput.value.trim();
     if (!tagActionsEnabled || alias === "") return;
@@ -427,10 +432,101 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     await refreshTags();
   }
 
+  /**
+   * 拼首联想 max-height：只看锚点下方实际可用高度（或预留命中区实测高度），
+   * 不读 previewLimit / 不按「条数×行高」限行。
+   */
+  function suggestMaxHeightFor(anchor: HTMLElement): number {
+    if (anchor === chipField) {
+      const hitsH = previewHits.getBoundingClientRect().height;
+      if (hitsH > 0) return Math.max(48, Math.floor(hitsH));
+    }
+    return Math.max(
+      48,
+      spaceBelowPx({
+        viewportHeightPx: window.innerHeight,
+        anchorBottomPx: anchor.getBoundingClientRect().bottom,
+        gapPx: SUGGEST_GAP_PX,
+      }),
+    );
+  }
+
+  /**
+   * 按标签检索列表：高度按 previewLimit 预留。
+   * 打标 Popup：先让 body/shell 按内容撑开再测高，窗口贴合内容（≤600），避免底部裁切。
+   */
+  function applyPopupLayout(): void {
+    const limit = config?.previewLimit ?? 8;
+    const idealHitsH = previewHitsHeightPx(limit);
+    if (!useFixedSuggest) {
+      document.body.style.setProperty("--preview-hits-height", `${idealHitsH}px`);
+      document.body.style.setProperty("--suggest-max-height", `${idealHitsH}px`);
+      return;
+    }
+
+    // 解除定高，否则 scrollHeight 仍按旧窗口高度截断，底部显示不全。
+    document.body.style.height = "auto";
+    document.body.style.setProperty("--popup-height", "auto");
+    root.style.height = "auto";
+    root.style.paddingBottom = "";
+    document.body.style.setProperty("--preview-hits-height", `${idealHitsH}px`);
+    void root.offsetHeight;
+
+    const contentWithIdeal = Math.max(
+      root.scrollHeight,
+      Math.ceil(root.getBoundingClientRect().height),
+    );
+    const hitsH = hitsHeightForPopupCap({
+      idealHitsHeightPx: idealHitsH,
+      contentHeightWithIdealPx: contentWithIdeal,
+    });
+    if (hitsH !== idealHitsH) {
+      document.body.style.setProperty("--preview-hits-height", `${hitsH}px`);
+      void root.offsetHeight;
+    }
+
+    const contentH = Math.max(
+      root.scrollHeight,
+      Math.ceil(root.getBoundingClientRect().height),
+    );
+    const height = popupHeightPx(contentH);
+    document.body.style.height = `${height}px`;
+    document.body.style.setProperty("--popup-height", `${height}px`);
+    root.style.height = "";
+  }
+
+  function setPreviewSuggestOpen(open: boolean): void {
+    if (open) {
+      // Collapse idle hint so it does not look like a large gap under the chip.
+      previewHint.hidden = true;
+    } else if (hits.length === 0) {
+      previewHint.hidden = false;
+      previewHint.textContent =
+        previewTags.length === 0 ? copy.previewIdle : copy.previewEmpty;
+    }
+  }
+
+  function syncPopupFloats(): void {
+    if (!useFixedSuggest) return;
+    if (suggestList.childElementCount > 0) {
+      placeFixedNear(aliasField, suggestList, {
+        gap: SUGGEST_GAP_PX,
+        maxHeight: suggestMaxHeightFor(aliasField),
+      });
+    }
+    if (previewSuggest.childElementCount > 0) {
+      placeFixedNear(chipField, previewSuggest, {
+        gap: SUGGEST_GAP_PX,
+        maxHeight: suggestMaxHeightFor(chipField),
+      });
+    }
+  }
+
   function clearTagSuggest(): void {
     tagSuggestRequestId += 1;
     tagSuggest = emptySuggestNav();
     suggestList.replaceChildren();
+    if (useFixedSuggest) clearFixedPlacement(suggestList);
   }
 
   function paintTagSuggest(): void {
@@ -439,6 +535,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       clearTagSuggest();
       createMissing.checked = false;
     });
+    syncPopupFloats();
   }
 
   const runSuggest = debounce(() => {
@@ -455,6 +552,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       if (!result.ok) {
         tagSuggest = emptySuggestNav();
         suggestList.replaceChildren();
+        if (useFixedSuggest) clearFixedPlacement(suggestList);
         return;
       }
       createMissing.checked = shouldCheckCreateMissing(
@@ -492,23 +590,24 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     void tagCurrent();
   });
-  tagBtn.addEventListener("click", () => {
-    void tagCurrent();
-  });
-  untagBtn.addEventListener("click", () => {
-    void untagByAlias();
-  });
 
   function clearPreviewSuggest(): void {
     previewSuggestRequestId += 1;
     previewSuggestNav = emptySuggestNav();
     previewSuggest.replaceChildren();
+    if (useFixedSuggest) {
+      clearFixedPlacement(previewSuggest);
+      root.style.paddingBottom = "";
+    }
+    setPreviewSuggestOpen(false);
   }
 
   function paintPreviewSuggest(): void {
     renderSuggestList(previewSuggest, previewSuggestNav, (alias) => {
       commitPreviewTag(alias);
     });
+    setPreviewSuggestOpen(previewSuggestNav.rows.length > 0);
+    syncPopupFloats();
   }
 
   function renderPreviewChips(): void {
@@ -534,6 +633,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     qInput.placeholder =
       previewTags.length > 0 ? copy.findQueryContinue : copy.findQueryPlaceholder;
+    clearBtn.hidden = previewTags.length === 0;
   }
 
   function commitPreviewTag(raw: string | null): void {
@@ -547,7 +647,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   function showIdlePreview(): void {
     hits = [];
     previewCount = 0;
-    selected = new Set();
+    selectedId = null;
     hitsList.replaceChildren();
     previewHint.hidden = false;
     previewHint.textContent = copy.previewIdle;
@@ -567,7 +667,8 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showFailure(result);
       return;
     }
-    renderHits(result.data);
+    const type = config?.previewResourceType ?? "links";
+    renderHits(filterPreviewByResourceType(result.data, type));
   }
 
   const runPreviewSuggest = debounce(() => {
@@ -583,6 +684,11 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       if (!result.ok) {
         previewSuggestNav = emptySuggestNav();
         previewSuggest.replaceChildren();
+        if (useFixedSuggest) {
+          clearFixedPlacement(previewSuggest);
+          root.style.paddingBottom = "";
+        }
+        setPreviewSuggestOpen(false);
         return;
       }
       previewSuggestNav = suggestNavFromRows(
@@ -632,9 +738,9 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     qInput.focus();
   });
 
-  async function openSelected(): Promise<void> {
+  async function openHit(hit: QueryHit): Promise<void> {
     if (config === undefined) return;
-    const decision = decideOpen(hits, selected, config.previewLimit);
+    const decision = decideOpen([hit], new Set([hit.id]), config.previewLimit);
     if (!decision.ok) {
       setStatus(decision.reason === "none" ? copy.openNone : copy.openOverLimit, "err");
       return;
@@ -646,10 +752,6 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     }
     setStatus(previewStatusText());
   }
-
-  openBtn.addEventListener("click", () => {
-    void openSelected();
-  });
 
   followBtn.addEventListener("click", () => {
     void (async () => {
@@ -666,6 +768,15 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     })();
   });
 
+  if (useFixedSuggest) {
+    root.addEventListener("scroll", () => {
+      syncPopupFloats();
+    });
+    window.addEventListener("resize", () => {
+      syncPopupFloats();
+    });
+  }
+
   async function boot(): Promise<void> {
     const cfg = await sendToBackground<ElExtensionConfig>({ type: "getConfig" });
     if (!cfg.ok) {
@@ -678,9 +789,11 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
 
     if (mode === "popup") {
       await loadPopupPage();
+      applyPopupLayout();
       return;
     }
 
+    applyPopupLayout();
     await loadAppPage();
     chrome.storage.session.onChanged.addListener((changes) => {
       if (!("pageSnapshot" in changes)) return;

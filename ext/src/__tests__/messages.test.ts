@@ -157,6 +157,7 @@ describe("handleRequest config", () => {
         confirmUntag: true,
         previewLimit: DEFAULT_PREVIEW_LIMIT,
         findTagLogic: "and",
+        previewResourceType: "links",
       },
       message: null,
     });
@@ -184,8 +185,17 @@ describe("handleRequest config", () => {
     expect(d.saveStored).not.toHaveBeenCalled();
   });
 
-  it("saves only the four-key config on a valid draft", async () => {
-    const d = deps();
+  it("saves config and preserves findTagLogic from storage", async () => {
+    const d = deps({
+      stored: {
+        baseUrl: GOOD_BASE,
+        token: TOKEN,
+        confirmUntag: true,
+        previewLimit: 8,
+        findTagLogic: "or",
+        previewResourceType: "links",
+      },
+    });
     const result = await handleRequest(
       {
         type: "saveConfig",
@@ -194,6 +204,7 @@ describe("handleRequest config", () => {
           token: TOKEN,
           confirmUntag: false,
           previewLimit: 16,
+          previewResourceType: "all",
         },
       },
       d,
@@ -205,6 +216,8 @@ describe("handleRequest config", () => {
         token: TOKEN,
         confirmUntag: false,
         previewLimit: 16,
+        findTagLogic: "or",
+        previewResourceType: "all",
       },
       message: null,
     });
@@ -214,6 +227,8 @@ describe("handleRequest config", () => {
       token: TOKEN,
       confirmUntag: false,
       previewLimit: 16,
+      findTagLogic: "or",
+      previewResourceType: "all",
     });
   });
 });

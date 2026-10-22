@@ -14,6 +14,7 @@ const STORED_KEYS = [
   "confirmUntag",
   "previewLimit",
   "findTagLogic",
+  "previewResourceType",
 ] as const;
 const MENU_MANAGE_PAGE = "el-manage-page";
 const MENU_LIBRARY = "el-library";
@@ -35,6 +36,7 @@ async function saveStored(cfg: ElExtensionConfig): Promise<void> {
     confirmUntag: cfg.confirmUntag,
     previewLimit: cfg.previewLimit,
     findTagLogic: cfg.findTagLogic,
+    previewResourceType: cfg.previewResourceType,
   });
 }
 

@@ -48,5 +48,18 @@ export function renderSuggestList(
     li.append(btn);
     listEl.append(li);
   });
-  listEl.querySelector("li.selected")?.scrollIntoView({ block: "nearest" });
+  scrollSelectedIntoList(listEl);
+}
+
+/** Scroll only the list itself — avoid scrollIntoView moving overflow:auto ancestors. */
+function scrollSelectedIntoList(listEl: HTMLUListElement): void {
+  const selected = listEl.querySelector("li.selected");
+  if (!(selected instanceof HTMLElement)) return;
+  const listRect = listEl.getBoundingClientRect();
+  const rowRect = selected.getBoundingClientRect();
+  if (rowRect.bottom > listRect.bottom) {
+    listEl.scrollTop += rowRect.bottom - listRect.bottom;
+  } else if (rowRect.top < listRect.top) {
+    listEl.scrollTop -= listRect.top - rowRect.top;
+  }
 }

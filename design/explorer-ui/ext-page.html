@@ -57,49 +57,76 @@
               <input type="checkbox" />
               <span>创建缺失标签</span>
             </label>
-            <div class="actions-right">
-              <button type="button" class="btn">去标</button>
-              <button type="button" class="btn btn-primary">打标</button>
-            </div>
           </div>
 
           <p class="section-label">预览</p>
-          <div class="find-toolbar">
-            <div class="chip-field">
-              <div class="chip-wrap">
-                <span class="chip only-filled">工作 <button type="button" aria-label="移除">×</button></span>
-                <span class="chip only-filled">React <button type="button" aria-label="移除">×</button></span>
-                <div class="chip-input">
-                  <input class="only-empty" type="text" placeholder="输入标签后按回车键…" aria-label="标签查询" />
-                  <input class="only-filled" type="text" placeholder="继续输入…" aria-label="标签查询" />
+          <div class="ext-preview-block">
+            <div class="find-toolbar">
+              <div class="chip-field">
+                <div class="chip-wrap">
+                  <span class="chip only-filled">工作 <button type="button" aria-label="移除">×</button></span>
+                  <span class="chip only-filled">React <button type="button" aria-label="移除">×</button></span>
+                  <div class="chip-input">
+                    <input class="only-empty" type="text" placeholder="输入标签后按回车键…" aria-label="标签查询" />
+                    <input class="only-filled" type="text" placeholder="继续输入…" aria-label="标签查询" />
+                  </div>
                 </div>
+                <button type="button" class="clear-all-tags only-filled" aria-label="清空标签" title="清空标签">&#xE894;</button>
               </div>
-              <button type="button" class="clear-all-tags only-filled" aria-label="清空标签" title="清空标签">&#xE894;</button>
+            </div>
+            <div class="ext-preview-hits" role="listbox" aria-label="预览结果（输入框下方文档流，按预览条数预留高度）">
+              <p class="empty-hint only-empty ext-preview-empty">添加标签后，这里显示匹配结果</p>
+              <ul class="result-list only-filled">
+                <li class="selected" title="双击打开">
+                  <span class="kind-icon webpage" role="img" aria-label="网页"></span>
+                  <div class="result-text">
+                    <div class="title-row">
+                      <span class="name">EverythingLabeled</span>
+                      <span class="result-tags" aria-label="标签">
+                        <span class="result-tag">工作</span>
+                        <span class="result-tag">React</span>
+                        <span class="result-tag">开源</span>
+                      </span>
+                    </div>
+                    <div class="sub">https://github.com/lanwah/EverythingLabeled</div>
+                  </div>
+                </li>
+                <li title="双击打开">
+                  <span class="kind-icon webpage" role="img" aria-label="网页"></span>
+                  <div class="result-text">
+                    <div class="title-row">
+                      <span class="name">Anthropic 发布 Git 版本控制</span>
+                      <span class="result-tags" aria-label="标签">
+                        <span class="result-tag">工作</span>
+                        <span class="result-tag">React</span>
+                      </span>
+                    </div>
+                    <div class="sub">https://mp.weixin.qq.com/s/example</div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
-          <p class="empty-hint only-empty">添加标签后，这里显示匹配结果</p>
-          <ul class="result-list only-filled">
-            <li class="selected">
-              <span class="kind-icon webpage" role="img" aria-label="网页"></span>
-              <div class="result-text">
-                <div class="title">EverythingLabeled</div>
-                <div class="sub">https://github.com/lanwah/EverythingLabeled</div>
-              </div>
-            </li>
-            <li>
-              <span class="kind-icon webpage" role="img" aria-label="网页"></span>
-              <div class="result-text">
-                <div class="title">Anthropic 发布 Git 版本控制</div>
-                <div class="sub">https://mp.weixin.qq.com/s/example</div>
-              </div>
-            </li>
-          </ul>
           <div class="footer">
             <span class="status only-empty">预览 0 条</span>
             <span class="status only-filled">预览 2 条</span>
           </div>
         </div>
       </div>
+
+      <aside class="design-notes" aria-label="交互说明（设计稿文字）">
+        <h2>交互说明（图中体现不全时以本文为准）</h2>
+        <ol>
+          <li><strong>打标</strong>：无「打标」按钮。别名框按 <kbd>Enter</kbd> 提交打标（有联想时采用当前高亮项，与现有 suggest 行为一致）。</li>
+          <li><strong>去标</strong>：无「去标」按钮。点击「当前标签」芯片上的 <kbd>×</kbd> 去除该标签。</li>
+          <li><strong>预览空提示间隙</strong>：芯片输入框与「添加标签后，这里显示匹配结果」之间保留可见垂直间隙（约 12px）。</li>
+          <li><strong>预览资源类型</strong>：可配置「仅链接」或「全部（文件 / 文件夹 / 链接）」；默认「仅链接」。配置项在设置页，键 <code>previewResourceType</code>（<code>links</code> / <code>all</code>）。本填充态按默认仅链接示意。</li>
+          <li><strong>拼首联想浮动</strong>（与结果区不同）：输入末词时浮动叠在输入框下；高度 = 下方可用空间（铺满预留命中区），<strong>不</strong>按预览条数限行。Chrome Popup 无法画到窗外。</li>
+          <li><strong>结果区占位</strong>（与联想不同）：匹配结果在芯片框<strong>下方</strong>文档流；高度<strong>只</strong>按 Options「预览条数」预留（不压缩）；条数不足仍占位。「预览 N 条」在区外紧跟。Popup 窗口贴合内容无滚动条（上限 600px）。</li>
+          <li><strong>结果行</strong>：无勾选框；单击仅高亮选中；双击打开该链接（本设计稿为静态示意，无法演示双击）。名称后展示该资源标签胶囊，布局与样式对齐「按标签查找」（preview API <code>tags</code>）。</li>
+          <li><strong>清空</strong>：无「清空标签」「打开所选」按钮。有芯片时，输入框右侧显示清除图标（对齐「按标签查找」），一点清空全部预览芯片。</li>
+        </ol>
+      </aside>
     </div>
   </div>
   <script src="preview.js"></script>

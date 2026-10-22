@@ -3,7 +3,9 @@ import {
   canonicalizeBaseUrl,
   DEFAULT_BASE_URL,
   DEFAULT_PREVIEW_LIMIT,
+  filterPreviewByResourceType,
   normalizeStoredConfig,
+  parsePreviewResourceType,
   validateDraft,
 } from "../config";
 
@@ -46,6 +48,7 @@ describe("normalizeStoredConfig", () => {
       confirmUntag: true,
       previewLimit: DEFAULT_PREVIEW_LIMIT,
       findTagLogic: "and",
+      previewResourceType: "links",
     });
     expect(DEFAULT_BASE_URL).toBe("http://127.0.0.1:5123");
     expect(DEFAULT_PREVIEW_LIMIT).toBe(8);
@@ -60,6 +63,7 @@ describe("normalizeStoredConfig", () => {
       confirmUntag: false,
       previewLimit: 16,
       findTagLogic: "and",
+      previewResourceType: "links",
     });
   });
 
@@ -68,9 +72,34 @@ describe("normalizeStoredConfig", () => {
     expect(normalizeStoredConfig({ findTagLogic: "AND" }).findTagLogic).toBe("and");
   });
 
+  it("parses previewResourceType all", () => {
+    expect(normalizeStoredConfig({ previewResourceType: "all" }).previewResourceType).toBe(
+      "all",
+    );
+    expect(parsePreviewResourceType("ALL")).toBe("all");
+    expect(parsePreviewResourceType("links")).toBe("links");
+    expect(parsePreviewResourceType("nope")).toBe("links");
+  });
+
   it("coerces illegal previewLimit to 8", () => {
     expect(normalizeStoredConfig({ previewLimit: 0 }).previewLimit).toBe(8);
     expect(normalizeStoredConfig({ previewLimit: "99" }).previewLimit).toBe(8);
+  });
+});
+
+describe("filterPreviewByResourceType", () => {
+  const hits = [
+    { kind: "url", id: "u" },
+    { kind: "file", id: "f" },
+    { kind: "folder", id: "d" },
+  ];
+
+  it("keeps only url when links", () => {
+    expect(filterPreviewByResourceType(hits, "links")).toEqual([{ kind: "url", id: "u" }]);
+  });
+
+  it("keeps all when all", () => {
+    expect(filterPreviewByResourceType(hits, "all")).toEqual(hits);
   });
 });
 
@@ -86,7 +115,7 @@ describe("validateDraft", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("accepts previewLimit 8", () => {
+  it("accepts previewLimit 8 and defaults previewResourceType to links", () => {
     const result = validateDraft({ ...valid, previewLimit: 8 });
     expect(result).toEqual({
       ok: true,
@@ -95,7 +124,19 @@ describe("validateDraft", () => {
         token: "",
         confirmUntag: true,
         previewLimit: 8,
+        findTagLogic: "and",
+        previewResourceType: "links",
       },
     });
+  });
+
+  it("accepts previewResourceType all", () => {
+    const result = validateDraft({
+      ...valid,
+      previewLimit: 8,
+      previewResourceType: "all",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.previewResourceType).toBe("all");
   });
 });
