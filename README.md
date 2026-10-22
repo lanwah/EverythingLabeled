@@ -38,8 +38,9 @@ v1 以 **Windows 本地守护进程** 为唯一数据入口；CLI、资源管理
 
 ```powershell
 .\build.ps1
-# 或
-dotnet build EverythingLabeled.sln
+# 同时构建 .NET 解决方案与浏览器扩展（ext/）
+# 只编扩展：.\build-ext.ps1
+# 只编 .NET：dotnet build EverythingLabeled.sln
 ```
 
 ### 2. 启动 Service

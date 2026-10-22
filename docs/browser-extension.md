@@ -11,11 +11,11 @@ Chrome / Edge MV3 扩展，源码与构建产物在 `ext/`。只走本机 Servic
 
 ## 构建与测试
 
-均在 `ext/` 目录：
+仓库根可用 `build-ext.bat` / `.\build-ext.ps1`（缺 `node_modules` 时先 `npm ci`）；`build.bat` / `.\build.ps1` 在 `dotnet build` 之后也会调用它。也可直接在 `ext/`：
 
 ```text
 cd ext
-npm install
+npm ci
 npm test
 npm run build
 ```

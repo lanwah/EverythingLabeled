@@ -92,4 +92,9 @@ Stop-RepoBuildLockingProcesses -RepoRoot $Root
 
 Write-Host "Building $Sln ($Configuration)..."
 dotnet build $Sln -c $Configuration --nologo
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+& (Join-Path $Root 'build-ext.ps1')
 exit $LASTEXITCODE

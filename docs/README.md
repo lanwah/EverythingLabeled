@@ -97,7 +97,7 @@ ext/  …… 独立 Node/Vite 工程，无 .NET ProjectReference
 
 ## 编译
 
-仓库根对 `EverythingLabeled.sln` 执行 `dotnet build`。需要 .NET 8 SDK。默认 Debug。浏览器扩展另需在 `ext/` 下用 Node（见 [浏览器扩展](./browser-extension.md)）。
+仓库根对 `EverythingLabeled.sln` 执行 `dotnet build`，并接着构建浏览器扩展。需要 .NET 8 SDK；扩展需要 Node.js ≥ 20（见 [浏览器扩展](./browser-extension.md)）。默认 Debug。
 
 ```bat
 build.bat
@@ -109,7 +109,9 @@ build.bat -Configuration Release
 .\build.ps1 -Configuration Release
 ```
 
-`build.bat` 调用同目录 `build.ps1`。编译前会结束本仓库输出目录里仍在运行的 `EverythingLabeled.Tray` 与 `EverythingLabeled.ExplorerHost`（Find 关窗只隐藏，托盘退出也不会结束 Host，否则会锁住 DLL）。等价命令：`dotnet build EverythingLabeled.sln`（可加 `-c Release`；直接 `dotnet build` 不会先结束这两个进程）。
+`build.bat` 调用同目录 `build.ps1`：先 `dotnet build`，再调用 `build-ext.ps1`（`ext/` 下 `npm run build`，缺 `node_modules` 时先 `npm ci`）。编译前会结束本仓库输出目录里仍在运行的 `EverythingLabeled.Tray` 与 `EverythingLabeled.ExplorerHost`（Find 关窗只隐藏，托盘退出也不会结束 Host，否则会锁住 DLL）。
+
+只编扩展：`build-ext.bat` / `.\build-ext.ps1`。只编 .NET：`dotnet build EverythingLabeled.sln`（可加 `-c Release`；直接 `dotnet build` 不会先结束 Tray/Host，也不会编扩展）。
 
 ## 分项文档
 
