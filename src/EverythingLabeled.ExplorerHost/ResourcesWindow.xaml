@@ -43,6 +43,15 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- 对齐 Find 芯片区清空：无边框，仅悬停底色 -->
+        <Style x:Key="ResFieldClearTagsStyle" TargetType="Button" BasedOn="{StaticResource ResCaptionButton}">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
         <Style x:Key="ResRowButton" TargetType="Button">
             <Setter Property="MinWidth" Value="56" />
             <Setter Property="Padding" Value="8,4" />
@@ -159,7 +168,7 @@
                                 DockPanel.Dock="Right"
                                 Content="&#xE894;"
                                 FontFamily="Segoe MDL2 Assets"
-                                Style="{StaticResource ResRowButton}"
+                                Style="{StaticResource ResFieldClearTagsStyle}"
                                 ToolTip="清空标签"
                                 Visibility="Collapsed"
                                 Click="OnClearTags" />

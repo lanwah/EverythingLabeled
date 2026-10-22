@@ -9,7 +9,7 @@
 - Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标 + 名称后资源标签胶囊（preview API `tags`）；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [设计稿](design/explorer-ui/find.html) · [docs/explorer.md](docs/explorer.md)
 - 浏览器扩展 0.1.3：Popup 固定 600px、无外层滚动条（命中区吃满剩余高度）；拼首联想跟下方可用空间；打标 suggest 默认首项 + ↑/↓/Enter；预览 ↑/↓/空输入 Enter 对齐 Find → [docs/browser-extension.md](docs/browser-extension.md)
 - 扩展 Popup 设计稿已调：无打标/去标与清空/打开所选；Enter 打标、芯片 × 去标；预览结果占位 + 拼首联想浮动、无勾选、双击打开；清除图标；设置「预览资源类型」存 `chrome.storage.local`（默认仅链接；修深色 select 与保存后被晚到 load 盖回 links）→ [ext-page](design/explorer-ui/ext-page.html) · [ext-options](design/explorer-ui/ext-options.html)
-- 管理标签已落地（Host `library`，列表每页 50）。管理资源：按标签查找后删除或替换；类型按新地址预选可改；芯片查询与 Find 相同（末词 suggest 含简拼，Enter 落联想）；空状态提示居中。稀疏包 `0.1.10.0`。右键只少新增项时查 comhost 是否过期（`CoCreate` `0x80040111`）→ [存档](plans/2026-10-20-explorer-comhost-stale.md) · [docs/explorer.md](docs/explorer.md)
+- 管理标签已落地（Host `library`，列表每页 50）。管理资源：按标签查找后删除或替换；类型按新地址预选可改；芯片查询与 Find 相同（末词 suggest 含简拼，Enter 落联想）；芯片区清空图标对齐 Find（无边框）；空状态提示居中。稀疏包 `0.1.10.0`。右键只少新增项时查 comhost 是否过期（`CoCreate` `0x80040111`）→ [存档](plans/2026-10-20-explorer-comhost-stale.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 关键决策
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)

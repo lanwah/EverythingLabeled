@@ -161,3 +161,4 @@
 - 2026-10-22 — 扩展文档确认：Popup 内自定义浮层（fixed/absolute）也不能画出窗外 / 突破 800×600 → [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 扩展 Popup 预览列表支持 ↑/↓ 切换与空输入 Enter 打开（对齐 Find）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 扩展 Popup 高度固定 600px、命中区吃满剩余、禁用外层滚动条 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-22 — 管理资源芯片区清空图标改用无边框样式，对齐 Find（`ResFieldClearTagsStyle`）
