@@ -28,6 +28,11 @@ body {
   min-height: 100%;
 }
 
+html.popup-root {
+  height: 600px;
+  overflow: hidden;
+}
+
 body.ext {
   /* 深色页必须声明，否则 Windows 上原生 <select> 关闭态沿用系统浅色文字色，看起来像空 */
   color-scheme: dark;
@@ -39,16 +44,16 @@ body.ext {
 
 body.popup {
   width: 420px;
-  /* 先 auto 让内容（含预留命中区）撑开；page-ui 再写入精确 --popup-height（上限 600） */
+  /* 固定 Chrome Popup 硬顶 600；page-ui 用命中区吃满剩余高度 */
   min-height: 0;
-  height: var(--popup-height, auto);
+  height: var(--popup-height, 600px);
   max-height: 600px;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body.popup .ext-shell {
-  /* 勿用 height:100%，否则 body 定高前测 scrollHeight 会偏短，底部被裁 */
-  height: auto;
+  height: 100%;
   overflow: hidden;
 }
 

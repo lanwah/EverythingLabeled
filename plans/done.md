@@ -159,3 +159,5 @@
 - 2026-10-21 — 修复 Options 保存后「预览资源类型」被打回「仅链接」：丢弃过期 getConfig 回填，避免晚到的初次 load 盖住刚保存的 `all`
 - 2026-10-22 — 扩展文档补记：新增配置项须在扩展管理页「重新加载」；Popup 浏览器硬顶宽 800×高 600（[chrome.action](https://developer.chrome.com/docs/extensions/reference/api/action#popup)）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 扩展文档确认：Popup 内自定义浮层（fixed/absolute）也不能画出窗外 / 突破 800×600 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-22 — 扩展 Popup 预览列表支持 ↑/↓ 切换与空输入 Enter 打开（对齐 Find）→ [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-22 — 扩展 Popup 高度固定 600px、命中区吃满剩余、禁用外层滚动条 → [docs/browser-extension.md](../docs/browser-extension.md)

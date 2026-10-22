@@ -55,20 +55,17 @@ export function spaceBelowPx(args: {
 }
 
 /**
- * Popup body height: fit in-flow content (including config-reserved hits).
- * Cap at Chrome 600px so the window itself does not grow a scrollbar.
+ * Popup body height: always Chrome's hard cap so the window is full-height
+ * and does not get a browser scrollbar from undersized/oversized content.
  */
-export function popupHeightPx(contentHeightPx: number): number {
-  return Math.min(
-    CHROME_POPUP_MAX_HEIGHT_PX,
-    Math.max(0, Math.ceil(contentHeightPx)),
-  );
+export function popupHeightPx(_contentHeightPx?: number): number {
+  return CHROME_POPUP_MAX_HEIGHT_PX;
 }
 
 /**
- * Prefer config-reserved hits height. Only if chrome + ideal hits exceed
- * Chrome's 600px hard cap, shrink hits so the panel stays fully inside the
- * window (avoids mid-box clipping / popup scrollbar).
+ * Size the preview hits panel to fill the remaining space under a fixed
+ * popup height (default 600). Expands when chrome + ideal is under max;
+ * shrinks when they would exceed it (keeps at least one hit row).
  */
 export function hitsHeightForPopupCap(args: {
   idealHitsHeightPx: number;
@@ -77,9 +74,8 @@ export function hitsHeightForPopupCap(args: {
 }): number {
   const maxH = args.maxPopupHeightPx ?? CHROME_POPUP_MAX_HEIGHT_PX;
   const content = Math.ceil(args.contentHeightWithIdealPx);
-  if (content <= maxH) return args.idealHitsHeightPx;
   const chromeH = content - args.idealHitsHeightPx;
   const room = maxH - chromeH;
   const minHits = PREVIEW_HITS_BORDER_PX + PREVIEW_HIT_ROW_PX;
-  return Math.max(minHits, Math.min(args.idealHitsHeightPx, room));
+  return Math.max(minHits, room);
 }

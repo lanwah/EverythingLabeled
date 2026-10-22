@@ -8,6 +8,8 @@ import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
 import {
   composePreviewQuery,
+  nextDownIndex,
+  nextUpIndex,
   normalizeQueryToken,
   SUGGEST_DEBOUNCE_MS,
   tryAddPreviewTag,
@@ -29,6 +31,7 @@ import {
   emptySuggestNav,
   moveSuggestNav,
   renderSuggestList,
+  scrollSelectedIntoContainer,
   selectedSuggestAlias,
   suggestNavFromRows,
   type SuggestNavState,
@@ -298,6 +301,39 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       const id = li.dataset.hitId;
       li.classList.toggle("selected", id !== undefined && id === selectedId);
     }
+    scrollSelectedIntoContainer(previewHits);
+  }
+
+  /** Align Host Find: suggest first, else preview hits. */
+  function movePreviewList(down: boolean): boolean {
+    if (previewSuggestNav.rows.length > 0) {
+      previewSuggestNav = moveSuggestNav(previewSuggestNav, down);
+      paintPreviewSuggest();
+      return true;
+    }
+    if (hits.length === 0) return false;
+    const current = hits.findIndex((hit) => hit.id === selectedId);
+    const next = down
+      ? nextDownIndex(current, hits.length)
+      : nextUpIndex(current, hits.length);
+    if (next < 0) return false;
+    const hit = hits[next];
+    if (hit === undefined) return false;
+    selectedId = hit.id;
+    paintHitSelection();
+    return true;
+  }
+
+  function tryOpenSelectedHit(): boolean {
+    if (hits.length === 0) return false;
+    const hit =
+      (selectedId != null ? hits.find((row) => row.id === selectedId) : undefined) ??
+      hits[0];
+    if (hit === undefined) return false;
+    selectedId = hit.id;
+    paintHitSelection();
+    void openHit(hit);
+    return true;
   }
 
   function renderHits(next: QueryHit[]): void {
@@ -317,7 +353,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
     for (const hit of hits) {
       const li = document.createElement("li");
       li.dataset.hitId = hit.id;
-      li.title = "双击打开";
+      li.title = "双击或回车打开";
       if (hit.id === selectedId) li.classList.add("selected");
       const openable = isOpenableUrl(hit.kind, hit.uri);
       const icon = el("span", `kind-icon ${kindIconClass(hit.kind)}`);
@@ -452,8 +488,8 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   }
 
   /**
-   * 按标签检索列表：高度按 previewLimit 预留。
-   * 打标 Popup：先让 body/shell 按内容撑开再测高，窗口贴合内容（≤600），避免底部裁切。
+   * 按标签检索列表：先按 previewLimit 预留，再把命中区拉满到 Popup 固定 600px，
+   * 整窗 overflow:hidden，避免浏览器外层滚动条。
    */
   function applyPopupLayout(): void {
     const limit = config?.previewLimit ?? 8;
@@ -464,7 +500,7 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       return;
     }
 
-    // 解除定高，否则 scrollHeight 仍按旧窗口高度截断，底部显示不全。
+    // 解除定高再测 chrome，否则 scrollHeight 被旧高度截断。
     document.body.style.height = "auto";
     document.body.style.setProperty("--popup-height", "auto");
     root.style.height = "auto";
@@ -480,19 +516,13 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       idealHitsHeightPx: idealHitsH,
       contentHeightWithIdealPx: contentWithIdeal,
     });
-    if (hitsH !== idealHitsH) {
-      document.body.style.setProperty("--preview-hits-height", `${hitsH}px`);
-      void root.offsetHeight;
-    }
+    document.body.style.setProperty("--preview-hits-height", `${hitsH}px`);
+    void root.offsetHeight;
 
-    const contentH = Math.max(
-      root.scrollHeight,
-      Math.ceil(root.getBoundingClientRect().height),
-    );
-    const height = popupHeightPx(contentH);
+    const height = popupHeightPx();
     document.body.style.height = `${height}px`;
     document.body.style.setProperty("--popup-height", `${height}px`);
-    root.style.height = "";
+    root.style.height = "100%";
   }
 
   function setPreviewSuggestOpen(open: boolean): void {
@@ -713,21 +743,24 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       return;
     }
     if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-      if (previewSuggestNav.rows.length === 0) return;
-      previewSuggestNav = moveSuggestNav(previewSuggestNav, ev.key === "ArrowDown");
-      paintPreviewSuggest();
-      ev.preventDefault();
+      if (movePreviewList(ev.key === "ArrowDown")) ev.preventDefault();
       return;
     }
     if (ev.key !== "Enter") return;
-    ev.preventDefault();
+    // Chip mode (Find Q3): draft/suggest → chip; empty input + hits → open.
     const fromSuggest = selectedSuggestAlias(previewSuggestNav);
     if (fromSuggest !== undefined && normalizeQueryToken(qInput.value) != null) {
+      ev.preventDefault();
       commitPreviewTag(fromSuggest);
       return;
     }
     const draft = normalizeQueryToken(qInput.value);
-    if (draft != null) commitPreviewTag(draft);
+    if (draft != null) {
+      ev.preventDefault();
+      commitPreviewTag(draft);
+      return;
+    }
+    if (tryOpenSelectedHit()) ev.preventDefault();
   });
   clearBtn.addEventListener("click", () => {
     previewTags = [];

@@ -60,26 +60,25 @@ describe("spaceBelowPx", () => {
 });
 
 describe("popupHeightPx", () => {
-  it("uses content height when under the Chrome cap", () => {
-    expect(popupHeightPx(420)).toBe(420);
-  });
-
-  it("caps at Chrome popup max height", () => {
+  it("always uses Chrome popup max height", () => {
+    expect(popupHeightPx(420)).toBe(CHROME_POPUP_MAX_HEIGHT_PX);
     expect(popupHeightPx(800)).toBe(CHROME_POPUP_MAX_HEIGHT_PX);
+    expect(popupHeightPx()).toBe(CHROME_POPUP_MAX_HEIGHT_PX);
   });
 });
 
 describe("hitsHeightForPopupCap", () => {
-  it("keeps config-reserved hits when content fits under 600", () => {
+  it("expands hits to fill remaining space under 600", () => {
+    // chrome 332 + ideal 188 = 520 → room for hits = 268
     expect(
       hitsHeightForPopupCap({
         idealHitsHeightPx: 188,
         contentHeightWithIdealPx: 520,
       }),
-    ).toBe(188);
+    ).toBe(268);
   });
 
-  it("shrinks hits only when chrome + ideal exceed 600", () => {
+  it("shrinks hits when chrome + ideal exceed 600", () => {
     // chrome 350 + ideal 400 = 750 → room for hits = 250
     expect(
       hitsHeightForPopupCap({

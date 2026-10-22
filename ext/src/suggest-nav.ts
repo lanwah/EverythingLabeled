@@ -48,18 +48,18 @@ export function renderSuggestList(
     li.append(btn);
     listEl.append(li);
   });
-  scrollSelectedIntoList(listEl);
+  scrollSelectedIntoContainer(listEl);
 }
 
-/** Scroll only the list itself — avoid scrollIntoView moving overflow:auto ancestors. */
-function scrollSelectedIntoList(listEl: HTMLUListElement): void {
-  const selected = listEl.querySelector("li.selected");
+/** Scroll only inside `container` — avoid scrollIntoView moving the popup window. */
+export function scrollSelectedIntoContainer(container: HTMLElement): void {
+  const selected = container.querySelector("li.selected");
   if (!(selected instanceof HTMLElement)) return;
-  const listRect = listEl.getBoundingClientRect();
+  const listRect = container.getBoundingClientRect();
   const rowRect = selected.getBoundingClientRect();
   if (rowRect.bottom > listRect.bottom) {
-    listEl.scrollTop += rowRect.bottom - listRect.bottom;
+    container.scrollTop += rowRect.bottom - listRect.bottom;
   } else if (rowRect.top < listRect.top) {
-    listEl.scrollTop -= listRect.top - rowRect.top;
+    container.scrollTop -= listRect.top - rowRect.top;
   }
 }
