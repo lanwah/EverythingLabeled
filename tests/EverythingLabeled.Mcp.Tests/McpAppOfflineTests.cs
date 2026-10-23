@@ -109,7 +109,7 @@ public sealed class McpAppOfflineTests
             LoadConfig = overrides =>
             {
                 seen = overrides;
-                return ElResult<ElConfig>.Ok(new ElConfig("http://127.0.0.1:9/", "secret", true, 16, 4));
+                return ElResult<ElConfig>.Ok(new ElConfig("http://127.0.0.1:9/", "secret", true, 16, 8, 4));
             },
             RunHost = (runtime, _) =>
             {

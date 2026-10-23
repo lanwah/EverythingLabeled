@@ -16,6 +16,9 @@ public sealed class AppConfig
     [JsonPropertyName("previewLimit")]
     public int PreviewLimit { get; init; } = 16;
 
+    [JsonPropertyName("suggestLimit")]
+    public int SuggestLimit { get; init; } = 8;
+
     [JsonPropertyName("maxConcurrency")]
     public int MaxConcurrency { get; init; } = 4;
 

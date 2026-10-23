@@ -32,6 +32,7 @@ public sealed class ConfigBootstrapPreserveTests
                 Token = token,
                 ConfirmUntag = false,
                 PreviewLimit = 20,
+                SuggestLimit = 3,
                 MaxConcurrency = 8,
                 Port = 5124,
             };
@@ -44,6 +45,7 @@ public sealed class ConfigBootstrapPreserveTests
             Assert.Equal(token, root.GetProperty("token").GetString());
             Assert.False(root.GetProperty("confirmUntag").GetBoolean());
             Assert.Equal(20, root.GetProperty("previewLimit").GetInt32());
+            Assert.Equal(3, root.GetProperty("suggestLimit").GetInt32());
             Assert.Equal(8, root.GetProperty("maxConcurrency").GetInt32());
             Assert.Equal("Ctrl+K", root.GetProperty("findHotkey").GetString());
             Assert.True(root.GetProperty("extra").GetBoolean());

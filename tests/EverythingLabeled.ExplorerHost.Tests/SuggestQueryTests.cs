@@ -23,6 +23,6 @@ public sealed class SuggestQueryTests
     public void Constants_match_spec()
     {
         Assert.Equal(250, SuggestQuery.DebounceMs);
-        Assert.Equal(10, SuggestQuery.Limit);
+        Assert.Equal(8, SuggestQuery.DefaultLimit);
     }
 }

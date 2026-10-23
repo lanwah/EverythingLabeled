@@ -268,7 +268,7 @@ public sealed class TagCommandsTests
             IsTty = isTty,
             Api = api,
             LoadConfig = _ => ElResult<ElConfig>.Ok(
-                new ElConfig("http://127.0.0.1:5123/", "token", confirmUntag, 16, 4)),
+                new ElConfig("http://127.0.0.1:5123/", "token", confirmUntag, 16, 8, 4)),
         });
         return (code, stdout.ToString(), stderr.ToString());
     }

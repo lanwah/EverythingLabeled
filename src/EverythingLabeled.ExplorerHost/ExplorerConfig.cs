@@ -9,6 +9,7 @@ public sealed record ExplorerRuntimeConfig(
     string Token,
     bool ConfirmUntag,
     int PreviewLimit,
+    int SuggestLimit,
     int MaxConcurrency,
     bool FindUseOr);
 
@@ -61,6 +62,7 @@ public static class ExplorerConfigLoader
             cfg.Token,
             cfg.ConfirmUntag,
             cfg.PreviewLimit,
+            cfg.SuggestLimit,
             cfg.MaxConcurrency,
             findUseOr));
     }

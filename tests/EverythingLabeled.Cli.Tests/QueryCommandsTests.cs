@@ -152,7 +152,7 @@ public sealed class QueryCommandsTests
             Stderr = stderr,
             Api = api,
             LoadConfig = _ => ElResult<ElConfig>.Ok(
-                new ElConfig("http://127.0.0.1:5123/", "token", true, 16, 4)),
+                new ElConfig("http://127.0.0.1:5123/", "token", true, 16, 8, 4)),
         });
         return (code, stdout.ToString(), stderr.ToString());
     }

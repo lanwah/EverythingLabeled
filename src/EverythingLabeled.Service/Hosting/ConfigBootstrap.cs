@@ -72,6 +72,7 @@ public static class ConfigBootstrap
             Token = dto.Token,
             ConfirmUntag = dto.ConfirmUntag ?? true,
             PreviewLimit = dto.PreviewLimit ?? 16,
+            SuggestLimit = dto.SuggestLimit ?? 8,
             MaxConcurrency = dto.MaxConcurrency ?? 4,
             Port = port,
         };
@@ -94,6 +95,7 @@ public static class ConfigBootstrap
             Token = token,
             ConfirmUntag = true,
             PreviewLimit = 16,
+            SuggestLimit = 8,
             MaxConcurrency = 4,
             Port = port,
         };
@@ -130,6 +132,7 @@ public static class ConfigBootstrap
         root["token"] = config.Token;
         root["confirmUntag"] = config.ConfirmUntag;
         root["previewLimit"] = config.PreviewLimit;
+        root["suggestLimit"] = config.SuggestLimit;
         root["maxConcurrency"] = config.MaxConcurrency;
 
         var json = root.ToJsonString(WriteOptions);
@@ -230,6 +233,9 @@ public static class ConfigBootstrap
 
         [JsonPropertyName("previewLimit")]
         public int? PreviewLimit { get; set; }
+
+        [JsonPropertyName("suggestLimit")]
+        public int? SuggestLimit { get; set; }
 
         [JsonPropertyName("maxConcurrency")]
         public int? MaxConcurrency { get; set; }

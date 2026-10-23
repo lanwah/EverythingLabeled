@@ -7,6 +7,7 @@ public sealed record ElConfig(
     string Token,
     bool ConfirmUntag,
     int PreviewLimit,
+    int SuggestLimit,
     int MaxConcurrency);
 
 public sealed record ElBaseUrlConfig(string BaseUrl, bool ConfirmUntag);
@@ -19,9 +20,13 @@ public sealed record ElConfigOverrides(
 public static class ElConfigLoader
 {
     public const int DefaultPreviewLimit = 16;
+    /// <summary>拼首联想预览条数缺省；与扩展 Options「拼首联想预览条数」键名对齐，Host 缺省有意同为 8。</summary>
+    public const int DefaultSuggestLimit = 8;
     public const int DefaultMaxConcurrency = 4;
     public const int MinPreviewLimit = 1;
     public const int MaxPreviewLimit = 50;
+    public const int MinSuggestLimit = 1;
+    public const int MaxSuggestLimit = 50;
     public const int MinMaxConcurrency = 1;
     public const int MaxMaxConcurrency = 16;
 
@@ -41,6 +46,7 @@ public static class ElConfigLoader
             merged.TokenRaw.Trim(),
             merged.ConfirmUntag,
             merged.PreviewLimit,
+            merged.SuggestLimit,
             merged.MaxConcurrency));
     }
 
@@ -96,12 +102,16 @@ public static class ElConfigLoader
             FirstNonEmpty(overrides.TokenFlag, Env(env, "EL_TOKEN"), file?.Token),
             file?.ConfirmUntag ?? true,
             ClampPreviewLimit(file?.PreviewLimit),
+            ClampSuggestLimit(file?.SuggestLimit),
             ClampMaxConcurrency(file?.MaxConcurrency));
         return true;
     }
 
     private static int ClampPreviewLimit(int? raw) =>
         raw is >= MinPreviewLimit and <= MaxPreviewLimit ? raw.Value : DefaultPreviewLimit;
+
+    private static int ClampSuggestLimit(int? raw) =>
+        raw is >= MinSuggestLimit and <= MaxSuggestLimit ? raw.Value : DefaultSuggestLimit;
 
     private static int ClampMaxConcurrency(int? raw) =>
         raw is >= MinMaxConcurrency and <= MaxMaxConcurrency ? raw.Value : DefaultMaxConcurrency;
@@ -154,6 +164,7 @@ public static class ElConfigLoader
         string? token = null;
         bool? confirmUntag = null;
         int? previewLimit = null;
+        int? suggestLimit = null;
         int? maxConcurrency = null;
 
         if (root.TryGetProperty("baseUrl", out var baseUrlEl) && baseUrlEl.ValueKind == JsonValueKind.String)
@@ -167,12 +178,16 @@ public static class ElConfigLoader
             previewEl.ValueKind == JsonValueKind.Number &&
             previewEl.TryGetInt32(out var preview))
             previewLimit = preview;
+        if (root.TryGetProperty("suggestLimit", out var suggestEl) &&
+            suggestEl.ValueKind == JsonValueKind.Number &&
+            suggestEl.TryGetInt32(out var suggest))
+            suggestLimit = suggest;
         if (root.TryGetProperty("maxConcurrency", out var concurrencyEl) &&
             concurrencyEl.ValueKind == JsonValueKind.Number &&
             concurrencyEl.TryGetInt32(out var concurrency))
             maxConcurrency = concurrency;
 
-        return new FileFields(baseUrl, token, confirmUntag, previewLimit, maxConcurrency);
+        return new FileFields(baseUrl, token, confirmUntag, previewLimit, suggestLimit, maxConcurrency);
     }
 
     private sealed record FileFields(
@@ -180,6 +195,7 @@ public static class ElConfigLoader
         string? Token,
         bool? ConfirmUntag,
         int? PreviewLimit,
+        int? SuggestLimit,
         int? MaxConcurrency);
 
     private readonly record struct MergedFields(
@@ -187,5 +203,6 @@ public static class ElConfigLoader
         string? TokenRaw,
         bool ConfirmUntag,
         int PreviewLimit,
+        int SuggestLimit,
         int MaxConcurrency);
 }

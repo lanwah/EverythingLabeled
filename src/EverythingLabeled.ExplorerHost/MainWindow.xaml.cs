@@ -722,7 +722,8 @@ public partial class MainWindow : Window
 
         try
         {
-            var result = await _ctx.Api.SuggestAsync(q, SuggestQuery.Limit, ct).ConfigureAwait(true);
+            var suggestLimit = _ctx.Config?.SuggestLimit ?? SuggestQuery.DefaultLimit;
+            var result = await _ctx.Api.SuggestAsync(q, suggestLimit, ct).ConfigureAwait(true);
             if (ct.IsCancellationRequested)
                 return;
 
@@ -1152,7 +1153,8 @@ public partial class MainWindow : Window
 
         try
         {
-            var result = await _ctx.Api.SuggestAsync(token, SuggestQuery.Limit, ct).ConfigureAwait(true);
+            var suggestLimit = _ctx.Config?.SuggestLimit ?? SuggestQuery.DefaultLimit;
+            var result = await _ctx.Api.SuggestAsync(token, suggestLimit, ct).ConfigureAwait(true);
             if (ct.IsCancellationRequested)
                 return;
 

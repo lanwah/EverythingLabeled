@@ -21,6 +21,7 @@
   "token": "<64-hex-lowercase>",
   "confirmUntag": true,
   "previewLimit": 16,
+  "suggestLimit": 8,
   "maxConcurrency": 4,
   "findHotkey": "Alt+L",
   "runAtStartup": true,
@@ -37,7 +38,8 @@
 | `baseUrl` | 是 | （引导时写入） | 本机 Service HTTP 根地址。Service 校验：`http`、`127.0.0.1`、path 空或 `/`、无 query/fragment。首次引导端口常在 **5123–5132**；手改端口可超出该范围，仍须通过校验。 | Service、CLI、MCP、Explorer Host |
 | `token` | 是 | （引导时生成） | Bearer 共享密钥：**64 位小写 hex**（32 字节随机）。禁止写入日志。Service **不热加载**——修改后须重启 Service。 | 同上 |
 | `confirmUntag` | 否 | `true` | 去标前是否二次确认。 | CLI、`untag`；Explorer Host 去标（[CLI 规格 §5.2](../plans/2026-09-26-cli.md)） |
-| `previewLimit` | 否 | `16` | Find / 预览列表条数；有效 **1–50**，越界按缺省处理（`ElConfigLoader`）。 | Explorer Host |
+| `previewLimit` | 否 | `16` | 标签查询预览条数（Find / 管理资源 preview）；有效 **1–50**，越界按缺省。与扩展同键、扩展缺省 8 / 上限 16 **有意不同**。 | Explorer Host |
+| `suggestLimit` | 否 | `8` | 拼首联想预览条数（打标 / Find / 管理资源 `GET /v1/tags/suggest` 的 `limit`）；有效 **1–50**，越界按缺省。与扩展同键同缺省，扩展上限仍为 16。 | Explorer Host |
 | `maxConcurrency` | 否 | `4` | 批量打标/去标并发；有效 **1–16**。 | Explorer Host |
 | `findHotkey` | 否 | `"Alt+L"` | 托盘全局热键打开 Find；**空串或 `none`** → 不注册。语法见 [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md)。改 JSON 后 **重启 Tray**。 | Tray |
 | `runAtStartup` | 否 | `true` | 是否登记 HKCU Run **`EverythingLabeled.Tray`**（与 Service 的 `EverythingLabeled` 并存）。托盘菜单可切换并 **写回** 此键。 | Tray |
@@ -90,7 +92,7 @@ CLI / MCP 优先级（与规格一致）：**命令行 flag > 环境变量 > 默
 | 变更 | 生效方式 |
 |---|---|
 | `baseUrl` / `token` | 重启 **Service**；所有客户端改用新值 |
-| `confirmUntag`、`previewLimit`、`maxConcurrency` | 重启 **Explorer Host**（或重新打开对应窗口）；CLI 下次进程即读 |
+| `confirmUntag`、`previewLimit`、`suggestLimit`、`maxConcurrency` | 重启 **Explorer Host**（或重新打开对应窗口）；CLI 下次进程即读 |
 | `findTagLogic` | 重启 **Host / Find** |
 | `findHotkey` | 重启 **Tray** |
 | `runAtStartup` | Tray 读配置或菜单写回后，配合 `StartupRun` 更新注册表 |

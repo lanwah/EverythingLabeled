@@ -19,6 +19,7 @@ public sealed class ElConfigTests
         Assert.Equal("secret", r.Data.Token);
         Assert.True(r.Data.ConfirmUntag);
         Assert.Equal(16, r.Data.PreviewLimit);
+        Assert.Equal(8, r.Data.SuggestLimit);
         Assert.Equal(4, r.Data.MaxConcurrency);
     }
 
@@ -37,6 +38,20 @@ public sealed class ElConfigTests
     }
 
     [Fact]
+    public void Suggest_limit_three_is_kept()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","suggestLimit":3}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(3, r.Data!.SuggestLimit);
+    }
+
+    [Fact]
     public void Illegal_preview_limit_string_falls_back_to_sixteen()
     {
         using var dir = new TempDir();
@@ -48,6 +63,20 @@ public sealed class ElConfigTests
 
         Assert.True(r.IsSuccess);
         Assert.Equal(16, r.Data!.PreviewLimit);
+    }
+
+    [Fact]
+    public void Illegal_suggest_limit_falls_back_to_eight()
+    {
+        using var dir = new TempDir();
+        var path = dir.Write("config.json", """
+            {"baseUrl":"http://127.0.0.1:5123","token":"secret","suggestLimit":0}
+            """);
+
+        var r = ElConfigLoader.Load(EmptyFlags(), EmptyEnv(), path);
+
+        Assert.True(r.IsSuccess);
+        Assert.Equal(8, r.Data!.SuggestLimit);
     }
 
     [Fact]

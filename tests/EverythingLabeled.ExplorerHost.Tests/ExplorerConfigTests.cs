@@ -13,6 +13,7 @@ public sealed class ExplorerConfigTests
             "secret",
             true,
             8,
+            3,
             2));
 
         var r = ExplorerConfigLoader.LoadFrom(loaded, @"C:\el\config.json");
@@ -22,6 +23,7 @@ public sealed class ExplorerConfigTests
         Assert.Equal("secret", r.Data.Token);
         Assert.True(r.Data.ConfirmUntag);
         Assert.Equal(8, r.Data.PreviewLimit);
+        Assert.Equal(3, r.Data.SuggestLimit);
         Assert.Equal(2, r.Data.MaxConcurrency);
         Assert.False(r.Data.FindUseOr);
     }
@@ -34,6 +36,7 @@ public sealed class ExplorerConfigTests
             "secret",
             true,
             16,
+            8,
             4));
 
         var r = ExplorerConfigLoader.LoadFrom(loaded, @"C:\el\config.json", findUseOr: true);
@@ -87,6 +90,7 @@ public sealed class ExplorerConfigTests
             "secret",
             true,
             16,
+            8,
             4));
 
         var r = ExplorerConfigLoader.LoadFrom(loaded, @"C:\el\config.json");
@@ -104,6 +108,7 @@ public sealed class ExplorerConfigTests
             "secret",
             true,
             16,
+            8,
             4));
 
         var r = ExplorerConfigLoader.LoadFrom(loaded, @"C:\el\config.json");

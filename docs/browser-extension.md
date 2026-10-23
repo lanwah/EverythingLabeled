@@ -40,7 +40,7 @@ Options 页填写 `baseUrl` 与 `token`。可从 CLI / AppData 的 `config.json`
 
 标签查询预览条数：Options「标签查询预览条数」→ `previewLimit`（缺省 **8**，1–16）；用于查找命中区高度、`GET /v1/query/preview` 的 `limit`、以及单次打开 tab 硬顶。
 
-拼首联想预览条数：Options「拼首联想预览条数」→ `suggestLimit`（缺省 **8**，1–16）；用于打标 / 查找 / 管理资源的 `GET /v1/tags/suggest` 的 `limit`，以及拼首下拉理想行高。新增键后须在扩展管理页「重新加载」。
+拼首联想预览条数：Options「拼首联想预览条数」→ `suggestLimit`（缺省 **8**，1–16）；用于打标 / 查找 / 管理资源的 `GET /v1/tags/suggest` 的 `limit`，以及拼首下拉理想行高。新增键后须在扩展管理页「重新加载」。Explorer 右键 Host 同名键见 AppData [`config.json`](./config.md)（缺省同为 8，上限 50）。
 
 预览资源类型：Options「预览资源类型」写入扩展 `chrome.storage.local` 键 `previewResourceType`（`"links"` 缺省仅链接，`"all"` 为文件 / 文件夹 / 链接）；与 `baseUrl` / `token` 等同级，**不写** AppData `config.json`。打标页 / Popup 预览经 SW 映射为 `GET /v1/query/preview?kind=`（`links`→`url`，`all`→省略即服务端默认全部）；`limit` 作用在服务端 kind 过滤之后。管理资源预览固定不传 `kind`。改后重新打开扩展页生效。
 
