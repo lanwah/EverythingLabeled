@@ -172,3 +172,4 @@
 - 2026-10-23 — 选定并落地 MIT 开源许可（根目录 `LICENSE`，README 已指向）
 - 2026-10-23 — 扩展 Options「预览条数」改名「标签查询预览条数」；新增「拼首联想预览条数」(`suggestLimit`，缺省 8) 用于 suggest API 与下拉高度 → [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-23 — ExplorerHost 专用 exe 图标 `Assets/host.ico`（MDL2 打开文件夹 E838 + 标签角标 E8EC；与 Tray `el.ico` 区分；`scripts/make-host-icon.ps1`）→ [docs/explorer.md](../docs/explorer.md)
+- 2026-10-24 — 打标页「当前标签」井区对齐设计稿：MinHeight 120 + 居中「暂无标签」→ [design/explorer-ui/tag.html](../design/explorer-ui/tag.html)

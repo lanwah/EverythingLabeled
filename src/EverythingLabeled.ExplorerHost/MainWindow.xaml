@@ -497,19 +497,29 @@
                         BorderBrush="{StaticResource HostBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
-                        Padding="12">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Focusable="False">
-                        <ItemsControl x:Name="TagCurrentTagList"
-                                      ItemTemplate="{StaticResource RemovableAliasChipTemplate}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </ScrollViewer>
+                        Padding="12"
+                        MinHeight="120">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Focusable="False">
+                            <ItemsControl x:Name="TagCurrentTagList"
+                                          ItemTemplate="{StaticResource RemovableAliasChipTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <TextBlock x:Name="TagTagsEmpty"
+                                   Text="{x:Static local:Copy.UntagTagsEmpty}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{StaticResource HostMutedBrush}"
+                                   FontSize="13"
+                                   Visibility="Collapsed" />
+                    </Grid>
                 </Border>
             </DockPanel>
             <Grid Grid.Row="3" Margin="0,10,0,0">

@@ -432,7 +432,9 @@ public partial class MainWindow : Window
         TagCurrentTagPanel.Visibility = showTag ? Visibility.Visible : Visibility.Collapsed;
         UntagTagListPanel.Visibility = showUntag ? Visibility.Visible : Visibility.Collapsed;
         if (!showTag)
-            TagCurrentTagList.ItemsSource = null;
+            SetTagCurrentTags(null);
+        else
+            UpdateTagCurrentTagsEmpty();
         if (!showUntag)
         {
             _untagAliases = [];
@@ -440,6 +442,19 @@ public partial class MainWindow : Window
             UntagTagList.ItemsSource = null;
             ApplyUntagTagFilter(updateStatus: false);
         }
+    }
+
+    private void SetTagCurrentTags(IReadOnlyList<AliasRow>? rows)
+    {
+        TagCurrentTagList.ItemsSource = rows;
+        UpdateTagCurrentTagsEmpty();
+    }
+
+    private void UpdateTagCurrentTagsEmpty()
+    {
+        var empty = TagCurrentTagPanel.Visibility == Visibility.Visible
+            && TagCurrentTagList.Items.Count == 0;
+        TagTagsEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FillPathLists()
@@ -523,7 +538,7 @@ public partial class MainWindow : Window
 
     private async Task LoadResourceTagsAsync(bool refreshUntagStatus = true)
     {
-        TagCurrentTagList.ItemsSource = null;
+        SetTagCurrentTags(null);
         TagsTagList.ItemsSource = null;
         _untagAliases = [];
         _untagTagsLoaded = false;
@@ -551,12 +566,13 @@ public partial class MainWindow : Window
             {
                 SetHostStatus(result.Error?.Message ?? Copy.TagsLoadFailed);
                 ApplyUntagTagFilter(updateStatus: false);
+                UpdateTagCurrentTagsEmpty();
                 return;
             }
 
             var rows = FlattenAliases(result.Data!.Items);
             if (UntagClickDelete.ShowsPanel(HostMode.Tag, uris.Count))
-                TagCurrentTagList.ItemsSource = rows;
+                SetTagCurrentTags(rows);
             _untagAliases = rows;
             _untagTagsLoaded = true;
             TagsTagList.ItemsSource = rows;
@@ -572,6 +588,7 @@ public partial class MainWindow : Window
         {
             SetHostStatus(Copy.TagsLoadFailed + "：" + ex.Message);
             ApplyUntagTagFilter(updateStatus: false);
+            UpdateTagCurrentTagsEmpty();
         }
     }
 

@@ -1167,7 +1167,8 @@ a.btn:hover {
   pointer-events: none;
 }
 
-.alias-field input,
+/* 仅直连 input（如扩展 Popup）；芯片井内的 input 走 .alias-chip-wrap input，避免双框 */
+.alias-field > input,
 .alias-row > input {
   width: 100%;
   height: 36px;
@@ -1181,7 +1182,7 @@ a.btn:hover {
   outline: none;
 }
 
-.alias-field input:focus,
+.alias-field > input:focus,
 .alias-row > input:focus {
   border-color: var(--accent);
 }
