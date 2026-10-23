@@ -2,6 +2,8 @@ import { copy } from "./copy";
 
 export const DEFAULT_BASE_URL = "http://127.0.0.1:5123";
 export const DEFAULT_PREVIEW_LIMIT = 8;
+/** 拼首联想 `/v1/tags/suggest` 的 limit；与标签查询预览同缺省与范围。 */
+export const DEFAULT_SUGGEST_LIMIT = 8;
 export const MIN_PREVIEW_LIMIT = 1;
 export const MAX_PREVIEW_LIMIT = 16;
 
@@ -14,7 +16,10 @@ export type ElExtensionConfig = {
   baseUrl: string;
   token: string;
   confirmUntag: boolean;
+  /** 标签查询预览条数（`/v1/query/preview` limit + 命中区高度 + 打开硬顶）。 */
   previewLimit: number;
+  /** 拼首联想预览条数（`/v1/tags/suggest` limit）。 */
+  suggestLimit: number;
   findTagLogic: FindTagLogic;
   previewResourceType: PreviewResourceType;
 };
@@ -66,6 +71,10 @@ export function parsePreviewLimit(raw: unknown): number {
   return parseIntegerInRange(raw) ?? DEFAULT_PREVIEW_LIMIT;
 }
 
+export function parseSuggestLimit(raw: unknown): number {
+  return parseIntegerInRange(raw) ?? DEFAULT_SUGGEST_LIMIT;
+}
+
 export function parseFindTagLogic(raw: unknown): FindTagLogic {
   if (typeof raw !== "string") return "and";
   const v = raw.trim().toLowerCase();
@@ -100,6 +109,7 @@ export function normalizeStoredConfig(
     token,
     confirmUntag,
     previewLimit: parsePreviewLimit(stored?.previewLimit),
+    suggestLimit: parseSuggestLimit(stored?.suggestLimit),
     findTagLogic: parseFindTagLogic(stored?.findTagLogic),
     previewResourceType: parsePreviewResourceType(stored?.previewResourceType),
   };
@@ -110,6 +120,7 @@ export function validateDraft(draft: {
   token: string;
   confirmUntag: boolean;
   previewLimit: unknown;
+  suggestLimit: unknown;
   previewResourceType?: unknown;
 }): ConfigParse {
   const base = canonicalizeBaseUrl(draft.baseUrl);
@@ -118,6 +129,10 @@ export function validateDraft(draft: {
   if (previewLimit === undefined) {
     return { ok: false, message: copy.invalidPreviewLimit };
   }
+  const suggestLimit = parseIntegerInRange(draft.suggestLimit);
+  if (suggestLimit === undefined) {
+    return { ok: false, message: copy.invalidSuggestLimit };
+  }
   return {
     ok: true,
     value: {
@@ -125,6 +140,7 @@ export function validateDraft(draft: {
       token: draft.token,
       confirmUntag: draft.confirmUntag,
       previewLimit,
+      suggestLimit,
       findTagLogic: "and",
       previewResourceType: parsePreviewResourceType(draft.previewResourceType),
     },

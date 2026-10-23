@@ -82,7 +82,7 @@
                   <button type="button" class="clear-all-tags only-filled" aria-label="清空标签" title="清空标签">&#xE894;</button>
                 </div>
               </div>
-              <div class="ext-preview-hits ext-preview-hits-tall" role="listbox" aria-label="查找结果（按预览条数预留高度，查找页可用空间更大）">
+              <div class="ext-preview-hits ext-preview-hits-tall" role="listbox" aria-label="查找结果（按标签查询预览条数预留高度，查找页可用空间更大）">
                 <p class="empty-hint only-empty ext-preview-empty">添加标签后，这里显示匹配结果</p>
                 <ul class="result-list only-filled">
                   <li class="selected" title="双击打开">
@@ -141,9 +141,9 @@
         <ol>
           <li><strong>模式开关</strong>：标题单独一行；第二行左侧 switch + 模式说明（「打标模式」/「查找模式」），右侧「管理标签 / 管理资源」；默认打标（开关关）。打开或切换后焦点落到当前模式文本框。Popup 窗宽约 420px、高固定 600px（Chrome 硬顶）不变；功能拆开后查找页可把剩余高度留给结果区。</li>
           <li><strong>打标模式</strong>：当前网页卡片、当前标签、别名输入、创建缺失。无「打标」按钮；打开/切回后别名框获焦；别名框 <kbd>Enter</kbd> 提交（有联想时用当前高亮项）。去标：点当前标签芯片 <kbd>×</kbd>。</li>
-          <li><strong>查找模式</strong>：芯片查询 + 结果区 +「预览 N 条」。切入后查询框获焦。无网页卡片与打标区，结果区更高，可按 Options「预览条数」完整显示（不足则仍占位；超出窗高时区内滚动）。</li>
+          <li><strong>查找模式</strong>：芯片查询 + 结果区 +「预览 N 条」。切入后查询框获焦。无网页卡片与打标区，结果区更高，可按 Options「标签查询预览条数」完整显示（不足则仍占位；超出窗高时区内滚动）。</li>
           <li><strong>预览资源类型</strong>：可配置「仅链接」或「全部」；默认「仅链接」。键 <code>previewResourceType</code>。本填充态按默认仅链接示意。</li>
-          <li><strong>拼首联想浮动</strong>：输入末词时浮动叠在输入框下；高度 = 下方可用空间，<strong>不</strong>按预览条数限行。Chrome Popup 无法画到窗外。</li>
+          <li><strong>拼首联想浮动</strong>：输入末词时浮动叠在输入框下；条数与理想行高按 Options「拼首联想预览条数」，再与下方可用空间取较小值。Chrome Popup 无法画到窗外。</li>
           <li><strong>结果行</strong>：无勾选框；单击高亮；双击打开。名称后展示该资源标签胶囊（preview API <code>tags</code>）。</li>
           <li><strong>清空</strong>：有芯片时输入框右侧清除图标，一点清空全部查找芯片。无「清空标签」「打开所选」按钮。</li>
         </ol>

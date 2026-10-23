@@ -13,6 +13,7 @@ const STORED_KEYS = [
   "token",
   "confirmUntag",
   "previewLimit",
+  "suggestLimit",
   "findTagLogic",
   "previewResourceType",
 ] as const;
@@ -35,6 +36,7 @@ async function saveStored(cfg: ElExtensionConfig): Promise<void> {
     token: cfg.token,
     confirmUntag: cfg.confirmUntag,
     previewLimit: cfg.previewLimit,
+    suggestLimit: cfg.suggestLimit,
     findTagLogic: cfg.findTagLogic,
     previewResourceType: cfg.previewResourceType,
   });

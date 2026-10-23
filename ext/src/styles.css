@@ -392,7 +392,7 @@ body.options .ext-shell {
   display: none;
 }
 
-/* 预览：芯片下方按 previewLimit 预留命中区高度（文档流，不浮动） */
+/* 预览：芯片下方按「标签查询预览条数」(previewLimit) 预留命中区高度（文档流，不浮动） */
 .ext-preview-block {
   position: relative;
   margin: 0 0 4px;

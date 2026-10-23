@@ -43,6 +43,14 @@ previewLimit.type = "number";
 previewLimit.min = "1";
 previewLimit.max = "16";
 previewLimit.step = "1";
+previewLimit.setAttribute("aria-label", "标签查询预览条数");
+
+const suggestLimit = document.createElement("input");
+suggestLimit.type = "number";
+suggestLimit.min = "1";
+suggestLimit.max = "16";
+suggestLimit.step = "1";
+suggestLimit.setAttribute("aria-label", "拼首联想预览条数");
 
 const previewResourceType = document.createElement("select");
 previewResourceType.setAttribute("aria-label", "预览资源类型");
@@ -75,7 +83,8 @@ form.append(
   field("服务地址", baseUrl),
   field("Token", token),
   confirmLabel,
-  field("预览条数", previewLimit),
+  field("标签查询预览条数", previewLimit),
+  field("拼首联想预览条数", suggestLimit),
   field("预览资源类型", previewResourceType),
 );
 
@@ -121,6 +130,7 @@ function fill(cfg: ElExtensionConfig): void {
   token.value = cfg.token;
   confirmUntag.checked = cfg.confirmUntag;
   previewLimit.value = String(cfg.previewLimit);
+  suggestLimit.value = String(cfg.suggestLimit);
   previewResourceType.value = cfg.previewResourceType ?? "links";
 }
 
@@ -154,6 +164,7 @@ form.addEventListener("submit", (ev) => {
         token: token.value,
         confirmUntag: confirmUntag.checked,
         previewLimit: previewLimit.value,
+        suggestLimit: suggestLimit.value,
         previewResourceType: previewResourceType.value as PreviewResourceType,
       },
     });

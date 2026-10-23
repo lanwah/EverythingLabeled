@@ -21,6 +21,7 @@ export type ElRequest =
         token: string;
         confirmUntag: boolean;
         previewLimit: unknown;
+        suggestLimit: unknown;
         previewResourceType?: unknown;
       };
     }
@@ -188,7 +189,12 @@ export async function handleRequest(req: ElRequest, deps: Deps): Promise<ElRespo
       );
     case "suggest": {
       if (req.q.trim() === "") return emptyOk;
-      const result = await api.suggest(cfg.baseUrl, cfg.token, req.q);
+      const result = await api.suggest(
+        cfg.baseUrl,
+        cfg.token,
+        req.q,
+        cfg.suggestLimit,
+      );
       if (!result.ok) return emptyOk;
       return toElResponse(result);
     }

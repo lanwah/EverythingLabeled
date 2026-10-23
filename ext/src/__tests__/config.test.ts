@@ -3,6 +3,7 @@ import {
   canonicalizeBaseUrl,
   DEFAULT_BASE_URL,
   DEFAULT_PREVIEW_LIMIT,
+  DEFAULT_SUGGEST_LIMIT,
   normalizeStoredConfig,
   parsePreviewResourceType,
   previewApiKind,
@@ -47,21 +48,28 @@ describe("normalizeStoredConfig", () => {
       token: "",
       confirmUntag: true,
       previewLimit: DEFAULT_PREVIEW_LIMIT,
+      suggestLimit: DEFAULT_SUGGEST_LIMIT,
       findTagLogic: "and",
       previewResourceType: "links",
     });
     expect(DEFAULT_BASE_URL).toBe("http://127.0.0.1:5123");
     expect(DEFAULT_PREVIEW_LIMIT).toBe(8);
+    expect(DEFAULT_SUGGEST_LIMIT).toBe(8);
   });
 
-  it("keeps explicit confirmUntag false and previewLimit 16", () => {
+  it("keeps explicit confirmUntag false and previewLimit / suggestLimit 16", () => {
     expect(
-      normalizeStoredConfig({ confirmUntag: false, previewLimit: 16 }),
+      normalizeStoredConfig({
+        confirmUntag: false,
+        previewLimit: 16,
+        suggestLimit: 16,
+      }),
     ).toEqual({
       baseUrl: DEFAULT_BASE_URL,
       token: "",
       confirmUntag: false,
       previewLimit: 16,
+      suggestLimit: 16,
       findTagLogic: "and",
       previewResourceType: "links",
     });
@@ -81,9 +89,11 @@ describe("normalizeStoredConfig", () => {
     expect(parsePreviewResourceType("nope")).toBe("links");
   });
 
-  it("coerces illegal previewLimit to 8", () => {
+  it("coerces illegal previewLimit / suggestLimit to 8", () => {
     expect(normalizeStoredConfig({ previewLimit: 0 }).previewLimit).toBe(8);
     expect(normalizeStoredConfig({ previewLimit: "99" }).previewLimit).toBe(8);
+    expect(normalizeStoredConfig({ suggestLimit: 0 }).suggestLimit).toBe(8);
+    expect(normalizeStoredConfig({ suggestLimit: "99" }).suggestLimit).toBe(8);
   });
 });
 
@@ -102,12 +112,29 @@ describe("validateDraft", () => {
   };
 
   it("rejects previewLimit 0", () => {
-    const result = validateDraft({ ...valid, previewLimit: 0 });
+    const result = validateDraft({
+      ...valid,
+      previewLimit: 0,
+      suggestLimit: 8,
+    });
     expect(result.ok).toBe(false);
   });
 
-  it("accepts previewLimit 8 and defaults previewResourceType to links", () => {
-    const result = validateDraft({ ...valid, previewLimit: 8 });
+  it("rejects suggestLimit 0", () => {
+    const result = validateDraft({
+      ...valid,
+      previewLimit: 8,
+      suggestLimit: 0,
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts previewLimit / suggestLimit 8 and defaults previewResourceType to links", () => {
+    const result = validateDraft({
+      ...valid,
+      previewLimit: 8,
+      suggestLimit: 8,
+    });
     expect(result).toEqual({
       ok: true,
       value: {
@@ -115,6 +142,7 @@ describe("validateDraft", () => {
         token: "",
         confirmUntag: true,
         previewLimit: 8,
+        suggestLimit: 8,
         findTagLogic: "and",
         previewResourceType: "links",
       },
@@ -125,6 +153,7 @@ describe("validateDraft", () => {
     const result = validateDraft({
       ...valid,
       previewLimit: 8,
+      suggestLimit: 8,
       previewResourceType: "all",
     });
     expect(result.ok).toBe(true);

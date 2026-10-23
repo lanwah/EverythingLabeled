@@ -134,11 +134,18 @@ try {
       const tok = inputs.find((i) => i.type === "password");
       const limit = inputs.find((i) => i.type === "number");
       const confirm = inputs.find((i) => i.type === "checkbox");
+      const previewLimitEl = document.querySelector(
+        'input[aria-label="标签查询预览条数"]',
+      );
+      const suggestLimitEl = document.querySelector(
+        'input[aria-label="拼首联想预览条数"]',
+      );
       const draft = {
         baseUrl: base?.value ?? "",
         token: tok?.value ?? "",
         confirmUntag: confirm?.checked ?? true,
-        previewLimit: limit?.value ?? "8",
+        previewLimit: previewLimitEl?.value ?? limit?.value ?? "8",
+        suggestLimit: suggestLimitEl?.value ?? "8",
         previewResourceType: sel?.value ?? "",
       };
       const saveResult = await chrome.runtime.sendMessage({
@@ -148,6 +155,7 @@ try {
       const stored = await chrome.storage.local.get([
         "baseUrl",
         "previewLimit",
+        "suggestLimit",
         "previewResourceType",
         "findTagLogic",
       ]);

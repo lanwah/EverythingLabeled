@@ -1,6 +1,7 @@
 export const copy = {
   invalidBaseUrl: "地址必须是 http://127.0.0.1，不能带路径或查询",
-  invalidPreviewLimit: "预览条数必须是 1–16 的整数",
+  invalidPreviewLimit: "标签查询预览条数必须是 1–16 的整数",
+  invalidSuggestLimit: "拼首联想预览条数必须是 1–16 的整数",
   pageCannotTag: "当前页不可打标",
   pageNotFollowed: "还没有跟随网页",
   followNoHttpPage: "没有可跟随的网页",

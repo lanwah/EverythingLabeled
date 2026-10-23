@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { copy } from "../copy";
 import type { ElExtensionConfig } from "../config";
-import { DEFAULT_BASE_URL, DEFAULT_PREVIEW_LIMIT } from "../config";
+import {
+  DEFAULT_BASE_URL,
+  DEFAULT_PREVIEW_LIMIT,
+  DEFAULT_SUGGEST_LIMIT,
+} from "../config";
 import type { ElResult } from "../el-api";
 import { debounce } from "../debounce";
 import { handleRequest } from "../messages";
@@ -55,7 +59,13 @@ function deps(overrides?: {
 function configured(api?: ReturnType<typeof apiStub>) {
   return deps({
     api,
-    stored: { baseUrl: GOOD_BASE, token: TOKEN, confirmUntag: true, previewLimit: 8 },
+    stored: {
+      baseUrl: GOOD_BASE,
+      token: TOKEN,
+      confirmUntag: true,
+      previewLimit: 8,
+      suggestLimit: 8,
+    },
   });
 }
 
@@ -156,6 +166,7 @@ describe("handleRequest config", () => {
         token: "",
         confirmUntag: true,
         previewLimit: DEFAULT_PREVIEW_LIMIT,
+        suggestLimit: DEFAULT_SUGGEST_LIMIT,
         findTagLogic: "and",
         previewResourceType: "links",
       },
@@ -173,6 +184,7 @@ describe("handleRequest config", () => {
           token: TOKEN,
           confirmUntag: true,
           previewLimit: 0,
+          suggestLimit: 8,
         },
       },
       d,
@@ -192,6 +204,7 @@ describe("handleRequest config", () => {
         token: TOKEN,
         confirmUntag: true,
         previewLimit: 8,
+        suggestLimit: 8,
         findTagLogic: "or",
         previewResourceType: "links",
       },
@@ -204,6 +217,7 @@ describe("handleRequest config", () => {
           token: TOKEN,
           confirmUntag: false,
           previewLimit: 16,
+          suggestLimit: 4,
           previewResourceType: "all",
         },
       },
@@ -216,6 +230,7 @@ describe("handleRequest config", () => {
         token: TOKEN,
         confirmUntag: false,
         previewLimit: 16,
+        suggestLimit: 4,
         findTagLogic: "or",
         previewResourceType: "all",
       },
@@ -227,6 +242,7 @@ describe("handleRequest config", () => {
       token: TOKEN,
       confirmUntag: false,
       previewLimit: 16,
+      suggestLimit: 4,
       findTagLogic: "or",
       previewResourceType: "all",
     });
@@ -366,11 +382,22 @@ describe("handleRequest suggest and preview", () => {
     expect(d.api.suggest).not.toHaveBeenCalled();
   });
 
-  it("passes nonempty suggest q as received", async () => {
+  it("passes nonempty suggest q with stored suggestLimit", async () => {
     const api = apiStub();
     api.suggest.mockResolvedValue(ok([]));
-    await handleRequest({ type: "suggest", q: "  foo" }, configured(api));
-    expect(api.suggest).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "  foo");
+    await handleRequest(
+      { type: "suggest", q: "  foo" },
+      deps({
+        api,
+        stored: {
+          baseUrl: GOOD_BASE,
+          token: TOKEN,
+          previewLimit: 8,
+          suggestLimit: 3,
+        },
+      }),
+    );
+    expect(api.suggest).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "  foo", 3);
   });
 
   it("turns suggest API failure into an empty success", async () => {

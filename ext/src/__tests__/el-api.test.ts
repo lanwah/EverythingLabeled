@@ -265,15 +265,15 @@ describe("createElApi", () => {
     };
     const { fetch, calls } = scriptedFetch((url) =>
       url.includes("q=wo")
-        ? ok({ items: [item], offset: 0, limit: 10, total: 1 })
-        : ok({ offset: 0, limit: 10, total: 0 }),
+        ? ok({ items: [item], offset: 0, limit: 8, total: 1 })
+        : ok({ offset: 0, limit: 8, total: 0 }),
     );
     const api = createElApi({ fetch });
-    const withItems = await api.suggest(BASE, TOKEN, "wo");
-    const empty = await api.suggest(BASE, TOKEN, "zz");
+    const withItems = await api.suggest(BASE, TOKEN, "wo", 8);
+    const empty = await api.suggest(BASE, TOKEN, "zz", 8);
 
     expect(calls[0]!.url).toBe(
-      `${BASE}/v1/tags/suggest?q=${encodeURIComponent("wo")}&limit=10`,
+      `${BASE}/v1/tags/suggest?q=${encodeURIComponent("wo")}&limit=8`,
     );
     expect(withItems).toEqual({ ok: true, data: [item], message: null });
     expect(empty).toEqual({ ok: true, data: [], message: null });

@@ -428,7 +428,7 @@ a:hover {
 
 .ext-preview-hits {
   margin: 8px 0 0;
-  /* 设计稿示意 3 行（2+3×62）；实现按 Options「预览条数」写入 --preview-hits-height */
+  /* 设计稿示意 3 行（2+3×62）；实现按 Options「标签查询预览条数」写入 --preview-hits-height */
   height: var(--preview-hits-height, 188px);
   overflow: auto;
   border: 1px solid var(--border);

@@ -1,5 +1,9 @@
 import { copy } from "./copy";
-import { type ElExtensionConfig } from "./config";
+import {
+  DEFAULT_PREVIEW_LIMIT,
+  DEFAULT_SUGGEST_LIMIT,
+  type ElExtensionConfig,
+} from "./config";
 import { shouldCheckCreateMissing } from "./create-missing-suggest";
 import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
@@ -18,6 +22,7 @@ import {
   popupHeightPx,
   previewHitsHeightPx,
   spaceBelowPx,
+  suggestListHeightPx,
   SUGGEST_GAP_PX,
 } from "./popup-layout";
 import { sendToBackground } from "./runtime-message";
@@ -542,34 +547,52 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
   }
 
   /**
-   * 拼首联想 max-height：只看锚点下方实际可用高度（或预留命中区实测高度），
-   * 不读 previewLimit / 不按「条数×行高」限行。
+   * 拼首联想 max-height：按 Options「拼首联想预览条数」算理想高度，
+   * 再与锚点下方可用空间（或命中区实测高度）取较小值。
    */
   function suggestMaxHeightFor(anchor: HTMLElement): number {
+    const ideal = suggestListHeightPx(
+      config?.suggestLimit ?? DEFAULT_SUGGEST_LIMIT,
+    );
+    let available: number;
     if (anchor === chipField) {
       const hitsH = previewHits.getBoundingClientRect().height;
-      if (hitsH > 0) return Math.max(48, Math.floor(hitsH));
+      available =
+        hitsH > 0
+          ? Math.max(48, Math.floor(hitsH))
+          : Math.max(
+              48,
+              spaceBelowPx({
+                viewportHeightPx: window.innerHeight,
+                anchorBottomPx: anchor.getBoundingClientRect().bottom,
+                gapPx: SUGGEST_GAP_PX,
+              }),
+            );
+    } else {
+      available = Math.max(
+        48,
+        spaceBelowPx({
+          viewportHeightPx: window.innerHeight,
+          anchorBottomPx: anchor.getBoundingClientRect().bottom,
+          gapPx: SUGGEST_GAP_PX,
+        }),
+      );
     }
-    return Math.max(
-      48,
-      spaceBelowPx({
-        viewportHeightPx: window.innerHeight,
-        anchorBottomPx: anchor.getBoundingClientRect().bottom,
-        gapPx: SUGGEST_GAP_PX,
-      }),
-    );
+    return Math.min(ideal, available);
   }
 
   /**
-   * 按标签检索列表：先按 previewLimit 预留，再把命中区拉满到 Popup 固定 600px，
+   * 按标签检索列表：先按「标签查询预览条数」预留，再把命中区拉满到 Popup 固定 600px，
    * 整窗 overflow:hidden，避免浏览器外层滚动条。打标模式不测命中区。
    */
   function applyPopupLayout(): void {
-    const limit = config?.previewLimit ?? 8;
+    const limit = config?.previewLimit ?? DEFAULT_PREVIEW_LIMIT;
+    const suggestLimit = config?.suggestLimit ?? DEFAULT_SUGGEST_LIMIT;
     const idealHitsH = previewHitsHeightPx(limit);
+    const idealSuggestH = suggestListHeightPx(suggestLimit);
     if (!useFixedSuggest) {
       document.body.style.setProperty("--preview-hits-height", `${idealHitsH}px`);
-      document.body.style.setProperty("--suggest-max-height", `${idealHitsH}px`);
+      document.body.style.setProperty("--suggest-max-height", `${idealSuggestH}px`);
       return;
     }
 

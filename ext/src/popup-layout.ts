@@ -24,7 +24,8 @@ export function suggestListHeightPx(
 
 /**
  * Reserved in-flow height for the tag-search / preview hits panel.
- * Driven only by Options「预览条数」— never used to size the suggest dropdown.
+ * Driven only by Options「标签查询预览条数」— not used to size the suggest dropdown
+ * (that uses「拼首联想预览条数」via {@link suggestListHeightPx}).
  */
 export function previewHitsHeightPx(
   rowCount: number,

@@ -46,8 +46,12 @@
               <span>去标前确认</span>
             </label>
             <label class="field">
-              <span>预览条数</span>
-              <input type="number" value="8" readonly />
+              <span>标签查询预览条数</span>
+              <input type="number" value="8" readonly aria-label="标签查询预览条数" />
+            </label>
+            <label class="field">
+              <span>拼首联想预览条数</span>
+              <input type="number" value="8" readonly aria-label="拼首联想预览条数" />
             </label>
             <label class="field">
               <span>预览资源类型</span>
@@ -71,6 +75,8 @@
       <aside class="design-notes" aria-label="交互说明（设计稿文字）">
         <h2>交互说明</h2>
         <ol>
+          <li><strong>标签查询预览条数</strong>：查找命中区条数 / 高度与打开硬顶；键 <code>previewLimit</code>，缺省 8（1–16）。</li>
+          <li><strong>拼首联想预览条数</strong>：<code>/v1/tags/suggest</code> 的 <code>limit</code> 与下拉理想行高；键 <code>suggestLimit</code>，缺省 8（1–16）。</li>
           <li><strong>预览资源类型</strong>：控制打标页 / Popup「预览」列表过滤。默认「仅链接」；可选「全部」以同时显示文件、文件夹与链接。存 <code>chrome.storage.local</code> 键 <code>previewResourceType</code>（<code>links</code> / <code>all</code>）；改后重新打开扩展页生效。</li>
         </ol>
       </aside>

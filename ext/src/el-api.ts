@@ -126,7 +126,12 @@ export function createElApi(deps: { fetch: typeof fetch }): {
     uri: string,
     remove: Array<string | { id: string }>,
   ): Promise<ElResult<unknown>>;
-  suggest(baseUrl: string, token: string, q: string): Promise<ElResult<SuggestItem[]>>;
+  suggest(
+    baseUrl: string,
+    token: string,
+    q: string,
+    limit: number,
+  ): Promise<ElResult<SuggestItem[]>>;
   preview(
     baseUrl: string,
     token: string,
@@ -231,10 +236,10 @@ export function createElApi(deps: { fetch: typeof fetch }): {
         createMissing: false,
       });
     },
-    async suggest(baseUrl, token, q) {
+    async suggest(baseUrl, token, q, limit) {
       return unwrapItems(
         await authGet<{ items?: SuggestItem[] }>(
-          `v1/tags/suggest?q=${encodeURIComponent(q)}&limit=10`,
+          `v1/tags/suggest?q=${encodeURIComponent(q)}&limit=${limit}`,
           baseUrl,
           token,
         ),
