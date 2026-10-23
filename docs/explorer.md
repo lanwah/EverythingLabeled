@@ -7,7 +7,7 @@ Windows 稀疏包 `IExplorerCommand` + 进程外 WPF `EverythingLabeled.Explorer
 | 项目 | 说明 |
 |---|---|
 | `src/EverythingLabeled.ExplorerShared` | paths-file（tmp / Cleanup / Write / ReadAndDelete） |
-| `src/EverythingLabeled.ExplorerHost` | WPF Host：`--mode tag\|untag\|tags\|find`，可选 `--paths-file` |
+| `src/EverythingLabeled.ExplorerHost` | WPF Host：`--mode tag\|untag\|tags\|find`，可选 `--paths-file`；exe 图标 `Assets/host.ico`（文件夹 E838 + 标签角标；`scripts/make-host-icon.ps1`） |
 | `src/EverythingLabeled.ExplorerCommand` | COM 菜单 DLL（`EnableComHosting` → `*.comhost.dll`）+ `Package/AppxManifest.xml` |
 | `src/EverythingLabeled.Tray` | WinForms 托盘：全局热键打开 Find；构建时拷 Host 整目录到 Tray 旁 → [Tray 规格](../plans/2026-10-07-tray-find-hotkey.md) · [实现计划](../plans/2026-10-07-tray-find-hotkey-impl.md) |
 

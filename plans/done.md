@@ -171,3 +171,4 @@
 - 2026-10-23 — query/preview 增加 `?kind=`（省略=`all`）；扩展「仅链接」改传 `kind=url`，去掉客户端分页凑数 → [HTTP API §3.6](../plans/2026-09-26-http-api.md) · [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-23 — 选定并落地 MIT 开源许可（根目录 `LICENSE`，README 已指向）
 - 2026-10-23 — 扩展 Options「预览条数」改名「标签查询预览条数」；新增「拼首联想预览条数」(`suggestLimit`，缺省 8) 用于 suggest API 与下拉高度 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-23 — ExplorerHost 专用 exe 图标 `Assets/host.ico`（MDL2 打开文件夹 E838 + 标签角标 E8EC；与 Tray `el.ico` 区分；`scripts/make-host-icon.ps1`）→ [docs/explorer.md](../docs/explorer.md)

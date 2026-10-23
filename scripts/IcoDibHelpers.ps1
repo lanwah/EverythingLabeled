@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-# Shared ICO (DIB frame) helpers for make-explorer-icons.ps1 and make-service-icon.ps1.
+# Shared ICO (DIB frame) helpers for make-explorer-icons / make-service-icon / make-host-icon.
 
 function Draw-Mdl2Glyph {
     param(
@@ -48,15 +48,35 @@ function New-GlyphBitmap {
     return $bitmap
 }
 
-# Service 守护进程：服务器字形 + 右下角标签角标（与 Tray/Host 纯标签 el.ico 区分）
+# Service 守护进程：服务器字形 + 右下角标签角标（与 Tray 纯标签 el.ico 区分）
 function New-ServiceIconBitmap {
     param(
         [int]$Size,
         [System.Drawing.Color]$Ink
     )
 
-    $serverGlyph = 0xE968   # Server
-    $tagGlyph = 0xE8EC      # Tag（与品牌 el.ico 同源字形）
+    return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE968
+}
+
+# ExplorerHost：打开文件夹 + 右下角标签角标（与 Tray 纯标签、Service 服务器区分）
+function New-HostIconBitmap {
+    param(
+        [int]$Size,
+        [System.Drawing.Color]$Ink
+    )
+
+    # OpenFolder：Explorer 壳层集成的进程外 Host
+    return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE838
+}
+
+# 品牌复合图标：主字形偏左上 + Tag(E8EC) 角标；≥24px 带淡青绿圆底板
+function New-CompoundBrandIconBitmap {
+    param(
+        [int]$Size,
+        [System.Drawing.Color]$Ink,
+        [int]$PrimaryGlyph,
+        [int]$BadgeGlyph = 0xE8EC   # Tag（与品牌 el.ico 同源字形）
+    )
 
     $bitmap = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bitmap)
@@ -72,11 +92,11 @@ function New-ServiceIconBitmap {
             try { $g.FillEllipse($brush, $x, $x, $plate, $plate) } finally { $brush.Dispose() }
         }
 
-        $serverSize = [single]($Size * $(if ($Size -le 20) { 0.78 } else { 0.68 }))
-        Draw-Mdl2Glyph -Graphics $g -CodePoint $serverGlyph -CenterX ($Size * 0.46) -CenterY ($Size * 0.44) -FontSizePx $serverSize -Ink $Ink
+        $primarySize = [single]($Size * $(if ($Size -le 20) { 0.78 } else { 0.68 }))
+        Draw-Mdl2Glyph -Graphics $g -CodePoint $PrimaryGlyph -CenterX ($Size * 0.46) -CenterY ($Size * 0.44) -FontSizePx $primarySize -Ink $Ink
 
-        $tagSize = [single]($Size * $(if ($Size -le 20) { 0.36 } else { 0.40 }))
-        Draw-Mdl2Glyph -Graphics $g -CodePoint $tagGlyph -CenterX ($Size * 0.72) -CenterY ($Size * 0.72) -FontSizePx $tagSize -Ink $Ink
+        $badgeSize = [single]($Size * $(if ($Size -le 20) { 0.36 } else { 0.40 }))
+        Draw-Mdl2Glyph -Graphics $g -CodePoint $BadgeGlyph -CenterX ($Size * 0.72) -CenterY ($Size * 0.72) -FontSizePx $badgeSize -Ink $Ink
     } finally {
         $g.Dispose()
     }

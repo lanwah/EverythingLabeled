@@ -10,7 +10,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>EverythingLabeled.ExplorerHost</RootNamespace>
     <AssemblyName>EverythingLabeled.ExplorerHost</AssemblyName>
-    <ApplicationIcon>..\EverythingLabeled.ExplorerShared\Assets\el.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\host.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

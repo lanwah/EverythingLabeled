@@ -5,7 +5,7 @@
 
 ## 当前状态
 - v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled → [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
-- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。托盘右键「重新启动」结束全部 ExplorerHost 后冷启动 Find，避免服务晚于查找进程起来时横幅停在「服务未运行」。打标/去标/看标签/管理标签与 Find 一致：点击窗口外失焦自动关闭（Find 仍为 Hide）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
+- Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。托盘右键「重新启动」结束全部 ExplorerHost 后冷启动 Find，避免服务晚于查找进程起来时横幅停在「服务未运行」。打标/去标/看标签/管理标签与 Find 一致：点击窗口外失焦自动关闭（Find 仍为 Hide）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除。Host exe 已用 `Assets/host.ico`（文件夹+标签），不再与 Tray 共用 `el.ico` → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
 - Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标 + 名称后资源标签胶囊（preview API `tags`）；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [设计稿](design/explorer-ui/find.html) · [docs/explorer.md](docs/explorer.md)
 - 浏览器扩展 0.1.3：Popup 固定 600px、无外层滚动条；标题单独一行，第二行 switch +「打标模式 / 查找模式」与管理按钮（默认打标）；查找页命中区吃满剩余高度并可按「标签查询预览条数」显示；拼首联想按「拼首联想预览条数」限 API/理想行高；打标 suggest 默认首项 + ↑/↓/Enter；查找 ↑/↓/空输入 Enter 对齐 Find → [docs/browser-extension.md](docs/browser-extension.md)
 - 扩展 Options：`previewLimit` 显示名「标签查询预览条数」；新增 `suggestLimit`「拼首联想预览条数」（缺省均 8，1–16）；「预览资源类型」默认仅链接 → [ext-options](design/explorer-ui/ext-options.html) · [docs/browser-extension.md](docs/browser-extension.md)
@@ -29,7 +29,7 @@
 - Find UI：芯片输入；多标签逻辑读 `findTagLogic`（默认 `and`），不在 UI 切换；Find 无边框深色标题栏；Enter 落芯片 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)（UI 切换已改为配置项）
 - Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；打标与去标单选当前标签为带 × 芯片；打标页不显示底部取消/打标，Enter 提交；去标页不显示别名与底部取消/去标，当前标签可检索后点叉号去除）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；关窗/失焦 Hide 保活；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
-- Service exe 图标：`Assets/service.ico`（服务器 E968 + 标签角标 E8EC，与 Tray/Host 纯标签 `el.ico` 区分）→ `scripts/make-service-icon.ps1` · [Service 骨架](docs/service-skeleton.md)
+- exe 图标三分开：Tray/扩展纯标签 `el.ico`；Host `Assets/host.ico`（打开文件夹 E838 + 标签角标）；Service `Assets/service.ico`（服务器 E968 + 标签角标）→ `scripts/make-host-icon.ps1` · `scripts/make-service-icon.ps1` · [Explorer](docs/explorer.md) · [Service 骨架](docs/service-skeleton.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 待办

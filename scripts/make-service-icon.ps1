@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     视觉：Segoe MDL2「服务器」E968 + 右下角「标签」E8EC 角标，主色 #2EC4B6，
-    与 Tray/Host 共用的纯标签 el.ico 区分，表示本机标签守护进程。
+    与 Tray 纯标签 el.ico、Host 文件夹+标签 host.ico 区分，表示本机标签守护进程。
 
     帧编码与 Explorer 菜单图标相同：多尺寸 DIB（32bpp），不用 PNG 帧。
 
