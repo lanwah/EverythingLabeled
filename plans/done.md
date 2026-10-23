@@ -169,3 +169,4 @@
 - 2026-10-22 — 根目录增加 `build-ext.bat` / `build-ext.ps1`；`build.bat` / `build.ps1` 在 `dotnet build` 后一并构建扩展 → [docs/README.md](../docs/README.md)
 - 2026-10-23 — 扩展「仅链接」预览：SW 分页过滤凑满 previewLimit，避免先 limit 再丢非链接导致条数偏少 → [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-23 — query/preview 增加 `?kind=`（省略=`all`）；扩展「仅链接」改传 `kind=url`，去掉客户端分页凑数 → [HTTP API §3.6](../plans/2026-09-26-http-api.md) · [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-23 — 选定并落地 MIT 开源许可（根目录 `LICENSE`，README 已指向）

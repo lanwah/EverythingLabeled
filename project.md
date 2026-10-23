@@ -13,6 +13,7 @@
 - 管理标签已落地（Host `library`，列表每页 50）。管理资源：按标签查找后删除或替换；类型按新地址预选可改；芯片查询与 Find 相同（末词 suggest 含简拼，Enter 落联想）；芯片区清空图标对齐 Find（无边框）；空状态提示居中。稀疏包 `0.1.10.0`。右键只少新增项时查 comhost 是否过期（`CoCreate` `0x80040111`）→ [存档](plans/2026-10-20-explorer-comhost-stale.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 关键决策
+- 开源许可证：MIT（根目录 [LICENSE](LICENSE)）
 - 单体本地守护进程 + SQLite；客户端只走 HTTP（`127.0.0.1` + Bearer）→ [架构](plans/2026-09-22-local-daemon-architecture.md)
 - 技术栈 .NET 8（C#）；Windows 优先，Service/CLI 避开 Windows-only API
 - 标签：扁平主名 + 可选命名空间；`TagRelation` 网状（`child`/`related`）；查询默认 AND，支持 OR / `-tag` → [数据模型](plans/2026-09-23-data-model.md)

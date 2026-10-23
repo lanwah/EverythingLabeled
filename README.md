@@ -107,4 +107,4 @@ v1 核心链路（Service、CRUD/查询、CLI、MCP、浏览器扩展、Explorer
 
 ## 许可
 
-尚未选定开源许可证；使用或分发前请先与仓库维护者确认。
+[MIT](LICENSE)
