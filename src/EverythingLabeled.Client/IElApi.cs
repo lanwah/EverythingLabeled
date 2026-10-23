@@ -23,6 +23,7 @@ public interface IElApi
         int? expandedTagLimit,
         int limit,
         int offset,
+        string? kind = null,
         CancellationToken ct = default);
 
     Task<ElResult<PreviewPage>> PreviewAsync(
@@ -31,6 +32,7 @@ public interface IElApi
         int? maxDepth,
         int? expandedTagLimit,
         int limit,
+        string? kind = null,
         CancellationToken ct = default);
 
     Task<ElResult<SuggestPage>> SuggestAsync(string prefix, int limit, CancellationToken ct = default);

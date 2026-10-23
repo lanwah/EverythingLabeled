@@ -10,8 +10,9 @@ public static class QueryCacheKeyFactory
         int maxDepth,
         int expandedTagLimit,
         int limit,
-        int offset) =>
-        $"v{dataVersion}:{op}:{normalizedQuery}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}";
+        int offset,
+        string kind = "all") =>
+        $"v{dataVersion}:{op}:{normalizedQuery}:{expand}:{maxDepth}:{expandedTagLimit}:{limit}:{offset}:{kind}";
 
     public static string ForSuggest(int dataVersion, string normalizedPrefix, int limit) =>
         $"v{dataVersion}:suggest:{normalizedPrefix}:{limit}";

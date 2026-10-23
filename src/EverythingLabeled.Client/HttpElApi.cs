@@ -79,10 +79,11 @@ public sealed class HttpElApi : IElApi
         int? expandedTagLimit,
         int limit,
         int offset,
+        string? kind = null,
         CancellationToken ct = default) =>
         SendAsync<QueryPage>(
             HttpMethod.Get,
-            "v1/query?" + BuildQuery(q, expand, maxDepth, expandedTagLimit, limit, offset),
+            "v1/query?" + BuildQuery(q, expand, maxDepth, expandedTagLimit, limit, offset, kind),
             body: null,
             authorize: true,
             ct);
@@ -93,10 +94,11 @@ public sealed class HttpElApi : IElApi
         int? maxDepth,
         int? expandedTagLimit,
         int limit,
+        string? kind = null,
         CancellationToken ct = default) =>
         SendAsync<PreviewPage>(
             HttpMethod.Get,
-            "v1/query/preview?" + BuildQuery(q, expand, maxDepth, expandedTagLimit, limit, offset: null),
+            "v1/query/preview?" + BuildQuery(q, expand, maxDepth, expandedTagLimit, limit, offset: null, kind),
             body: null,
             authorize: true,
             ct);
@@ -160,7 +162,8 @@ public sealed class HttpElApi : IElApi
         int? maxDepth,
         int? expandedTagLimit,
         int limit,
-        int? offset)
+        int? offset,
+        string? kind = null)
     {
         var parts = new List<string>
         {
@@ -175,6 +178,9 @@ public sealed class HttpElApi : IElApi
             parts.Add("maxDepth=" + depth.ToString(CultureInfo.InvariantCulture));
         if (expandedTagLimit is { } tagLimit)
             parts.Add("expandedTagLimit=" + tagLimit.ToString(CultureInfo.InvariantCulture));
+        if (!string.IsNullOrWhiteSpace(kind)
+            && !kind.Equals("all", StringComparison.Ordinal))
+            parts.Add("kind=" + Uri.EscapeDataString(kind));
         return string.Join("&", parts);
     }
 

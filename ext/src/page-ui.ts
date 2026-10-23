@@ -1,8 +1,5 @@
 import { copy } from "./copy";
-import {
-  filterPreviewByResourceType,
-  type ElExtensionConfig,
-} from "./config";
+import { type ElExtensionConfig } from "./config";
 import { shouldCheckCreateMissing } from "./create-missing-suggest";
 import { debounce } from "./debounce";
 import type { QueryHit, SuggestItem, TagInfo } from "./el-api";
@@ -769,14 +766,17 @@ export function mountPageUi(root: HTMLElement, mode: PageUiMode): void {
       showIdlePreview();
       return;
     }
-    const result = await sendToBackground<QueryHit[]>({ type: "preview", q });
+    const result = await sendToBackground<QueryHit[]>({
+      type: "preview",
+      q,
+      resourceType: config?.previewResourceType ?? "links",
+    });
     if (requestId !== previewRequestId) return;
     if (!result.ok) {
       showFailure(result);
       return;
     }
-    const type = config?.previewResourceType ?? "links";
-    renderHits(filterPreviewByResourceType(result.data, type));
+    renderHits(result.data);
   }
 
   const runPreviewSuggest = debounce(() => {

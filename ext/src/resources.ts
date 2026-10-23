@@ -361,7 +361,11 @@ function mountResources(root: HTMLElement): void {
       renderHits();
       return;
     }
-    const result = await sendToBackground<QueryHit[]>({ type: "preview", q });
+    const result = await sendToBackground<QueryHit[]>({
+      type: "preview",
+      q,
+      resourceType: "all",
+    });
     if (gen !== loadGen) return;
     if (!result.ok) {
       showBanner(formatUiError(result));

@@ -395,13 +395,48 @@ describe("handleRequest suggest and preview", () => {
       stored: { baseUrl: GOOD_BASE, token: TOKEN, previewLimit: 16 },
     });
     const result = await handleRequest({ type: "preview", q: "tag:a" }, d);
-    expect(api.preview).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "tag:a", 16);
+    expect(api.preview).toHaveBeenCalledWith(
+      GOOD_BASE,
+      TOKEN,
+      "tag:a",
+      16,
+      undefined,
+    );
     expect(result).toEqual({
       ok: false,
       code: "bad_request",
       message: "syntax",
       httpStatus: 400,
     });
+  });
+
+  it("omitted resourceType omits kind so the service returns all kinds", async () => {
+    const api = apiStub();
+    const hits = [
+      { id: "1", uri: "file:///a", kind: "file", displayName: null },
+      { id: "2", uri: "https://ex.com", kind: "url", displayName: null },
+    ];
+    api.preview.mockResolvedValue(ok(hits));
+    const d = deps({
+      api,
+      stored: { baseUrl: GOOD_BASE, token: TOKEN, previewLimit: 2 },
+    });
+    const result = await handleRequest({ type: "preview", q: "web" }, d);
+    expect(api.preview).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "web", 2, undefined);
+    expect(result).toEqual({ ok: true, data: hits, message: null });
+  });
+
+  it("links resourceType passes kind=url to preview", async () => {
+    const api = apiStub();
+    api.preview.mockResolvedValue(
+      ok([{ id: "u1", uri: "https://a", kind: "url", displayName: null }]),
+    );
+    const d = deps({
+      api,
+      stored: { baseUrl: GOOD_BASE, token: TOKEN, previewLimit: 4 },
+    });
+    await handleRequest({ type: "preview", q: "web", resourceType: "links" }, d);
+    expect(api.preview).toHaveBeenCalledWith(GOOD_BASE, TOKEN, "web", 4, "url");
   });
 });
 

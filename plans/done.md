@@ -167,3 +167,5 @@
 - 2026-10-22 — 扩展 Popup 标题单独一行，第二行放模式开关与管理按钮 → [ext-page](../design/explorer-ui/ext-page.html)
 - 2026-10-22 — 扩展 Popup 打开与切换模式后焦点落到对应文本框（打标别名 / 查找查询）→ [docs/browser-extension.md](../docs/browser-extension.md)
 - 2026-10-22 — 根目录增加 `build-ext.bat` / `build-ext.ps1`；`build.bat` / `build.ps1` 在 `dotnet build` 后一并构建扩展 → [docs/README.md](../docs/README.md)
+- 2026-10-23 — 扩展「仅链接」预览：SW 分页过滤凑满 previewLimit，避免先 limit 再丢非链接导致条数偏少 → [docs/browser-extension.md](../docs/browser-extension.md)
+- 2026-10-23 — query/preview 增加 `?kind=`（省略=`all`）；扩展「仅链接」改传 `kind=url`，去掉客户端分页凑数 → [HTTP API §3.6](../plans/2026-09-26-http-api.md) · [docs/browser-extension.md](../docs/browser-extension.md)

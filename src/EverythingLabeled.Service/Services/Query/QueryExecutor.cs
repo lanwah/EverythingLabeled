@@ -11,12 +11,15 @@ public sealed class QueryExecutor(ElDbContext db)
         ExpandedQuery expanded,
         Paging paging,
         bool includeTotal,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? kindFilter = null)
     {
         // Filter in SQL via ResourceTags Any/Contains (SQLite translates closed-over Guid[]).
         // Clause OR uses Union. Sort/skip/take stay in-memory because SQLite cannot ORDER BY
         // DateTimeOffset (same constraint as ResourceService.ListAsync).
         var filtered = FilterInSql(expanded.Clauses);
+        if (kindFilter is not null)
+            filtered = filtered.Where(r => r.Kind == kindFilter);
         var matched = (await filtered
                 .Select(r => new { r.Id, r.Uri, r.Kind, r.DisplayName, r.CreatedAt })
                 .ToListAsync(ct))

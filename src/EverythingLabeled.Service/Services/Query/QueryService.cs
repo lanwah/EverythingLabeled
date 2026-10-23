@@ -3,6 +3,7 @@ using EverythingLabeled.Service.Data;
 using EverythingLabeled.Service.Services.Abstractions;
 using EverythingLabeled.Service.Services.Caching;
 using EverythingLabeled.Service.Services.Relations;
+using EverythingLabeled.Service.Services.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -58,9 +59,20 @@ public sealed class QueryService(
         if (!gates.IsSuccess)
             return ServiceResult<QueryResultDto>.Fail(gates.Code!, gates.Message!, gates.Details);
 
+        var kindFilter = ResourceKinds.ParseQueryFilter(req.KindRaw);
+        if (!kindFilter.IsSuccess)
+        {
+            Log.Information("Query {Reason} kind={Kind}", "param_invalid", req.KindRaw);
+            return ServiceResult<QueryResultDto>.Fail(
+                kindFilter.Code!,
+                kindFilter.Message!,
+                kindFilter.Details);
+        }
+
         var expandMode = gates.Data!.ExpandMode;
         var maxDepth = gates.Data.MaxDepth;
         var expandedTagLimit = gates.Data.ExpandedTagLimit;
+        var kind = kindFilter.Data;
 
         var parsed = parser.Parse(req.Q!);
         if (!parsed.IsSuccess)
@@ -109,7 +121,8 @@ public sealed class QueryService(
             cacheDepth,
             cacheLimit,
             req.Paging.Limit,
-            req.Paging.Offset);
+            req.Paging.Offset,
+            ResourceKinds.CacheKeyToken(kind));
 
         var entryOptions = op == "preview"
             ? new CacheEntryOptions(cacheOptions.Value.PreviewTtl)
@@ -118,7 +131,7 @@ public sealed class QueryService(
             key,
             versionAtKey,
             dataVersion.GetAsync,
-            token => executor.ExecuteAsync(expanded, req.Paging, includeTotal, token),
+            token => executor.ExecuteAsync(expanded, req.Paging, includeTotal, token, kind),
             entryOptions,
             ct);
 

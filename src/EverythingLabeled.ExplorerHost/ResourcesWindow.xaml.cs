@@ -257,7 +257,7 @@ public partial class ResourcesWindow : Window
             maxDepth: null,
             expandedTagLimit: null,
             _ctx.Config?.PreviewLimit ?? 16,
-            ct).ConfigureAwait(true);
+            ct: ct).ConfigureAwait(true);
         if (gen != _loadGen || ct.IsCancellationRequested)
             return;
 

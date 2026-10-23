@@ -43,11 +43,11 @@ DI 集中在 `ServiceRegistration`；`Program` 挂载上述 Map*Endpoints。骨�
 
 `GET /v1/query` 与 `GET /v1/query/preview` 共用 `QueryService.RunAsync`：
 
-1. 闸门：`expand` / `maxDepth` / `expandedTagLimit`（见 HTTP 规格）。
+1. 闸门：`expand` / `maxDepth` / `expandedTagLimit`；可选 `kind`（`file`/`folder`/`url`/`all`，省略=`all`）（见 HTTP 规格）。
 2. `QueryParser` → 规范化 + AND/OR/`-tag` 子句。
 3. 解析别名：未知**正词** → `200 ok` + 英文 `message` + 空 `items`（不写缓存）。
 4. 可选 `expand=child`（`QueryExpander`）；`related` 不参与集合展开。
-5. `QueryCachePipeline`：TryGet → 冷路径 `QueryExecutor` → 版本复核后 Set。
+5. `QueryCachePipeline`：TryGet → 冷路径 `QueryExecutor`（SQL 侧按 `kind` 过滤后再分页）→ 版本复核后 Set。
 6. preview 映射为 `PreviewResultDto`：**JSON 无 `total` 属性**；query 含 `total`。
 
 ## 4. 缓存

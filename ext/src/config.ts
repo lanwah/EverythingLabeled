@@ -78,13 +78,14 @@ export function parsePreviewResourceType(raw: unknown): PreviewResourceType {
   return v === "all" ? "all" : "links";
 }
 
-/** Client-side filter after preview API; `links` keeps only `kind === "url"`. */
-export function filterPreviewByResourceType<T extends { kind: string }>(
-  hits: readonly T[],
+/**
+ * Map Options「预览资源类型」→ query/preview `kind` query param.
+ * `links` → `url`；`all` → omit（服务端默认 all）.
+ */
+export function previewApiKind(
   type: PreviewResourceType,
-): T[] {
-  if (type === "all") return [...hits];
-  return hits.filter((hit) => hit.kind === "url");
+): "url" | undefined {
+  return type === "links" ? "url" : undefined;
 }
 
 export function normalizeStoredConfig(

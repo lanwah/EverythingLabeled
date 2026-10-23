@@ -3,9 +3,9 @@ import {
   canonicalizeBaseUrl,
   DEFAULT_BASE_URL,
   DEFAULT_PREVIEW_LIMIT,
-  filterPreviewByResourceType,
   normalizeStoredConfig,
   parsePreviewResourceType,
+  previewApiKind,
   validateDraft,
 } from "../config";
 
@@ -87,19 +87,10 @@ describe("normalizeStoredConfig", () => {
   });
 });
 
-describe("filterPreviewByResourceType", () => {
-  const hits = [
-    { kind: "url", id: "u" },
-    { kind: "file", id: "f" },
-    { kind: "folder", id: "d" },
-  ];
-
-  it("keeps only url when links", () => {
-    expect(filterPreviewByResourceType(hits, "links")).toEqual([{ kind: "url", id: "u" }]);
-  });
-
-  it("keeps all when all", () => {
-    expect(filterPreviewByResourceType(hits, "all")).toEqual(hits);
+describe("previewApiKind", () => {
+  it("maps links to url and all to omitted", () => {
+    expect(previewApiKind("links")).toBe("url");
+    expect(previewApiKind("all")).toBeUndefined();
   });
 });
 

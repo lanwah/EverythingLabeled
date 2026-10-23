@@ -1,8 +1,11 @@
 import {
   canonicalizeBaseUrl,
   normalizeStoredConfig,
+  parsePreviewResourceType,
+  previewApiKind,
   validateDraft,
   type ElExtensionConfig,
+  type PreviewResourceType,
 } from "./config";
 import { copy } from "./copy";
 import { buildTagBody, createElApi, type ElResult } from "./el-api";
@@ -33,7 +36,8 @@ export type ElRequest =
   | { type: "untagById"; uri: string; tagId: string }
   | { type: "untagByAlias"; uri: string; alias: string }
   | { type: "suggest"; q: string }
-  | { type: "preview"; q: string }
+  /** `resourceType` omitted → `all`（管理资源等）；Popup/打标页传配置值。 */
+  | { type: "preview"; q: string; resourceType?: PreviewResourceType }
   | { type: "listTags"; q: string | null }
   | { type: "renameTag"; from: string; to: string }
   | { type: "deleteTag"; id: string }
@@ -190,8 +194,19 @@ export async function handleRequest(req: ElRequest, deps: Deps): Promise<ElRespo
     }
     case "preview": {
       if (req.q.trim() === "") return emptyOk;
+      // Omitted → all（管理资源）；勿对 undefined 走 parse 默认 links。
+      const resourceType =
+        req.resourceType === undefined
+          ? "all"
+          : parsePreviewResourceType(req.resourceType);
       return toElResponse(
-        await api.preview(cfg.baseUrl, cfg.token, req.q, cfg.previewLimit),
+        await api.preview(
+          cfg.baseUrl,
+          cfg.token,
+          req.q,
+          cfg.previewLimit,
+          previewApiKind(resourceType),
+        ),
       );
     }
     case "listTags": {

@@ -104,7 +104,7 @@ public sealed class ElTools(ElMcpRuntime runtime)
             parsed.Expand.ExpandedTagLimit,
             parsed.Limit,
             parsed.Offset ?? 0,
-            cancellationToken).ConfigureAwait(false));
+            ct: cancellationToken).ConfigureAwait(false));
     }
 
     [McpServerTool(Name = "el_preview", ReadOnly = true)]
@@ -129,7 +129,7 @@ public sealed class ElTools(ElMcpRuntime runtime)
             parsed.Expand.MaxDepth,
             parsed.Expand.ExpandedTagLimit,
             parsed.Limit,
-            cancellationToken).ConfigureAwait(false));
+            ct: cancellationToken).ConfigureAwait(false));
     }
 
     [McpServerTool(Name = "el_suggest", ReadOnly = true)]

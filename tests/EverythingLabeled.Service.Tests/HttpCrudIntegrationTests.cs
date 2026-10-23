@@ -267,6 +267,40 @@ public sealed class HttpCrudIntegrationTests
     }
 
     [Fact]
+    public async Task Query_and_preview_kind_filters_resource_type_default_all()
+    {
+        await using var fx = ServiceProcessFixture.CreateIsolated();
+        fx.WriteConfigForFreePort();
+        await fx.StartAsync();
+        using var client = fx.CreateClient(fx.Config!.Token);
+
+        await CreateTagAsync(client, "kindmix");
+        await ApplyTagsAsync(client, "file:///C:/kind-file.txt", ["kindmix"], kind: "file");
+        await ApplyTagsAsync(client, "https://example.com/kind-url", ["kindmix"], kind: "url");
+
+        using var all = await client.GetAsync(
+            "/v1/query?q=" + Uri.EscapeDataString("kindmix") + "&limit=10");
+        Assert.Equal(HttpStatusCode.OK, all.StatusCode);
+        var allUris = (await ReadJsonAsync(all)).GetProperty("data").GetProperty("items")
+            .EnumerateArray().Select(e => e.GetProperty("uri").GetString()).ToHashSet();
+        Assert.Contains("file:///C:/kind-file.txt", allUris);
+        Assert.Contains("https://example.com/kind-url", allUris);
+
+        using var urls = await client.GetAsync(
+            "/v1/query/preview?q=" + Uri.EscapeDataString("kindmix") + "&limit=10&kind=url");
+        Assert.Equal(HttpStatusCode.OK, urls.StatusCode);
+        var urlItems = (await ReadJsonAsync(urls)).GetProperty("data").GetProperty("items")
+            .EnumerateArray().ToList();
+        Assert.Single(urlItems);
+        Assert.Equal("url", urlItems[0].GetProperty("kind").GetString());
+        Assert.Equal("https://example.com/kind-url", urlItems[0].GetProperty("uri").GetString());
+
+        using var bad = await client.GetAsync(
+            "/v1/query?q=" + Uri.EscapeDataString("kindmix") + "&kind=link");
+        Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);
+    }
+
+    [Fact]
     public async Task Query_expand_child_hits_resource_tagged_only_with_child()
     {
         await using var fx = ServiceProcessFixture.CreateIsolated();
@@ -422,14 +456,17 @@ public sealed class HttpCrudIntegrationTests
         return json.GetProperty("data").GetProperty("id").GetGuid();
     }
 
-    private static async Task ApplyTagsAsync(HttpClient client, string uri, string[] aliases)
+    private static Task ApplyTagsAsync(HttpClient client, string uri, string[] aliases) =>
+        ApplyTagsAsync(client, uri, aliases, kind: "file");
+
+    private static async Task ApplyTagsAsync(HttpClient client, string uri, string[] aliases, string kind)
     {
         using var response = await client.PostAsJsonAsync(
             "/v1/resources/tags",
             new
             {
                 uri,
-                kind = "file",
+                kind,
                 add = aliases.Cast<object>().ToArray(),
                 createMissing = false,
             });

@@ -1200,7 +1200,7 @@ public partial class MainWindow : Window
                 maxDepth: null,
                 expandedTagLimit: null,
                 _ctx.Config.PreviewLimit,
-                ct).ConfigureAwait(true);
+                ct: ct).ConfigureAwait(true);
 
             if (ct.IsCancellationRequested)
                 return;

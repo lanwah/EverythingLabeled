@@ -186,6 +186,32 @@ public sealed class HttpElApiTests
     }
 
     [Fact]
+    public async Task Preview_sends_kind_when_not_all()
+    {
+        var api = CreateApi((req, _, _) =>
+        {
+            Assert.Contains("kind=url", req.RequestUri!.Query);
+            return Ok("""{"items":[],"offset":0,"limit":10}""");
+        });
+
+        var r = await api.PreviewAsync("q", null, null, null, 10, kind: "url");
+        Assert.True(r.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Preview_omits_kind_when_all_or_null()
+    {
+        var api = CreateApi((req, _, i) =>
+        {
+            Assert.DoesNotContain("kind=", req.RequestUri!.Query);
+            return Ok("""{"items":[],"offset":0,"limit":10}""");
+        });
+
+        Assert.True((await api.PreviewAsync("q", null, null, null, 10)).IsSuccess);
+        Assert.True((await api.PreviewAsync("q", null, null, null, 10, kind: "all")).IsSuccess);
+    }
+
+    [Fact]
     public async Task Suggest_uses_q_not_prefix()
     {
         var api = CreateApi((req, _, _) =>

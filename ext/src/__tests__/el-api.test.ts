@@ -298,6 +298,28 @@ describe("createElApi", () => {
     expect(result).toEqual({ ok: true, data: [hit], message: null });
   });
 
+  it("appends kind when preview kind is set", async () => {
+    const { fetch, calls } = scriptedFetch(() => ok({ items: [], offset: 0, limit: 8 }));
+    const api = createElApi({ fetch });
+    await api.preview(BASE, TOKEN, "foo", 8, "url");
+    expect(calls[0]!.url).toBe(
+      `${BASE}/v1/query/preview?q=${encodeURIComponent("foo")}&limit=8&kind=url`,
+    );
+  });
+
+  it("omits kind when preview kind is all or unset", async () => {
+    const { fetch, calls } = scriptedFetch(() => ok({ items: [], offset: 0, limit: 8 }));
+    const api = createElApi({ fetch });
+    await api.preview(BASE, TOKEN, "foo", 8, "all");
+    await api.preview(BASE, TOKEN, "bar", 8);
+    expect(calls[0]!.url).toBe(
+      `${BASE}/v1/query/preview?q=${encodeURIComponent("foo")}&limit=8`,
+    );
+    expect(calls[1]!.url).toBe(
+      `${BASE}/v1/query/preview?q=${encodeURIComponent("bar")}&limit=8`,
+    );
+  });
+
   it("lists tags with q and maps items/total", async () => {
     const tag = {
       id: "t1",

@@ -8,7 +8,8 @@
 - Explorer / Tray 本机验收通过：稀疏包 `0.1.9.0`、Host 四页深色皮肤、Tray `Alt+L`；Find Hide 保活 + 管道 Activate（回写 HWND，Tray/Host 双端抢前台；Notepad 占前台时 `Alt+L` 抢焦 8/8）。托盘右键「重新启动」结束全部 ExplorerHost 后冷启动 Find，避免服务晚于查找进程起来时横幅停在「服务未运行」。打标/去标/看标签/管理标签与 Find 一致：点击窗口外失焦自动关闭（Find 仍为 Hide）。打标页底部「取消」「打标」已隐藏，别名框 Enter 直接提交。去标页已按设计稿隐藏别名与底部「取消」「去标」，单选当前标签可检索后点叉号去除 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md) · [设计稿](design/explorer-ui/untag.html)
 - Find：末词 suggest + 实时 preview、芯片输入；多标签 AND/OR 由 `config.json` 的 `findTagLogic`（`and`/`or`）配置、界面不展示；结果行 kind 图标 + 名称后资源标签胶囊（preview API `tags`）；无芯片时拼首联想底部显示「建议 N 条」；底部仅预览条数（无「清空标签」「打开」）；有芯片时输入框右侧清除图标；回车/双击结果行打开 → [Find UX](plans/confirmed/2026-10-07-find-ux-review.md) · [设计稿](design/explorer-ui/find.html) · [docs/explorer.md](docs/explorer.md)
 - 浏览器扩展 0.1.3：Popup 固定 600px、无外层滚动条；标题单独一行，第二行 switch +「打标模式 / 查找模式」与管理按钮（默认打标）；查找页命中区吃满剩余高度并可按预览条数显示；拼首联想跟下方可用空间；打标 suggest 默认首项 + ↑/↓/Enter；查找 ↑/↓/空输入 Enter 对齐 Find → [docs/browser-extension.md](docs/browser-extension.md)
-- 扩展 Popup 设计稿：标题一行 + 第二行 switch/按钮；无打标/去标与清空/打开所选；Enter 打标、芯片 × 去标；查找结果占位 + 拼首联想浮动、无勾选、双击打开；清除图标；设置「预览资源类型」存 `chrome.storage.local`（默认仅链接）→ [ext-page](design/explorer-ui/ext-page.html) · [ext-options](design/explorer-ui/ext-options.html)
+- 扩展 Popup 设计稿：标题一行 + 第二行 switch/按钮；无打标/去标与清空/打开所选；Enter 打标、芯片 × 去标；查找结果占位 + 拼首联想浮动、无勾选、双击打开；清除图标；设置「预览资源类型」存 `chrome.storage.local`（默认仅链接）；`links`→ preview `kind=url`（服务端过滤，limit 在过滤后）→ [ext-page](design/explorer-ui/ext-page.html) · [ext-options](design/explorer-ui/ext-options.html)
+- `GET /v1/query` / `preview` 支持可选 `kind`（`file`/`folder`/`url`/`all`，省略=`all`）；缓存键含 kind 段 → [HTTP API §3.6](plans/2026-09-26-http-api.md)
 - 管理标签已落地（Host `library`，列表每页 50）。管理资源：按标签查找后删除或替换；类型按新地址预选可改；芯片查询与 Find 相同（末词 suggest 含简拼，Enter 落联想）；芯片区清空图标对齐 Find（无边框）；空状态提示居中。稀疏包 `0.1.10.0`。右键只少新增项时查 comhost 是否过期（`CoCreate` `0x80040111`）→ [存档](plans/2026-10-20-explorer-comhost-stale.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 关键决策
@@ -44,4 +45,4 @@
 - 别名字符集、简拼、关系 `Seq` 等细则多，实现时易漏边界（以已确认 plans 为准）
 
 ## 下一步
-本机验收扩展 Popup：重新 `npm run build` 并「重新加载」后，打开默认「打标模式」且别名框获焦，切「查找模式」后查询框获焦；查找结果区更高；↑/↓ 与空输入 Enter 打开仍可用 → [docs/browser-extension.md](docs/browser-extension.md)
+本机验收：重启 Service 后，`/v1/query/preview?q=…&limit=4&kind=url` 只返回链接且可满 4 条；扩展 `npm run build` 并「重新加载」后「仅链接」预览与之一致 → [docs/browser-extension.md](docs/browser-extension.md)

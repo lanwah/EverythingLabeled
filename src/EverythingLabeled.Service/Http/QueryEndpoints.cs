@@ -24,7 +24,8 @@ public static class QueryEndpoints
                 context.OptionalQuery("expand"),
                 context.OptionalQuery("maxDepth"),
                 context.OptionalQuery("expandedTagLimit"),
-                paging.Data);
+                paging.Data,
+                context.OptionalQuery("kind"));
             await context.WriteAsync(await queries.QueryAsync(request, cancellationToken));
         });
 
@@ -45,7 +46,8 @@ public static class QueryEndpoints
                 context.OptionalQuery("expand"),
                 context.OptionalQuery("maxDepth"),
                 context.OptionalQuery("expandedTagLimit"),
-                paging.Data);
+                paging.Data,
+                context.OptionalQuery("kind"));
             await context.WriteAsync(await queries.PreviewAsync(request, cancellationToken));
         });
     }

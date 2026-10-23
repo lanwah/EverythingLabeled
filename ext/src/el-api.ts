@@ -127,7 +127,13 @@ export function createElApi(deps: { fetch: typeof fetch }): {
     remove: Array<string | { id: string }>,
   ): Promise<ElResult<unknown>>;
   suggest(baseUrl: string, token: string, q: string): Promise<ElResult<SuggestItem[]>>;
-  preview(baseUrl: string, token: string, q: string, limit: number): Promise<ElResult<QueryHit[]>>;
+  preview(
+    baseUrl: string,
+    token: string,
+    q: string,
+    limit: number,
+    kind?: string | null,
+  ): Promise<ElResult<QueryHit[]>>;
   listTags(
     baseUrl: string,
     token: string,
@@ -234,13 +240,13 @@ export function createElApi(deps: { fetch: typeof fetch }): {
         ),
       );
     },
-    async preview(baseUrl, token, q, limit) {
+    async preview(baseUrl, token, q, limit, kind) {
+      let relative = `v1/query/preview?q=${encodeURIComponent(q)}&limit=${limit}`;
+      if (kind != null && kind !== "" && kind !== "all") {
+        relative += `&kind=${encodeURIComponent(kind)}`;
+      }
       return unwrapItems(
-        await authGet<{ items?: QueryHit[] }>(
-          `v1/query/preview?q=${encodeURIComponent(q)}&limit=${limit}`,
-          baseUrl,
-          token,
-        ),
+        await authGet<{ items?: QueryHit[] }>(relative, baseUrl, token),
       );
     },
     async listTags(baseUrl, token, q, limit, offset) {

@@ -335,7 +335,7 @@ public static class ElApp
             async (api, _, token) =>
             {
                 var result = await api.QueryAsync(
-                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, offset, token)
+                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, offset, ct: token)
                     .ConfigureAwait(false);
                 if (!result.IsSuccess)
                 {
@@ -371,7 +371,7 @@ public static class ElApp
             async (api, _, token) =>
             {
                 var result = await api.PreviewAsync(
-                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, token)
+                        q, expand.Expand, expand.MaxDepth, expand.ExpandedTagLimit, limit, ct: token)
                     .ConfigureAwait(false);
                 if (!result.IsSuccess)
                 {

@@ -90,6 +90,7 @@ public sealed class ProbeTests
             int? expandedTagLimit,
             int limit,
             int offset,
+            string? kind = null,
             CancellationToken ct = default) =>
             throw new NotImplementedException();
 
@@ -99,6 +100,7 @@ public sealed class ProbeTests
             int? maxDepth,
             int? expandedTagLimit,
             int limit,
+            string? kind = null,
             CancellationToken ct = default) =>
             throw new NotImplementedException();
 

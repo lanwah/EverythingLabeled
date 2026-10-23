@@ -46,7 +46,8 @@ public sealed record QueryRequest(
     string? Expand,
     string? MaxDepthRaw,
     string? ExpandedTagLimitRaw,
-    Paging Paging)
+    Paging Paging,
+    string? KindRaw = null)
 {
     public static QueryRequest Parse(
         string q,
@@ -54,6 +55,7 @@ public sealed record QueryRequest(
         string? maxDepth = null,
         string? expandedTagLimit = null,
         int offset = 0,
-        int limit = Paging.DefaultLimit) =>
-        new(q, expand, maxDepth, expandedTagLimit, new Paging(offset, limit));
+        int limit = Paging.DefaultLimit,
+        string? kind = null) =>
+        new(q, expand, maxDepth, expandedTagLimit, new Paging(offset, limit), kind);
 }

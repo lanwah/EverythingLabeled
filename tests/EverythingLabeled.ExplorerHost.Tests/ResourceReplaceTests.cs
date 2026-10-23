@@ -111,6 +111,7 @@ public sealed class ResourceReplaceTests
             int? expandedTagLimit,
             int limit,
             int offset,
+            string? kind = null,
             CancellationToken ct = default) =>
             throw new NotImplementedException();
 
@@ -120,6 +121,7 @@ public sealed class ResourceReplaceTests
             int? maxDepth,
             int? expandedTagLimit,
             int limit,
+            string? kind = null,
             CancellationToken ct = default) =>
             throw new NotImplementedException();
 

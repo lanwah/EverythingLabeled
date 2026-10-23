@@ -180,7 +180,7 @@ public sealed class QueryCommandsTests
             throw new NotImplementedException();
 
         public Task<ElResult<QueryPage>> QueryAsync(
-            string q, string? expand, int? maxDepth, int? expandedTagLimit, int limit, int offset, CancellationToken ct = default)
+            string q, string? expand, int? maxDepth, int? expandedTagLimit, int limit, int offset, string? kind = null, CancellationToken ct = default)
         {
             QueryCalls++;
             LastQ = q;
@@ -190,7 +190,7 @@ public sealed class QueryCommandsTests
         }
 
         public Task<ElResult<PreviewPage>> PreviewAsync(
-            string q, string? expand, int? maxDepth, int? expandedTagLimit, int limit, CancellationToken ct = default)
+            string q, string? expand, int? maxDepth, int? expandedTagLimit, int limit, string? kind = null, CancellationToken ct = default)
         {
             PreviewCalls++;
             LastQ = q;
