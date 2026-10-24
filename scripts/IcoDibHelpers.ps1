@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-# Shared ICO (DIB frame) helpers for make-explorer-icons / make-service-icon / make-host-icon.
+# Shared ICO (DIB frame) helpers for make-explorer-icons / make-*-icon.ps1.
 
 function Draw-Mdl2Glyph {
     param(
@@ -67,6 +67,17 @@ function New-HostIconBitmap {
 
     # OpenFolder：Explorer 壳层集成的进程外 Host
     return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE838
+}
+
+# CLI el.exe：命令提示符 + 右下角标签角标（与 Tray / Host / Service 四分开）
+function New-CliIconBitmap {
+    param(
+        [int]$Size,
+        [System.Drawing.Color]$Ink
+    )
+
+    # CommandPrompt：薄客户端命令行入口
+    return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE756
 }
 
 # 品牌复合图标：主字形偏左上 + Tag(E8EC) 角标；≥24px 带淡青绿圆底板

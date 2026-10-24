@@ -9,6 +9,7 @@
     <AssemblyName>el</AssemblyName>
     <RootNamespace>EverythingLabeled.Cli</RootNamespace>
     <Version>0.1.0</Version>
+    <ApplicationIcon>Assets\cli.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
