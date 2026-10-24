@@ -9,6 +9,7 @@
     <AssemblyName>EverythingLabeled.Mcp</AssemblyName>
     <RootNamespace>EverythingLabeled.Mcp</RootNamespace>
     <Version>0.1.0</Version>
+    <ApplicationIcon>Assets\mcp.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

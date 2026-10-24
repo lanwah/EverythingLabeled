@@ -80,6 +80,17 @@ function New-CliIconBitmap {
     return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE756
 }
 
+# MCP EverythingLabeled.Mcp.exe：拼图/插件 + 右下角标签角标（与 Tray / Host / Service / CLI 五分开）
+function New-McpIconBitmap {
+    param(
+        [int]$Size,
+        [System.Drawing.Color]$Ink
+    )
+
+    # Puzzle：stdio MCP 插件，供 Cursor 等 AI 宿主扩展 el_* 工具能力
+    return New-CompoundBrandIconBitmap -Size $Size -Ink $Ink -PrimaryGlyph 0xE895
+}
+
 # 品牌复合图标：主字形偏左上 + Tag(E8EC) 角标；≥24px 带淡青绿圆底板
 function New-CompoundBrandIconBitmap {
     param(

@@ -175,4 +175,6 @@
 - 2026-10-24 — 打标页「当前标签」井区对齐设计稿：MinHeight 120 + 居中「暂无标签」→ [design/explorer-ui/tag.html](../design/explorer-ui/tag.html)
 - 2026-10-24 — Explorer 右键 Host 对齐扩展两键：`config.json` 增 `suggestLimit`（缺省 8）；打标/Find/管理资源 suggest 改读配置，不再硬编码 10 → [docs/config.md](../docs/config.md) · [docs/explorer.md](../docs/explorer.md)
 - 2026-10-24 — CLI `el.exe` 专用图标 `Assets/cli.ico`（MDL2 命令提示符 E756 + 标签角标 E8EC；`ApplicationIcon` + `scripts/make-cli-icon.ps1`）→ [docs/cli.md](../docs/cli.md)
+- 2026-10-24 — MCP `EverythingLabeled.Mcp.exe` 专用图标 `Assets/mcp.ico`（MDL2 拼图/插件 E895 + 标签角标 E8EC；`ApplicationIcon` + `scripts/make-mcp-icon.ps1`）→ [docs/mcp.md](../docs/mcp.md)
+- 2026-10-24 — `docs/mcp.md` 补齐七个 `el_*` 工具手册（参数、示例、untag 确认、返回信封与错误码），对齐 `docs/cli.md` 结构 → [MCP 规格](../plans/2026-09-27-mcp.md)
 - 2026-10-24 — `docs/cli.md` 补齐用法与命令手册（tag/untag/tags/query/preview/suggest/completion），规格细节仍链 [CLI 规格](../plans/2026-09-26-cli.md)

@@ -4,7 +4,7 @@
 本机「任意对象可打标签、按标签快速找回」的标签服务；v1 以 Windows 本地守护进程为唯一数据入口，CLI / 浏览器扩展 / Explorer / MCP 均为薄客户端。
 
 ## 当前状态
-- v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled；[docs/cli.md](docs/cli.md) 已含 `el` 用法与七子命令手册（契约 → [CLI 规格](plans/2026-09-26-cli.md)）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [MCP](docs/mcp.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
+- v1 设计基线与 #8–#14 / Tray / Find UI / 扩展 `#121`–`#122` 已合入 `master` 并推送；公有仓库 https://github.com/lanwah/EverythingLabeled；[docs/cli.md](docs/cli.md) / [docs/mcp.md](docs/mcp.md) 已含用法与七工具/子命令手册（契约 → [CLI 规格](plans/2026-09-26-cli.md) · [MCP 规格](plans/2026-09-27-mcp.md)）→ [骨架](plans/2026-09-27-service-skeleton.md) · [CRUD](plans/2026-09-29-crud-and-query.md) · [扩展](docs/browser-extension.md) · [Explorer](docs/explorer.md)
 - Explorer / Tray：稀疏包 `0.1.10.0`、Host 深色四页 + `host.ico`、Tray `Alt+L` / 重新启动冷启 Find；打标/去标/看标签/管理标签失焦关窗（Find Hide）；打标 Enter 提交、当前标签井区对齐稿；去标隐藏别名与底部按钮、点叉号去除；管理标签 / 管理资源已落地 → [docs/explorer.md](docs/explorer.md) · [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
 - Find / Host 配置：芯片 + `findTagLogic`；`previewLimit`（标签查询预览，缺省 16）与 `suggestLimit`（拼首联想，缺省 8，1–50）写入 AppData `config.json`，与扩展同键对齐；打标/Find/管理资源 suggest 读配置 → [docs/config.md](docs/config.md) · [Find UX](plans/confirmed/2026-10-07-find-ux-review.md)
 - 浏览器扩展 0.1.3：Options「标签查询预览条数」/`previewLimit`、「拼首联想预览条数」/`suggestLimit`（缺省 8，1–16）；Popup 打标/查找双模式；预览资源类型默认仅链接；`kind` 过滤走 API → [docs/browser-extension.md](docs/browser-extension.md) · [HTTP API §3.6](plans/2026-09-26-http-api.md)
@@ -27,7 +27,7 @@
 - Find UI：芯片输入；多标签逻辑读 `findTagLogic`（默认 `and`），不在 UI 切换；Find 无边框深色标题栏；Enter 落芯片 → [芯片审核](plans/confirmed/2026-10-07-find-chip-and-or-review.md)（UI 切换已改为配置项）
 - Explorer Host 四页皮肤：以 [design/explorer-ui/](design/explorer-ui/index.html) 为视觉基线（打标/去标/看标签对齐 Find 深色；别名联想浮动下拉不撑布局；打标与去标单选当前标签为带 × 芯片；打标页不显示底部取消/打标，Enter 提交；去标页不显示别名与底部取消/去标，当前标签可检索后点叉号去除）
 - Tray：WinForms 独立进程；默认 `Alt+L`（空/`none` 关热键）；Find 全入口单实例；关窗/失焦 Hide 保活；Run=`EverythingLabeled.Tray`；Host 仅同目录 → [Tray 规格](plans/2026-10-07-tray-find-hotkey.md)
-- exe 图标四分开：Tray/扩展纯标签 `el.ico`；Host `Assets/host.ico`（打开文件夹 E838 + 标签角标）；Service `Assets/service.ico`（服务器 E968 + 标签角标）；CLI `Assets/cli.ico`（命令提示符 E756 + 标签角标）→ `scripts/make-host-icon.ps1` · `scripts/make-service-icon.ps1` · `scripts/make-cli-icon.ps1` · [Explorer](docs/explorer.md) · [Service 骨架](docs/service-skeleton.md) · [CLI](docs/cli.md)
+- exe 图标五分开：Tray/扩展纯标签 `el.ico`；Host `Assets/host.ico`（打开文件夹 E838 + 标签角标）；Service `Assets/service.ico`（服务器 E968 + 标签角标）；CLI `Assets/cli.ico`（命令提示符 E756 + 标签角标）；MCP `Assets/mcp.ico`（拼图/插件 E895 + 标签角标）→ `scripts/make-host-icon.ps1` · `scripts/make-service-icon.ps1` · `scripts/make-cli-icon.ps1` · `scripts/make-mcp-icon.ps1` · [Explorer](docs/explorer.md) · [Service 骨架](docs/service-skeleton.md) · [CLI](docs/cli.md) · [MCP](docs/mcp.md)
 - Explorer 菜单图标：Segoe MDL2 字形生成多尺寸 `.ico`，**用 DIB 帧不用 PNG 帧**（PNG 帧在 GDI+ 消费端会解出乱码）；`GetIcon` 返绝对路径且包 try/catch；右键 `find` 用放大镜 `E721`；Host Find 标题栏保持 `E8B7`（与菜单刻意区分）→ [菜单图标存档](plans/2026-10-17-explorer-menu-icons.md) · [docs/explorer.md](docs/explorer.md)
 
 ## 待办
